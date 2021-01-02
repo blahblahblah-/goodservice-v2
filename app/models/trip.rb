@@ -20,6 +20,29 @@ class Trip
       (trip.stops.keys - stops.keys).size <= 1
   end
 
+  def stop_ids
+    stops.keys
+  end
+
+  def upcoming_stop
+    stops.find { |_, v| v > timestamp }.first
+  end
+
+  def time_until_upcoming_stop
+    stops.find { |_, v| v > timestamp }.last - timestamp
+  end
+
+  def upcoming_stops
+    stops.select { |_, v| v > timestamp }.map(&:first)
+  end
+
+  def stops_behind(trip)
+    i = upcoming_stops.index(trip.upcoming_stop)
+    return [] unless i && i > 0
+
+    upcoming_stops[0..i]
+  end
+
   def stops_made
     return [] unless previous_trip
 
@@ -34,9 +57,13 @@ class Trip
     self.delay = 0
     return unless previous_trip
     return unless (next_stop_time - timestamp) <= 600
-    return if stops_made.present?
+    return if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
 
     self.delay += (destination_time - previous_trip.destination_time)
+  end
+
+  def time_between_stops(time_limit)
+    stops.select { |_, time| time <= timestamp + time_limit}.each_cons(2).map { |a, b| ["#{a.first}-#{b.first}", b.last - a.last]}.to_h
   end
 
   def next_stop_time

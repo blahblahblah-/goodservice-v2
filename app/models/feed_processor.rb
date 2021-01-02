@@ -5,6 +5,7 @@ class FeedProcessor
   INACTIVE_TRIP_TIMEOUT = 30.minutes
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes
   DELAY_THRESHOLD = 5.minutes
+  SUPPLEMENTARY_TIME_LOOKUP = 20.minutes
 
   class << self
     def analyze_feed(feed_id, minutes, half_minute)
@@ -25,6 +26,8 @@ class FeedProcessor
         puts "Feed id #{feed_id} is outdated"
         return
       end
+
+      puts "Timestamp of #{feed_name} is #{timestamp}"
 
       trips = feed.entity.select { |entity|
         valid_trip?(timestamp, entity)
@@ -52,16 +55,19 @@ class FeedProcessor
         attach_previous_trip_update(feed_id, trip)
       end
 
+      routes = translated_trips.group_by(&:route_id)
+
       REDIS_CLIENT.pipelined do
         translated_trips.each do |trip|
           update_trip(feed_id, timestamp, trip)
         end
-        translated_trips.map(&:route_id).uniq.each do |route_id|
-          REDIS_CLIENT.set("last-update:#{route_id}", timestamp, ex: 3600)
-        end
       end
 
       complete_trips(feed_id, timestamp)
+
+      routes.each do |route_id, trips|
+        RouteProcessor.process_route(route_id, trips, timestamp)
+      end
     end
 
     private
@@ -134,6 +140,9 @@ class FeedProcessor
         REDIS_CLIENT.zadd("delay:#{trip.route_id}:#{trip.direction}", trip.timestamp, trip.id)
       end
       marshaled_trip = Marshal.dump(trip)
+      trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP.to_i).each do |station_ids, time|
+        REDIS_CLIENT.hset("travel-time:supplementary", station_ids, time)
+      end
       REDIS_CLIENT.hset("active-trips:#{feed_id}", trip.id, marshaled_trip)
       REDIS_CLIENT.zadd("active-trips-list:#{feed_id}", timestamp, trip.id)
     end
@@ -141,7 +150,6 @@ class FeedProcessor
     def process_stops(trip)
       # TODO: M train shuffle
       trip.stops_made.each do |stop_id, timestamp|
-        puts "Stop made at #{stop_id} for #{trip.id} at #{timestamp}"
         REDIS_CLIENT.zadd("stops:#{stop_id}", timestamp, trip.id)
       end
     end
