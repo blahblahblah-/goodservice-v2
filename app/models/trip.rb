@@ -25,11 +25,11 @@ class Trip
   end
 
   def upcoming_stop
-    stops.find { |_, v| v > timestamp }.first
+    stops.find { |_, v| v > timestamp }&.first
   end
 
   def time_until_upcoming_stop
-    stops.find { |_, v| v > timestamp }.last - timestamp
+    (stops.find { |_, v| v > timestamp }&.last || timestamp) - timestamp
   end
 
   def upcoming_stops

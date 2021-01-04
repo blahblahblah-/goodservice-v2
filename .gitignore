@@ -4,6 +4,9 @@
 # or operating system, you probably want to add a global ignore instead:
 #   git config --global core.excludesfile '~/.gitignore_global'
 
+# Custom
+/import/*.txt
+
 # Ignore bundler config.
 /.bundle
 
@@ -38,3 +41,5 @@
 /yarn-error.log
 yarn-debug.log*
 .yarn-integrity
+
+.DS_Store

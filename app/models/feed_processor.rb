@@ -2,6 +2,8 @@ require 'nyct-subway.pb'
 
 class FeedProcessor
   UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes
+  UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes
+  SI_FEED = '-si'
   INACTIVE_TRIP_TIMEOUT = 30.minutes
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes
   DELAY_THRESHOLD = 5.minutes
@@ -28,9 +30,8 @@ class FeedProcessor
       end
 
       puts "Timestamp of #{feed_name} is #{timestamp}"
-
       trips = feed.entity.select { |entity|
-        valid_trip?(timestamp, entity)
+        valid_trip?(timestamp, entity, feed_id)
       }.map { |entity|
         convert_trip(timestamp, entity)
       }
@@ -38,6 +39,7 @@ class FeedProcessor
       translated_trips = trips.map{ |trip|
         translate_trip(feed_id, trip)
       }
+      puts trips.size if feed_id == SI_FEED
 
       unmatched_trips = []
       active_trip_ids = REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
@@ -72,14 +74,15 @@ class FeedProcessor
 
     private
 
-    def valid_trip?(timestamp, entity)
+    def valid_trip?(timestamp, entity, feed_id)
       return false unless entity.field?(:trip_update) && entity.trip_update.trip.nyct_trip_descriptor
+      upcoming_trip_time_allowance = feed_id == SI_FEED ? UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI : UPCOMING_TRIPS_TIME_ALLOWANCE
       entity.trip_update.stop_time_update.reject! { |update|
         (update.departure || update.arrival)&.time.nil?
       }
       return false if entity.trip_update.stop_time_update.all? {|update| (update&.departure || update&.arrival).time < timestamp }
       return false if entity.trip_update.stop_time_update.all? {|update|
-        (update&.departure || update&.arrival).time > timestamp + UPCOMING_TRIPS_TIME_ALLOWANCE
+        (update&.departure || update&.arrival).time > timestamp + upcoming_trip_time_allowance
       }
       true
     end
