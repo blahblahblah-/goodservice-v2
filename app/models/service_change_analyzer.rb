@@ -271,7 +271,7 @@ class ServiceChangeAnalyzer
   def self.current_routings(timestamp)
     if !@current_routings || !@timestamp || (timestamp - @timestamp) > 60
       puts "Refresh current routings"
-      @current_routings = Scheduled::Trip.soon(timestamp, nil).map { |route_id, trips_by_direction|
+      @current_routings = Scheduled::Trip.soon_grouped(timestamp, nil).map { |route_id, trips_by_direction|
         [route_id, trips_by_direction.map { |direction, trips|
           potential_routings = trips.map { |t|
             t.stop_times.not_past.pluck(:stop_internal_id)
@@ -292,7 +292,7 @@ class ServiceChangeAnalyzer
   end
 
   def self.evergreen_routings
-    @evergreen_routings ||= Scheduled::Trip.soon(Scheduled::CalendarException.next_weekday.to_time.change(hour: 12).to_i, nil).map { |route_id, trips_by_direction|
+    @evergreen_routings ||= Scheduled::Trip.soon_grouped(Scheduled::CalendarException.next_weekday.to_time.change(hour: 12).to_i, nil).map { |route_id, trips_by_direction|
       [route_id, trips_by_direction.map { |direction, trips|
         potential_routings = trips.map { |t|
           t.stop_times.pluck(:stop_internal_id)

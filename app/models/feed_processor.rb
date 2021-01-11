@@ -143,8 +143,8 @@ class FeedProcessor
     def update_trip(feed_id, timestamp, trip)
       process_stops(trip)
       trip.update_delay!
-      if trip.delay >= DELAY_THRESHOLD
-        puts "Delay detected for #{trip.id} for #{trip.delay}"
+      if trip.delayed_time >= DELAY_THRESHOLD
+        puts "Delay detected for #{trip.id} for #{trip.delayed_time}"
         REDIS_CLIENT.zadd("delay:#{trip.route_id}:#{trip.direction}", trip.timestamp, trip.id)
       end
       marshaled_trip = Marshal.dump(trip)

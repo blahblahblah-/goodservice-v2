@@ -18,7 +18,7 @@ class RouteProcessor
 
     headway_by_routes = determine_actual_headway(trips_by_routes, timestamp)
 
-    scheduled_trips = Scheduled::Trip.soon(timestamp, route_id)
+    scheduled_trips = Scheduled::Trip.soon_grouped(timestamp, route_id)
     scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: true)
 
     # Reload to load all stops

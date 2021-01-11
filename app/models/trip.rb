@@ -1,6 +1,6 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :delay
+  attr_accessor :id, :previous_trip, :delayed_time
 
   def initialize(route_id, direction, id, timestamp, trip_update)
     @route_id = route_id
@@ -54,12 +54,12 @@ class Trip
   end
 
   def update_delay!
-    self.delay = 0
+    self.delayed_time = 0
     return unless previous_trip
     return unless (next_stop_time - timestamp) <= 600
     return if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
-
-    self.delay += (destination_time - previous_trip.destination_time)
+    self.delayed_time = previous_trip.delayed_time if previous_trip.delayed_time
+    self.delayed_time += (destination_time - previous_trip.destination_time)
   end
 
   def time_between_stops(time_limit)

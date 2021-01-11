@@ -23,7 +23,7 @@ class Scheduled::Trip < ActiveRecord::Base
       additional_departure_time_range = twenty_four_hr..time_after_twenty_four_hr
     end
 
-    results = includes(:stop_times).where(
+    includes(:stop_times).where(
       {
         stop_times: {
           departure_time: from_time..to_time,
@@ -38,6 +38,10 @@ class Scheduled::Trip < ActiveRecord::Base
         }.merge(additional_filters)
       )
     ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date))
+  end
+
+  def self.soon_grouped(current_timestamp, route_id, time_range: 30.minutes)
+    results = soon(current_timestamp, route_id, time_range: time_range)
 
     if route_id
       results.group_by(&:direction)
@@ -46,5 +50,9 @@ class Scheduled::Trip < ActiveRecord::Base
         [route_id, trips.group_by(&:direction)]
       }.to_h
     end
+  end
+
+  def self.any_scheduled?(route_id)
+    !soon(Time.current.to_i, route_id).empty?
   end
 end
