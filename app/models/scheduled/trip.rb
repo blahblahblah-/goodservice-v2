@@ -1,61 +1,50 @@
-module Scheduled
-  class Trip < ActiveRecord::Base
-    belongs_to :route, foreign_key: "route_internal_id", primary_key: "internal_id"
-    belongs_to :schedule, foreign_key: "schedule_service_id", primary_key: "service_id"
-    has_many :stop_times, foreign_key: "trip_internal_id", primary_key: "internal_id"
+class Scheduled::Trip < ActiveRecord::Base
+  belongs_to :route, foreign_key: "route_internal_id", primary_key: "internal_id"
+  belongs_to :schedule, foreign_key: "schedule_service_id", primary_key: "service_id"
+  has_many :stop_times, foreign_key: "trip_internal_id", primary_key: "internal_id"
 
-    DAY_IN_MINUTES = 86400
+  DAY_IN_MINUTES = 86400
 
-    def self.soon(current_timestamp, route_id, time_range: 30.minutes)
-      current_time = Time.at(current_timestamp)
-      if (current_time + time_range).to_date == current_time.to_date.tomorrow
-        from_time = current_time - current_time.beginning_of_day
-        to_time = current_time - current_time.beginning_of_day + time_range.to_i
-        next_day_to_time = (current_time - current_time.beginning_of_day + time_range.to_i) % DAY_IN_MINUTES
+  def self.soon(current_timestamp, route_id, time_range: 30.minutes)
+    current_time = Time.at(current_timestamp)
+    from_time = current_time - current_time.beginning_of_day
+    to_time = current_time - current_time.beginning_of_day + time_range.to_i
+    additional_departure_time_range = from_time..to_time
+    additional_filters = route_id ? { route_internal_id: route_id} : {}
 
-        includes(:stop_times).where(
-          route_internal_id: route_id,
+    if (current_time + time_range).to_date == current_time.to_date.tomorrow
+      next_day_to_time = (current_time - current_time.beginning_of_day + time_range.to_i) % DAY_IN_MINUTES
+
+      additional_departure_time_range = 0..next_day_to_time
+    elsif current_time.hour < 4
+      twenty_four_hr = current_time - current_time.beginning_of_day + DAY_IN_MINUTES
+      time_after_twenty_four_hr = current_time - current_time.beginning_of_day + DAY_IN_MINUTES + time_range.to_i
+
+      additional_departure_time_range = twenty_four_hr..time_after_twenty_four_hr
+    end
+
+    results = includes(:stop_times).where(
+      {
+        stop_times: {
+          departure_time: from_time..to_time,
+        }
+      }.merge(additional_filters)
+    ).or(
+      includes(:stop_times).where(
+        {
           stop_times: {
-            departure_time: from_time..to_time
+            departure_time: additional_departure_time_range,
           }
-        ).or(
-          includes(:stop_times).where(
-            route_internal_id: route_id,
-            stop_times: {
-              departure_time: 0..next_day_to_time
-            }
-          )
-        ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date)).group_by(&:direction)
-      elsif current_time.hour < 4
-        from_time = current_time - current_time.beginning_of_day
-        to_time = current_time - current_time.beginning_of_day + time_range.to_i
-        twenty_four_hr = current_time - current_time.beginning_of_day + DAY_IN_MINUTES
-        time_after_twenty_four_hr = current_time - current_time.beginning_of_day + DAY_IN_MINUTES + time_range.to_i
+        }.merge(additional_filters)
+      )
+    ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date))
 
-        includes(:stop_times).where(
-          route_internal_id: route_id,
-          stop_times: {
-            departure_time: from_time..to_time
-          }
-        ).or(
-          includes(:stop_times).where(
-            route_internal_id: route_id,
-            stop_times: {
-              departure_time: twenty_four_hr..time_after_twenty_four_hr
-            }
-          )
-        ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date)).group_by(&:direction)
-      else
-        from_time = current_time - current_time.beginning_of_day
-        to_time = current_time - current_time.beginning_of_day + time_range.to_i
-
-        includes(:stop_times).where(
-          route_internal_id: route_id,
-          stop_times: {
-            departure_time: from_time..to_time
-          }
-        ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date)).group_by(&:direction)
-      end
+    if route_id
+      results.group_by(&:direction)
+    else
+      results.group_by(&:route_internal_id).map { |route_id, trips|
+        [route_id, trips.group_by(&:direction)]
+      }.to_h
     end
   end
 end

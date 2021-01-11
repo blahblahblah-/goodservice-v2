@@ -1,13 +1,13 @@
 require 'nyct-subway.pb'
 
 class FeedProcessor
-  UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes
-  UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes
+  UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes.to_i
+  UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes.to_i
   SI_FEED = '-si'
-  INACTIVE_TRIP_TIMEOUT = 30.minutes
-  INCOMPLETE_TRIP_TIMEOUT = 3.minutes
-  DELAY_THRESHOLD = 5.minutes
-  SUPPLEMENTARY_TIME_LOOKUP = 20.minutes
+  INACTIVE_TRIP_TIMEOUT = 30.minutes.to_i
+  INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
+  DELAY_THRESHOLD = 5.minutes.to_i
+  SUPPLEMENTARY_TIME_LOOKUP = 20.minutes.to_i
 
   class << self
     def analyze_feed(feed_id, minutes, half_minute)
@@ -30,6 +30,7 @@ class FeedProcessor
       end
 
       puts "Timestamp of #{feed_name} is #{timestamp}"
+
       trips = feed.entity.select { |entity|
         valid_trip?(timestamp, entity, feed_id)
       }.map { |entity|
@@ -39,7 +40,6 @@ class FeedProcessor
       translated_trips = trips.map{ |trip|
         translate_trip(feed_id, trip)
       }
-      puts trips.size if feed_id == SI_FEED
 
       unmatched_trips = []
       active_trip_ids = REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
@@ -84,6 +84,8 @@ class FeedProcessor
       return false if entity.trip_update.stop_time_update.all? {|update|
         (update&.departure || update&.arrival).time > timestamp + upcoming_trip_time_allowance
       }
+      direction = entity.trip_update.trip.nyct_trip_descriptor.direction == Transit_realtime::NyctTripDescriptor::Direction::NORTH ? 'N' : 'S'
+      return false unless entity.trip_update.stop_time_update.all? {|update| update.stop_id[3] == direction }
       true
     end
 
@@ -96,6 +98,8 @@ class FeedProcessor
         puts "A Shuttle found, reversing trip #{trip_id}"
         entity.trip_update, direction = reverse_trip_update(entity.trip_update)
       end
+
+      remove_hidden_stops(entity.trip_update)
 
       Trip.new(route_id, direction, trip_id, timestamp, entity.trip_update)
     end
@@ -132,6 +136,7 @@ class FeedProcessor
       if marshaled_previous_update
         previous_update = Marshal.load(marshaled_previous_update)
         trip.previous_trip = previous_update
+        trip.previous_trip.previous_trip = nil
       end
     end
 
@@ -143,7 +148,7 @@ class FeedProcessor
         REDIS_CLIENT.zadd("delay:#{trip.route_id}:#{trip.direction}", trip.timestamp, trip.id)
       end
       marshaled_trip = Marshal.dump(trip)
-      trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP.to_i).each do |station_ids, time|
+      trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP).each do |station_ids, time|
         REDIS_CLIENT.hset("travel-time:supplementary", station_ids, time)
       end
       REDIS_CLIENT.hset("active-trips:#{feed_id}", trip.id, marshaled_trip)
@@ -194,6 +199,14 @@ class FeedProcessor
       end
 
       return trip_update, direction
+    end
+
+    def remove_hidden_stops(trip_update)
+      trip_update.stop_time_update.filter! { |update| valid_stops.include?(update.stop_id) }
+    end
+
+    def valid_stops
+      @valid_stops ||= Scheduled::Stop.pluck(:internal_id).to_set
     end
 
     handle_asynchronously :analyze_feed, priority: 0

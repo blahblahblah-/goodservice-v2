@@ -1,6 +1,6 @@
 class RouteProcessor
-  RUNTIME_END_LIMIT = 30.minutes
-  RUNTIME_START_LIMIT = 40.minutes
+  RUNTIME_END_LIMIT = 30.minutes.to_i
+  RUNTIME_START_LIMIT = 40.minutes.to_i
 
   def self.process_route(route_id, trips, timestamp)
     trips_by_direction = trips.group_by(&:direction)
@@ -16,24 +16,39 @@ class RouteProcessor
       }.to_h]
     }.to_h
 
-    headway_by_routes = trips_by_routes.map { |direction, routes|
-      [direction, routes.map { |r, trips|
-        ["#{r.first}-#{r.last}-#{r.size}", trips.each_cons(2).map{ |a_trip, b_trip|
-          time_between_trips(a_trip, b_trip, timestamp, r)
-        }.max]
-      }.to_h]
-    }.to_h
+    headway_by_routes = determine_actual_headway(trips_by_routes, timestamp)
 
-    puts "Headway by Routes for #{route_id} - N: #{headway_by_routes[1]}"
-    puts "Headway by Routes for #{route_id} - S: #{headway_by_routes[3]}"
+    scheduled_trips = Scheduled::Trip.soon(timestamp, route_id)
+    scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: true)
 
-    scheduled_headway = determine_max_scheduled_headway(route_id, timestamp)
+    # Reload to load all stops
+    scheduled_trips.each do |_, trips|
+      trips.each { |t| t.stop_times.reload }
+    end
+    recent_scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp)
+    scheduled_headways_by_routes = determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
 
-    puts "Scheduled headway for #{route_id} - N: #{scheduled_headway[0]}"
-    puts "Scheduled headway for #{route_id} - S: #{scheduled_headway[1]}"
-
-    REDIS_CLIENT.set("last-update:#{route_id}", timestamp, ex: 3600)
+    REDIS_CLIENT.pipelined do
+      update_scheduled_runtimes(scheduled_trips)
+      REDIS_CLIENT.set("last-update:#{route_id}", timestamp, ex: 3600)
+      RouteAnalyzer.analyze_route(route_id, trips_by_routes, routings, headway_by_routes, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
+    end
   end
+
+  def self.average_travel_time(a_stop, b_stop, timestamp)
+    train_stops_at_b = REDIS_CLIENT.zrevrangebyscore("stops:#{b_stop}", timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT, withscores: true).to_h
+    train_stops_at_a = REDIS_CLIENT.zrangebyscore("stops:#{a_stop}", timestamp - RUNTIME_START_LIMIT, timestamp + 1.minute.to_i, withscores: true).to_h
+
+    trains_stopped_at_a = train_stops_at_a.map(&:first)
+    trains_traveled = train_stops_at_b.select{ |b_train, _| train_stops_at_a.find {|a_train, _| a_train == b_train } }.keys
+
+    return REDIS_CLIENT.hset("travel-time:supplementary", "#{a_stop}-#{b_stop}", timestamp) unless trains_traveled.present?
+
+    trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
+  end
+
+
+  private
 
   def self.determine_routings(trips_by_direction)
     trips_by_direction.map { |direction, t|
@@ -48,6 +63,36 @@ class RouteProcessor
       end
       memo
     end
+  end
+
+  def self.determine_actual_headway(trips_by_routes, timestamp)
+    trips_by_routes.map { |direction, routes|
+      headway_by_routes = routes.map { |r, trips|
+        ["#{r.first}-#{r.last}-#{r.size}", trips.each_cons(2).map{ |a_trip, b_trip|
+          time_between_trips(a_trip, b_trip, timestamp, r)
+        }]
+      }.to_h
+
+      if headway_by_routes.size > 1
+        headway_by_routes['blended'] = determine_actual_blended_headway(routes.keys, routes.values.flatten, timestamp)
+      end
+
+      [direction, headway_by_routes]
+    }.to_h
+  end
+
+  def self.determine_actual_blended_headway(routes, trips, timestamp)
+    sorted_trips = trips.sort_by(&:destination_time)
+    common_start = routes.first.find { |s| routes.all? { |r| r.include?(s) }}
+    common_end = routes.first.reverse.find { |s| routes.all? { |r| r.include?(s) }}
+
+    return unless common_start && common_end
+
+    common_sub_route = routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
+    trips_in_order = common_sub_route.map { |s| trips.find { |t| t.upcoming_stop == s }}.compact
+    trips_in_order.each_cons(2).map{ |a_trip, b_trip|
+      time_between_trips(a_trip, b_trip, timestamp, common_sub_route)
+    }
   end
 
   def self.time_between_trips(a_trip, b_trip, timestamp, routing)
@@ -69,25 +114,11 @@ class RouteProcessor
     (predicted_time_until_next_stop / predicted_time_between_stops) * actual_time_between_stops
   end
 
-  def self.average_travel_time(a_stop, b_stop, timestamp)
-    train_stops_at_b = REDIS_CLIENT.zrevrangebyscore("stops:#{b_stop}", timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT.to_i, withscores: true).to_h
-    train_stops_at_a = REDIS_CLIENT.zrangebyscore("stops:#{a_stop}", timestamp - RUNTIME_START_LIMIT.to_i, timestamp + 1.minute.to_i, withscores: true).to_h
-
-    trains_stopped_at_a = train_stops_at_a.map(&:first)
-    trains_traveled = train_stops_at_b.select{ |b_train, _| train_stops_at_a.find {|a_train, _| a_train == b_train } }.keys
-
-    return REDIS_CLIENT.hset("travel-time:supplementary", "#{a_stop}-#{b_stop}", timestamp) unless trains_traveled.present?
-
-    trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
-  end
-
-  def self.determine_max_scheduled_headway(route_id, timestamp)
-     scheduled_trips = Scheduled::Trip.soon(timestamp, route_id)
-
+  def self.determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
      return [nil, nil] unless scheduled_trips.present?
 
      scheduled_trips.map do |direction, trips|
-      routing_trips = trips.map { |t| t.stop_times.all }.group_by { |stop_times| "#{stop_times.first.stop_internal_id}-#{stop_times.last.stop_internal_id}-#{stop_times.size}" }
+      routing_trips = trips.map { |t| t.stop_times }.group_by { |stop_times| "#{stop_times.first.stop_internal_id}-#{stop_times.last.stop_internal_id}-#{stop_times.size}" }
 
       headway_by_routing = routing_trips.map { |r, s| [r, determine_scheduled_routing_headway(s)] }.to_h
 
@@ -102,18 +133,18 @@ class RouteProcessor
   def self.determine_scheduled_routing_headway(stop_time_arrays)
     departure_times = stop_time_arrays.map(&:last).map(&:departure_time)
 
-    determine_scheduled_headway(departure_times)
+    calculate_scheduled_headway(departure_times)
   end
 
   def self.determine_scheduled_blended_headway(trips)
-    reverse_trip_stops = trips.map { |t| t.stop_times.all.map(&:stop_internal_id).reverse }
+    reverse_trip_stops = trips.map { |t| t.stop_times.pluck(:stop_internal_id).reverse }
     common_stop = reverse_trip_stops.first.find { |s| reverse_trip_stops.all? { |t| t.include?(s) } }
-    departure_times = trips.map { |t| t.stop_times.all.find { |s| s.stop_internal_id == common_stop }}.map(&:departure_time)
+    departure_times = trips.map { |t| t.stop_times.find { |s| s.stop_internal_id == common_stop }}.map(&:departure_time)
 
-    determine_scheduled_headway(departure_times)
+    calculate_scheduled_headway(departure_times)
   end
 
-  def self.determine_scheduled_headway(departure_times)
+  def self.calculate_scheduled_headway(departure_times)
     # This probably means departure times span across midnight
     d = departure_times.clone
     if (departure_times.max - departure_times.min) > 4.hours.to_i
@@ -126,5 +157,30 @@ class RouteProcessor
       end
     end
     d.sort.each_cons(2).map { |a,b| (b - a) / 60 }.max
+  end
+
+  def self.update_scheduled_runtimes(scheduled_trips)
+    scheduled_trips.each do |_, trips|
+      trips.each do |t|
+        t.stop_times.each_cons(2).each do |a_st, b_st|
+          station_ids = "#{a_st.stop_internal_id}-#{b_st.stop_internal_id}"
+          time = b_st.departure_time - a_st.departure_time
+          REDIS_CLIENT.hset("travel-time:scheduled", station_ids, time)
+        end
+      end
+    end
+  end
+
+  def self.determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: false)
+    scheduled_trips.map { |direction, trips|
+      potential_routings = trips.map { |t|
+        exclude_past_stops ? t.stop_times.not_past.pluck(:stop_internal_id) : t.stop_times.pluck(:stop_internal_id)
+      }.uniq
+      result = potential_routings.select { |selected_routing|
+        others = potential_routings - [selected_routing]
+        selected_routing.length > 0 && others.none? {|o| o.each_cons(selected_routing.length).any?(&selected_routing.method(:==))}
+      }
+      [direction,  result]
+    }.to_h
   end
 end
