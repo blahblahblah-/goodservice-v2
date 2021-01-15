@@ -1,27 +1,27 @@
 class RouteAnalyzer
   def self.analyze_route(route_id, actual_trips, actual_routings, actual_headways_by_routes, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
-    # status, secondary_status, direction_statuses, direction_secondary_statuses, service_summaries = route_status
-    destination_station_names = destinations(actual_routings)
     max_delayed_time = max_delay(actual_trips)
+    slowness = accumulated_extra_time_between_stops(actual_routings, timestamp)
+    runtime_diff = overall_runtime_diff(actual_routings, timestamp)
+    headway_discrepancy = max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
+    direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+    destination_station_names = destinations(actual_routings)
+    # summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips, destination_station_names)
     results = {
-      # id: route_id,
-      # name: route.name,
-      # color: route.color,
-      # text_color: route.text_color,
-      # alternate_name: route.alternate_name,
-
-      # status: status,
-      # secondary_status: secondary_status,
-      # direction_statuses: direction_statuses,
-      # direction_secondary_statuses: direction_secondary_statuses,
-      # service_summaries: service_summaries,
-      max_delay: max_delayed_time,
+      destinations: destination_station_names,
+      status: status,
+      direction_statuses: convert_to_readable_directions(direction_statuses),
+      # service_summaries: convert_to_readable_directions(summaries),
+      max_delay: convert_to_readable_directions(max_delayed_time),
+      accumulated_extra_travel_time: convert_to_readable_directions(slowness),
+      overall_runtime_diff: convert_to_readable_directions(runtime_diff),
+      max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       service_changes: service_changes,
       service_change_summaries: service_change_summaries(route_id, service_changes, destination_station_names),
-      scheduled_headways: scheduled_headways_by_routes.map { |direction, headways| [direction == 0 ? :north : :south, headways] }.to_h ,
-      actual_headways: actual_headways_by_routes.map { |direction, headways| [direction == 0 ? :north : :south, headways] }.to_h,
-      actual_routings: actual_routings.map { |direction, routings| [direction == 0 ? :north : :south, routings] }.to_h,
+      scheduled_headways: convert_to_readable_directions(scheduled_headways_by_routes),
+      actual_headways: convert_to_readable_directions(actual_headways_by_routes),
+      actual_routings: convert_to_readable_directions(actual_routings),
       scheduled: scheduled_trips.present?,
       # visible: route.visible?,
     }.to_json
@@ -30,8 +30,100 @@ class RouteAnalyzer
 
   private
 
+  def self.route_status(delays, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+    direction_statuses = [1, 3].map { |direction|
+      direction_key = direction == 3 ? :south : :north
+      status = 'Good Service'
+      if actual_trips.empty?
+        if scheduled_trips.empty?
+          status = 'Not Scheduled'
+        else
+          status = 'No Service'
+        end
+      elsif delays[direction] && delays[direction] > 5
+        status = 'Delay'
+      elsif service_changes[direction_key].present? || service_changes[:both].present?
+        status = 'Service Change'
+      elsif slowness[direction] && slowness[direction] > 5
+        status = 'Slow'
+      elsif headway_discrepancy[direction] && headway_discrepancy[direction] > 2
+        status = 'Not Good'
+      end
+      [direction, status]
+    }.to_h
+    status = ['Delay', 'Service Change', 'Slow', 'Not Good', 'No Service', 'Not Scheduled', 'Good Service'].find { |s| direction_statuses.any? { |_, status| s == status } }
+
+    return direction_statuses, status
+  end
+
+  def self.convert_to_readable_directions(hash)
+    hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
+  end
+
+  def self.max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
+    [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
+      headways = actual_headways_by_routes[direction[:route_direction]]
+      actual_headway = headways&.values&.first&.max
+      if headways && headways.keys.size > 1
+        if headways['blended']
+          actual_headway = headways['blended'].max
+        else
+          actual_headway = headways.values.max_by { |h| h&.size || 0}.max
+        end
+      end
+
+      scheduled_headways = scheduled_headways_by_routes[direction[:scheduled_direction]]
+      scheduled_headway = scheduled_headways&.values&.first&.max
+      if scheduled_headways && scheduled_headways.keys.size > 1
+        if scheduled_headways['blended']
+          scheduled_headway = scheduled_headways['blended'].max
+        else
+          scheduled_headway = scheduled_headways.values.max_by { |h| h.size}.max
+        end
+      end
+      diff = scheduled_headway && actual_headway ? actual_headway - scheduled_headway : 0
+      [direction[:route_direction], [diff, 0].max]
+    }.to_h
+  end
+
+  def self.overall_runtime_diff(actual_routings, timestamp)
+    actual_routings.map { |direction, routings|
+      [direction, routings.map { |r|
+        scheduled_runtime = (
+          r.each_cons(2).map { |a_stop, b_stop|
+            station_ids = "#{a_stop}-#{b_stop}"
+            REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+          }.reduce(&:+) || 0
+        ) / 60.0
+        actual_runtime = (
+          r.each_cons(2).map { |a_stop, b_stop|
+            RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
+          }.reduce(&:+) || 0
+        ) / 60.0
+        actual_runtime - scheduled_runtime
+      }.max]
+    }.to_h
+  end
+
+  def self.accumulated_extra_time_between_stops(actual_routings, timestamp)
+    actual_routings.map { |direction, routings|
+      [direction, routings.map { |r|
+        (
+          r.each_cons(2).map { |a_stop, b_stop|
+            station_ids = "#{a_stop}-#{b_stop}"
+            scheduled_travel_time = REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
+            [actual_travel_time - scheduled_travel_time, 0].max
+          }.reduce(&:+) || 0
+        ) / 60.0
+      }.max]
+    }.to_h
+  end
+
   def self.max_delay(actual_trips)
-    actual_trips.values.map(&:values).flatten.map(&:delayed_time).max
+    actual_trips.map { |direction, trips|
+      [direction, trips.values.flatten.map(&:delayed_time).max / 60]
+    }.to_h
   end
 
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations)

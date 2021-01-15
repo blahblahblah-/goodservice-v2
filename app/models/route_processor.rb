@@ -31,8 +31,19 @@ class RouteProcessor
     REDIS_CLIENT.pipelined do
       update_scheduled_runtimes(scheduled_trips)
       REDIS_CLIENT.set("last-update:#{route_id}", timestamp, ex: 3600)
-      RouteAnalyzer.analyze_route(route_id, trips_by_routes, routings, headway_by_routes, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     end
+
+    RouteAnalyzer.analyze_route(
+      route_id,
+      trips_by_routes,
+      routings,
+      headway_by_routes,
+      timestamp,
+      scheduled_trips,
+      scheduled_routings,
+      recent_scheduled_routings,
+      scheduled_headways_by_routes
+    )
   end
 
   def self.average_travel_time(a_stop, b_stop, timestamp)
@@ -70,7 +81,7 @@ class RouteProcessor
       headway_by_routes = routes.map { |r, trips|
         ["#{r.first}-#{r.last}-#{r.size}", trips.each_cons(2).map{ |a_trip, b_trip|
           time_between_trips(a_trip, b_trip, timestamp, r)
-        }]
+        }.filter { |v| v > 0 }]
       }.to_h
 
       if headway_by_routes.size > 1
@@ -156,7 +167,7 @@ class RouteProcessor
         end
       end
     end
-    d.sort.each_cons(2).map { |a,b| (b - a) / 60 }.max
+    d.sort.each_cons(2).map { |a,b| (b - a) / 60 }
   end
 
   def self.update_scheduled_runtimes(scheduled_trips)
