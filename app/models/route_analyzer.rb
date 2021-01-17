@@ -115,7 +115,7 @@ class RouteAnalyzer
           common_start = all_routes.first.find { |s| all_routes.all? { |r| r.include?(s) }}
           common_end = all_routes.first.reverse.find { |s| all_routes.all? { |r| r.include?(s) }}
 
-          if common_start && common_end && (routing_with_least_trips.last.size.to_f / routing_with_most_trips.last.size) > 0.30
+          if common_start && common_end
             all_trips = actual_trips[direction[:route_direction]].values.flatten
             selected_routing = all_routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
             selected_trips = selected_routing.map { |s| all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }}.flatten.compact
@@ -163,10 +163,8 @@ class RouteAnalyzer
   def self.determine_headway_to_use(headway_by_routes)
     if headway_by_routes && headway_by_routes.keys.size > 1
       routing_with_most_headways = headway_by_routes.except('blended').max_by { |_, h| h.size }
-      routing_with_fewest_headways = headway_by_routes.except('blended').min_by { |_, h| h.size }
-      diff_number_of_headways = routing_with_most_headways.last.size - routing_with_fewest_headways.last.size
 
-      if headway_by_routes['blended'] && routing_with_most_headways.last.size > 0 && ((routing_with_fewest_headways.last.size + 1).to_f / (routing_with_most_headways.last.size + 1)) > 0.30
+      if headway_by_routes['blended']
         actual_headway = headway_by_routes['blended']
       else
         actual_headway = routing_with_most_headways.last
