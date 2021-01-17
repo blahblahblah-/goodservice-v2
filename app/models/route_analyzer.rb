@@ -7,12 +7,12 @@ class RouteAnalyzer
     headway_discrepancy = max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
     direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
     destination_station_names = destinations(actual_routings)
-    # summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips, destination_station_names)
+    summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     results = {
-      destinations: destination_station_names,
+      destinations: convert_to_readable_directions(destination_station_names),
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
-      # service_summaries: convert_to_readable_directions(summaries),
+      service_summaries: convert_to_readable_directions(summaries),
       max_delay: convert_to_readable_directions(max_delayed_time),
       accumulated_extra_travel_time: convert_to_readable_directions(slowness),
       overall_runtime_diff: convert_to_readable_directions(runtime_diff),
@@ -23,7 +23,6 @@ class RouteAnalyzer
       actual_headways: convert_to_readable_directions(actual_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
       scheduled: scheduled_trips.present?,
-      # visible: route.visible?,
     }.to_json
     REDIS_CLIENT.zadd("route-status:#{route_id}", timestamp, results)
   end
@@ -40,13 +39,13 @@ class RouteAnalyzer
         else
           status = 'No Service'
         end
-      elsif delays[direction] && delays[direction] > 5
+      elsif delays[direction] && delays[direction] >= 5
         status = 'Delay'
       elsif service_changes[direction_key].present? || service_changes[:both].present?
         status = 'Service Change'
-      elsif slowness[direction] && slowness[direction] > 5
+      elsif slowness[direction] && slowness[direction] >= 5
         status = 'Slow'
-      elsif headway_discrepancy[direction] && headway_discrepancy[direction] > 2
+      elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 2
         status = 'Not Good'
       end
       [direction, status]
@@ -56,34 +55,124 @@ class RouteAnalyzer
     return direction_statuses, status
   end
 
+  def self.service_summaries(delays, slowness, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
+      next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
+      strs = []
+      intro = "#{destination_stations[direction[:route_direction]]}-bound trains are "
+
+      if delays[direction[:route_direction]] && delays[direction[:route_direction]] >= 5
+        delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
+          trips.select { |t| t.delayed_time >= 300 }
+        }.max_by { |trips| trips.map { |t| t.delayed_time }.max || 0 }
+        max_delay = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60
+        if delayed_trips.size == 1
+          strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay.round} mins)"
+        else
+          strs << "delayed between #{stop_name(delayed_trips.first.upcoming_stop)} and #{stop_name(delayed_trips.last.upcoming_stop)} (for #{max_delay.round} mins)"
+        end
+      end
+
+      if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 5
+        slow_obj = actual_routings[direction[:route_direction]].map { |r|
+          stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
+            station_ids = "#{a_stop}-#{b_stop}"
+            scheduled_travel_time = REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
+            {
+              from: a_stop,
+              to: b_stop,
+              travel_time_diff: (actual_travel_time - scheduled_travel_time) / 60.0,
+            }
+          }.select { |obj|
+            obj[:travel_time_diff] >= 1
+          }
+
+          next { accumulated_travel_time_diff: 0 } unless stop_pairs.present?
+
+          accumulated_travel_time_diff = stop_pairs.reduce(0) { |sum, obj| sum + obj[:travel_time_diff]}
+
+          {
+            from: stop_pairs.first && stop_pairs.first[:from],
+            to: stop_pairs.last && stop_pairs.last[:to],
+            accumulated_travel_time_diff: accumulated_travel_time_diff,
+          }
+        }.max_by { |obj| obj[:accumulated_travel_time_diff] }
+
+        strs << "traveling slowly between #{stop_name(slow_obj[:from])} and #{stop_name(slow_obj[:to])} (taking #{slow_obj[:accumulated_travel_time_diff].round} mins longer)"
+      end
+
+      if headway_discrepancy[direction[:route_direction]] && headway_discrepancy[direction[:route_direction]] >= 2
+        max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
+        selected_routing = actual_trips[direction[:route_direction]].first.first
+        selected_trips = actual_trips[direction[:route_direction]].first.last
+        if actual_trips[direction[:route_direction]].keys.size > 1
+          routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
+          routing_with_least_trips = actual_trips[direction[:route_direction]].min_by { |_, trips| trips.size }
+
+          all_routes = actual_routings[direction[:route_direction]]
+          common_start = all_routes.first.find { |s| all_routes.all? { |r| r.include?(s) }}
+          common_end = all_routes.first.reverse.find { |s| all_routes.all? { |r| r.include?(s) }}
+
+          if common_start && common_end && (routing_with_least_trips.last.size / routing_with_most_trips.last.size) > 0.30
+            all_trips = actual_trips[direction[:route_direction]].values.flatten
+            selected_routing = all_routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
+            selected_trips = common_sub_route.map { |s| all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }}.flatten.compact
+          else
+            selected_routing = routing_with_most_trips.first
+            selected_trips = routing_with_most_trips.last
+          end
+        end
+
+        headways = selected_trips.each_cons(2).map { |a_trip, b_trip|
+          {
+            prev_trip: a_trip,
+            next_trip: b_trip,
+            time_between: RouteProcessor.time_between_trips(a_trip, b_trip, timestamp, selected_routing)
+          }
+        }.select { |obj| obj[:time_between] > max_scheduled_headway}
+        max_actual_headway = headways.max_by { |obj| obj[:time_between] }[:time_between]
+
+        strs << "have longer wait times between #{stop_name(headways.first[:prev_trip].upcoming_stop)} and #{stop_name(headways.last[:next_trip].upcoming_stop)} (up to #{max_actual_headway.round} mins, normally every #{max_scheduled_headway.round} mins)"
+      end
+
+      next [direction[:route_direction], nil] unless strs.present?
+
+      if strs.size > 1
+        strs[strs.size - 1] = "and #{strs.last}"
+      end
+
+      [direction[:route_direction], "#{intro}#{strs.join(', ')}."]
+    }.to_h
+  end
+
   def self.convert_to_readable_directions(hash)
     hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
   end
 
   def self.max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
     [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
-      headways = actual_headways_by_routes[direction[:route_direction]]
-      actual_headway = headways&.values&.first&.max
-      if headways && headways.keys.size > 1
-        if headways['blended']
-          actual_headway = headways['blended'].max
-        else
-          actual_headway = headways.values.max_by { |h| h&.size || 0}.max
-        end
-      end
-
-      scheduled_headways = scheduled_headways_by_routes[direction[:scheduled_direction]]
-      scheduled_headway = scheduled_headways&.values&.first&.max
-      if scheduled_headways && scheduled_headways.keys.size > 1
-        if scheduled_headways['blended']
-          scheduled_headway = scheduled_headways['blended'].max
-        else
-          scheduled_headway = scheduled_headways.values.max_by { |h| h.size}.max
-        end
-      end
+      actual_headway = determine_headway_to_use(actual_headways_by_routes[direction[:route_direction]])&.max
+      scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
       diff = scheduled_headway && actual_headway ? actual_headway - scheduled_headway : 0
       [direction[:route_direction], [diff, 0].max]
     }.to_h
+  end
+
+  def self.determine_headway_to_use(headway_by_routes)
+    if headway_by_routes && headway_by_routes.keys.size > 1
+      routing_with_most_headways = headway_by_routes.except('blended').max_by { |_, h| h.size }
+      routing_with_fewest_headways = headway_by_routes.except('blended').min_by { |_, h| h.size }
+      diff_number_of_headways = routing_with_most_headways.last.size - routing_with_fewest_headways.last.size
+
+      if headway_by_routes['blended'] && routing_with_most_headways.last.size > 0 && (routing_with_fewest_headways.last.size / routing_with_most_headways.last.size) > 0.30
+        actual_headway = headway_by_routes['blended']
+      else
+        actual_headway = routing_with_most_headways.last
+      end
+    else
+      headway_by_routes&.values&.first
+    end
   end
 
   def self.overall_runtime_diff(actual_routings, timestamp)
@@ -113,7 +202,8 @@ class RouteAnalyzer
             station_ids = "#{a_stop}-#{b_stop}"
             scheduled_travel_time = REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
             actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
-            [actual_travel_time - scheduled_travel_time, 0].max
+            diff = actual_travel_time - scheduled_travel_time
+            diff >= 60.0 ? diff : 0
           }.reduce(&:+) || 0
         ) / 60.0
       }.max]
@@ -168,7 +258,7 @@ class RouteAnalyzer
           end
 
           if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
-            if begin_of_route.related_routes.present?
+            if begin_of_route.related_routes.present? && !begin_of_route.related_routes.include?(route_id)
               if begin_of_route == end_of_route
                 if begin_of_route.first_station == begin_of_route.last_station
                   sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} to"
@@ -188,7 +278,7 @@ class RouteAnalyzer
           end
 
           if end_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
-            if end_of_route.related_routes.present? && begin_of_route != end_of_route
+            if end_of_route.related_routes.present? && begin_of_route != end_of_route && !end_of_route.related_routes.include?(route_id)
               sentence += " #{stop_name(end_of_route.first_station)}, via  #{end_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} #{end_preposition} #{stop_name(end_of_route.last_station)}."
             else
               sentence += " #{stop_name(end_of_route.last_station)}."
@@ -212,7 +302,11 @@ class RouteAnalyzer
       service_changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|
         sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " running"
         if change.related_routes.present?
-          sentence += " via #{change.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+          if change.related_routes.include?(route_id)
+            sentence += " between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+          else
+            sentence += " via #{change.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+          end
         else
           sentence += " via #{change.intermediate_stations.map { |s| stop_name(s) }.join(', ') } between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
         end
@@ -243,7 +337,7 @@ class RouteAnalyzer
 
   def self.destinations(actual_routings)
     actual_routings.map { |direction, routings|
-      [direction == 0 ? :north : :south, routings.map(&:last).uniq.map {|s| stop_name(s)}.compact.uniq.join('/')]
+      [direction, routings.map(&:last).uniq.map {|s| stop_name(s)}.compact.uniq.join('/')]
     }.to_h
   end
 

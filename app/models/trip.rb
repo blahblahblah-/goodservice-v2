@@ -28,6 +28,10 @@ class Trip
     stops.find { |_, v| v > timestamp }&.first
   end
 
+  def upcoming_stop_estimated_arrival_time
+    stops.find { |_, v| v > timestamp }&.last || timestamp
+  end
+
   def time_until_upcoming_stop
     (stops.find { |_, v| v > timestamp }&.last || timestamp) - timestamp
   end
@@ -56,7 +60,7 @@ class Trip
   def update_delay!
     self.delayed_time = 0
     return unless previous_trip
-    return unless (next_stop_time - timestamp) <= 600
+    return unless (next_stop_time - timestamp) <= 1080
     return if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
     self.delayed_time = previous_trip.delayed_time if previous_trip.delayed_time
     self.delayed_time += (destination_time - previous_trip.destination_time)

@@ -215,9 +215,7 @@ class ServiceChangeAnalyzer
     end
 
     if route_pair
-      if route_pair[0] != current_route_id[0]
-        reroute_service_change.related_routes = [route_pair[0]]
-      end
+      reroute_service_change.related_routes = [route_pair[0]]
       return
     end
 
@@ -292,10 +290,11 @@ class ServiceChangeAnalyzer
   end
 
   def self.evergreen_routings
-    @evergreen_routings ||= Scheduled::Trip.soon_grouped(Scheduled::CalendarException.next_weekday.to_time.change(hour: 12).to_i, nil).map { |route_id, trips_by_direction|
+    ref_time = Scheduled::CalendarException.next_weekday.to_time.change(hour: 12).to_i
+    @evergreen_routings ||= Scheduled::Trip.soon_grouped(ref_time, nil).map { |route_id, trips_by_direction|
       [route_id, trips_by_direction.map { |direction, trips|
         potential_routings = trips.map { |t|
-          t.stop_times.pluck(:stop_internal_id)
+          t.stop_times.not_past(current_timestamp: ref_time).pluck(:stop_internal_id)
         }.uniq
         result = potential_routings.select { |selected_routing|
           others = potential_routings - [selected_routing]

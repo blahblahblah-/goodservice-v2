@@ -9,7 +9,8 @@ class Scheduled::StopTime < ActiveRecord::Base
     Time.current.change(sec: 0)
   end
 
-  def self.not_past(current_time: rounded_time)
+  def self.not_past(current_timestamp: rounded_time.to_i)
+    current_time = Time.at(current_timestamp)
     if (current_time + BUFFER).to_date == current_time.to_date.tomorrow
       where("departure_time > ? or (? - departure_time > ?)",
         current_time - current_time.beginning_of_day,

@@ -9,10 +9,13 @@ class RouteProcessor
 
     trips_by_routes = trips_by_direction.map { |direction, trips|
       [direction, routings[direction].map {|r|
-        [r, trips.sort_by { |t| t.stops.size }.reverse.select { |t|
+        trips_selected = trips.select { |t|
           stops = t.stop_ids
           r.each_cons(stops.length).any?(&stops.method(:==))
-        }]
+        }
+        [r, r.map {|s|
+          trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }
+        }.flatten.compact]
       }.to_h]
     }.to_h
 
@@ -68,7 +71,7 @@ class RouteProcessor
   end
 
   def self.determine_routings_for_direction(trips)
-    trips.map(&:stop_ids).sort_by(&:size).reverse.inject([]) do |memo, stops_array|
+    trips.map(&:stop_ids).reverse.inject([]) do |memo, stops_array|
       unless memo.any? { |array| (stops_array - array).empty? }
         memo << stops_array
       end
@@ -93,7 +96,6 @@ class RouteProcessor
   end
 
   def self.determine_actual_blended_headway(routes, trips, timestamp)
-    sorted_trips = trips.sort_by(&:destination_time)
     common_start = routes.first.find { |s| routes.all? { |r| r.include?(s) }}
     common_end = routes.first.reverse.find { |s| routes.all? { |r| r.include?(s) }}
 
