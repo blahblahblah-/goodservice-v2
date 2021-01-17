@@ -7,9 +7,10 @@ class RouteAnalyzer
     headway_discrepancy = max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
     direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
     destination_station_names = destinations(actual_routings)
+    converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     results = {
-      destinations: convert_to_readable_directions(destination_station_names),
+      destinations: converted_destination_station_names,
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
       service_summaries: convert_to_readable_directions(summaries),
@@ -18,7 +19,7 @@ class RouteAnalyzer
       overall_runtime_diff: convert_to_readable_directions(runtime_diff),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       service_changes: service_changes,
-      service_change_summaries: service_change_summaries(route_id, service_changes, destination_station_names),
+      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
       scheduled_headways: convert_to_readable_directions(scheduled_headways_by_routes),
       actual_headways: convert_to_readable_directions(actual_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
