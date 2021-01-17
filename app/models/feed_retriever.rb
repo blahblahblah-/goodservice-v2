@@ -10,8 +10,14 @@ class FeedRetriever
     def retrieve_all_feeds
       minutes = Time.current.min
       half_minute = Time.current.sec / 30
-      FEEDS.each do |id|
-        retrieve_feed(id, minutes, half_minute)
+      if ENV['FEED_THREADS']
+        Parallel.each(FEEDS, in_threads: ENV['FEED_THREADS'].to_i) do |id|
+          retrieve_feed(id, minutes, half_minute)
+        end
+      else
+        FEEDS.each do |id|
+          retrieve_feed(id, minutes, half_minute)
+        end
       end
     end
 
