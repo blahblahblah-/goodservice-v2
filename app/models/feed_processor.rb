@@ -149,7 +149,7 @@ class FeedProcessor
       end
       marshaled_trip = Marshal.dump(trip)
       trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP).each do |station_ids, time|
-        REDIS_CLIENT.hset("travel-time:supplementary", station_ids, time)
+        REDIS_CLIENT.hset("travel-time:supplementary", station_ids, time) unless time <= 0
       end
       REDIS_CLIENT.hset("active-trips:#{feed_id}", trip.id, marshaled_trip)
       REDIS_CLIENT.zadd("active-trips-list:#{feed_id}", timestamp, trip.id)
