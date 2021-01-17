@@ -165,7 +165,7 @@ class RouteAnalyzer
       routing_with_fewest_headways = headway_by_routes.except('blended').min_by { |_, h| h.size }
       diff_number_of_headways = routing_with_most_headways.last.size - routing_with_fewest_headways.last.size
 
-      if headway_by_routes['blended'] && routing_with_most_headways.last.size > 0 && (routing_with_fewest_headways.last.size.to_f / routing_with_most_headways.last.size) > 0.30
+      if headway_by_routes['blended'] && routing_with_most_headways.last.size > 0 && ((routing_with_fewest_headways.last.size + 1).to_f / (routing_with_most_headways.last.size + 1)) > 0.30
         actual_headway = headway_by_routes['blended']
       else
         actual_headway = routing_with_most_headways.last
