@@ -109,9 +109,13 @@ class RouteProcessor
   end
 
   def self.time_between_trips(a_trip, b_trip, timestamp, routing)
-    (time_until_upcoming_stop(a_trip, timestamp, routing) +
-      a_trip.stops_behind(b_trip).each_cons(2).map { |a_stop, b_stop| average_travel_time(a_stop, b_stop, timestamp) }.sum -
-      time_until_upcoming_stop(b_trip, timestamp, routing)) / 60
+    if a_trip.stops_behind(b_trip).present?
+      (time_until_upcoming_stop(a_trip, timestamp, routing) +
+        a_trip.stops_behind(b_trip).each_cons(2).map { |a_stop, b_stop| average_travel_time(a_stop, b_stop, timestamp) }.sum -
+        time_until_upcoming_stop(b_trip, timestamp, routing)) / 60
+    else
+      (time_until_upcoming_stop(b_trip, timestamp, routing) - time_until_upcoming_stop(a_trip, timestamp, routing)) / 60
+    end
   end
 
   def self.time_until_upcoming_stop(trip, timestamp, routing)
