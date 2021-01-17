@@ -56,7 +56,7 @@ class RouteProcessor
     trains_stopped_at_a = train_stops_at_a.map(&:first)
     trains_traveled = train_stops_at_b.select{ |b_train, _| train_stops_at_a.find {|a_train, _| a_train == b_train } }.keys
 
-    return REDIS_CLIENT.hget("travel-time:supplementary", "#{a_stop}-#{b_stop}", timestamp) unless trains_traveled.present?
+    return REDIS_CLIENT.hget("travel-time:supplementary", "#{a_stop}-#{b_stop}").to_i unless trains_traveled.present?
 
     trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
   end
