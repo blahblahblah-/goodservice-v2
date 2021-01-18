@@ -16,7 +16,7 @@ class RedisStore
     end
 
     def add_feed(feed_id, minutes, half_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 300)
+      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 180)
     end
 
     # Trips
@@ -89,11 +89,15 @@ class RedisStore
 
     # Route statuses
     def route_status(route_id)
-      REDIS_CLIENT.zrevrangebyscore("route-status:#{route_id}", Time.current.to_i, Time.current.to_i - 60)&.first
+      REDIS_CLIENT.hget("route-status", route_id)
     end
 
-    def add_route_status(route_id, timestamp, data)
-      REDIS_CLIENT.zadd("route-status:#{route_id}", timestamp, data)
+    def route_statuses
+      REDIS_CLIENT.hgetall("route-status")
+    end
+
+    def add_route_status(route_id, data)
+      REDIS_CLIENT.hset("route-status", route_id, data)
     end
   end
 end

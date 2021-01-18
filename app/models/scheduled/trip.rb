@@ -23,14 +23,14 @@ class Scheduled::Trip < ActiveRecord::Base
       additional_departure_time_range = twenty_four_hr..time_after_twenty_four_hr
     end
 
-    includes(:stop_times).where(
+    includes(:stop_times, :route).where(
       {
         stop_times: {
           departure_time: from_time..to_time,
-        }
+        },
       }.merge(additional_filters)
     ).or(
-      includes(:stop_times).where(
+      includes(:stop_times, :route).where(
         {
           stop_times: {
             departure_time: additional_departure_time_range,

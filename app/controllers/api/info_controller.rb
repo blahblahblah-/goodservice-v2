@@ -1,11 +1,14 @@
 class Api::InfoController < ApplicationController
   def index
     data = Rails.cache.fetch("status", expires_in: 30.seconds) do
+      data_hash = RedisStore.route_statuses
+      scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
       {
         routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
-          route_data_encoded = RedisStore.route_status(route.internal_id)
+          route_data_encoded = data_hash[route.internal_id]
           route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
-          scheduled = Scheduled::Trip.any_scheduled?(route.internal_id)
+          route_data = {} if route_data[:timestamp] < (Time.current - 5.minutes).to_i
+          scheduled = scheduled_routes.include?(route.internal_id)
           [route.internal_id, {
             id: route.internal_id,
             name: route.name,

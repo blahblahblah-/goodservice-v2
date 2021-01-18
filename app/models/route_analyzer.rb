@@ -24,8 +24,9 @@ class RouteAnalyzer
       actual_headways: convert_to_readable_directions(actual_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
       scheduled: scheduled_trips.present?,
+      timestamp: timestamp,
     }.to_json
-    RedisStore.add_route_status(route_id, timestamp, results)
+    RedisStore.add_route_status(route_id, results)
   end
 
   private
