@@ -199,6 +199,6 @@ class RouteProcessor
       }.to_h
     end
 
-    handle_asynchronously :process_route, priority: 1
+    handle_asynchronously :process_route, priority: 2
   end
 end

@@ -165,7 +165,7 @@ class RedisStore
       end
     end
 
-    handle_asynchronously :clear_outdated_trips, priority: 2
-    handle_asynchronously :clear_outdated_trip_stops_and_delays, priority: 2
+    handle_asynchronously :clear_outdated_trips, priority: 3
+    handle_asynchronously :clear_outdated_trip_stops_and_delays, priority: 3
   end
 end
