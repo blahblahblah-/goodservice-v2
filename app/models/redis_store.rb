@@ -107,5 +107,22 @@ class RedisStore
     def update_route_status(route_id, data)
       REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 60)
     end
+
+    # Routings
+    def current_routings
+      REDIS_CLIENT.get("current-routings")
+    end
+
+    def set_current_routings(json)
+      REDIS_CLIENT.set("current-routings", json)
+    end
+
+    def evergreen_routings
+      REDIS_CLIENT.get("evergreen-routings")
+    end
+
+    def set_evergreen_routings(json)
+      REDIS_CLIENT.set("evergreen-routings", json)
+    end
   end
 end
