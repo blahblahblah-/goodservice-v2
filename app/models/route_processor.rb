@@ -179,9 +179,8 @@ class RouteProcessor
     scheduled_trips.each do |_, trips|
       trips.each do |t|
         t.stop_times.each_cons(2).each do |a_st, b_st|
-          station_ids = "#{a_st.stop_internal_id}-#{b_st.stop_internal_id}"
           time = b_st.departure_time - a_st.departure_time
-          RedisStore.add_scheduled_travel_time(a_st, b_st, time)
+          RedisStore.add_scheduled_travel_time(a_st.stop_internal_id, b_st.stop_internal_id, time)
         end
       end
     end
