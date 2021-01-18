@@ -16,7 +16,7 @@ class RedisStore
     end
 
     def add_feed(feed_id, minutes, half_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 60)
+      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 300)
     end
 
     # Trips

@@ -47,5 +47,6 @@ class FeedRetriever
     end
 
     handle_asynchronously :retrieve_all_feeds, priority: 0
+    handle_asynchronously :retrieve_feed, priority: 0
   end
 end
