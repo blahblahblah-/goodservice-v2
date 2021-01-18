@@ -11,4 +11,9 @@ module Clockwork
     ServiceChangeAnalyzer.preload_current_routings
     FeedRetriever.retrieve_all_feeds
   }
+
+  every(30.minutes, 'clean-up', at: ['**:30', '**:00']) {
+    RedisStore.clear_outdated_trips
+    RedisStore.clear_outdated_trip_stops_and_delays
+  }
 end
