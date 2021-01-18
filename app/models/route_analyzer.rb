@@ -25,7 +25,7 @@ class RouteAnalyzer
       actual_routings: convert_to_readable_directions(actual_routings),
       scheduled: scheduled_trips.present?,
     }.to_json
-    REDIS_CLIENT.zadd("route-status:#{route_id}", timestamp, results)
+    RedisStore.add_route_status(route_id, timestamp, results)
   end
 
   private
@@ -77,8 +77,7 @@ class RouteAnalyzer
       if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 5
         slow_obj = actual_routings[direction[:route_direction]].map { |r|
           stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
-            station_ids = "#{a_stop}-#{b_stop}"
-            scheduled_travel_time = REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop)
             actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
             {
               from: a_stop,
@@ -180,7 +179,7 @@ class RouteAnalyzer
         scheduled_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
             station_ids = "#{a_stop}-#{b_stop}"
-            REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+            RedisStore.scheduled_travel_time(a_stop, b_stop)
           }.reduce(&:+) || 0
         ) / 60.0
         actual_runtime = (
@@ -198,8 +197,7 @@ class RouteAnalyzer
       [direction, routings.map { |r|
         (
           r.each_cons(2).map { |a_stop, b_stop|
-            station_ids = "#{a_stop}-#{b_stop}"
-            scheduled_travel_time = REDIS_CLIENT.hget("travel-time:scheduled", station_ids).to_i
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop)
             actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
             diff = actual_travel_time - scheduled_travel_time
             diff >= 60.0 ? diff : 0

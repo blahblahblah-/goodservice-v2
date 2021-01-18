@@ -3,7 +3,7 @@ class Api::InfoController < ApplicationController
     data = Rails.cache.fetch("status", expires_in: 30.seconds) do
       {
         routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
-          route_data_encoded = REDIS_CLIENT.zrevrangebyscore("route-status:#{route.internal_id}", Time.current.to_i, Time.current.to_i - 60)&.first
+          route_data_encoded = RedisStore.route_status(route.internal_id)
           route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
           scheduled = Scheduled::Trip.any_scheduled?(route.internal_id)
           [route.internal_id, {

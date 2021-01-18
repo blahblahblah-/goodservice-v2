@@ -4,7 +4,6 @@ class FeedProcessor
   UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes.to_i
   UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes.to_i
   SI_FEED = '-si'
-  INACTIVE_TRIP_TIMEOUT = 30.minutes.to_i
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
   DELAY_THRESHOLD = 5.minutes.to_i
   SUPPLEMENTARY_TIME_LOOKUP = 20.minutes.to_i
@@ -12,7 +11,7 @@ class FeedProcessor
   class << self
     def analyze_feed(feed_id, minutes, half_minute)
       feed_name = "feed:#{minutes}:#{half_minute}:#{feed_id}"
-      marshaled_feed = REDIS_CLIENT.get("feed:#{minutes}:#{half_minute}:#{feed_id}")
+      marshaled_feed = RedisStore.feed(feed_id, minutes, half_minute)
       feed = Marshal.load(marshaled_feed) if marshaled_feed
 
       if !feed
@@ -42,7 +41,7 @@ class FeedProcessor
       }
 
       unmatched_trips = []
-      active_trip_ids = REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
+      active_trip_ids = RedisStore.active_trip_list(feed_id, timestamp)
       unmatched_trip_ids = active_trip_ids - translated_trips.map(&:id)
 
       unmatched_trips = translated_trips.select do |trip|
@@ -105,7 +104,7 @@ class FeedProcessor
     end
 
     def translate_trip(feed_id, trip)
-      if (translated_trip_id = REDIS_CLIENT.hget("active-trips:translations:#{feed_id}", trip.id))
+      if (translated_trip_id = RedisStore.trip_translation(feed_id, trip.id))
         trip.id = translated_trip_id
       end
       trip
@@ -113,7 +112,7 @@ class FeedProcessor
 
     def match_trip(feed_id, unmatched_trip_ids, trip)
       potential_match = unmatched_trip_ids.map { |t_id|
-        t = REDIS_CLIENT.hget("active-trips:#{feed_id}", t_id)
+        t = RedisStore.active_trip(feed_id, t_id)
         marshaled_t = Marshal.load(t) if t
       }.compact.select { |marshaled_t|
         trip.similar(marshaled_t)
@@ -122,7 +121,7 @@ class FeedProcessor
       }.first
 
       if potential_match
-        REDIS_CLIENT.hset("active-trips:translations:#{feed_id}", trip.id, potential_match.id)
+        RedisStore.add_trip_translation(feed_id, trip.id, potential_match.id)
         puts "Matched trip #{trip.id} with #{potential_match.id}"
         trip.id = potential_match.id
         unmatched_trip_ids.delete(trip.id)
@@ -132,7 +131,7 @@ class FeedProcessor
     end
 
     def attach_previous_trip_update(feed_id, trip)
-      marshaled_previous_update = REDIS_CLIENT.hget("active-trips:#{feed_id}", trip.id)
+      marshaled_previous_update = RedisStore.active_trip(feed_id, trip.id)
       if marshaled_previous_update
         previous_update = Marshal.load(marshaled_previous_update)
         trip.previous_trip = previous_update
@@ -145,35 +144,39 @@ class FeedProcessor
       trip.update_delay!
       if trip.delayed_time >= DELAY_THRESHOLD
         puts "Delay detected for #{trip.id} for #{trip.delayed_time}"
-        REDIS_CLIENT.zadd("delay:#{trip.route_id}:#{trip.direction}", trip.timestamp, trip.id)
+        RedisStore.add_delay(trip.route_id, trip.direction, trip.id, trip.timestamp)
       end
       marshaled_trip = Marshal.dump(trip)
       trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP).each do |station_ids, time|
-        REDIS_CLIENT.hset("travel-time:supplementary", station_ids, time) unless time <= 0
+        stop_ids = station_ids.split('-')
+        RedisStore.add_supplementary_scheduled_travel_time(stop_ids.first, stop_ids.second, time) if time > 0
       end
-      REDIS_CLIENT.hset("active-trips:#{feed_id}", trip.id, marshaled_trip)
-      REDIS_CLIENT.zadd("active-trips-list:#{feed_id}", timestamp, trip.id)
+      RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip)
+      RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp)
     end
 
     def process_stops(trip)
       # TODO: M train shuffle
       trip.stops_made.each do |stop_id, timestamp|
-        REDIS_CLIENT.zadd("stops:#{stop_id}", timestamp, trip.id)
+        RedisStore.add_stop(stop_id, trip.id, timestamp)
       end
     end
 
     def complete_trips(feed_id, timestamp)
-      active_trips_not_in_current_feed = REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INCOMPLETE_TRIP_TIMEOUT, "(#{timestamp}").to_set
+      active_trips_not_in_current_feed = RedisStore.active_trip_list(feed_id, timestamp).to_set
       active_trips_not_in_current_feed.each do |trip_id|
-        marshaled_trip = REDIS_CLIENT.hget("active-trips:#{feed_id}", trip_id)
-        next unless marshaled_trip
-        trip = Marshal.load(marshaled_trip)
-        next unless trip.stops.size < 4
-        puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
-        trip.stops.each do |stop_id, time|
-          REDIS_CLIENT.zadd("stops:#{stop_id}", [timestamp, time].min, trip_id)
+        marshaled_trip = RedisStore.active_trip(feed_id, trip_id)
+        if marshaled_trip
+          trip = Marshal.load(marshaled_trip)
+          next unless trip.stops.size < 4
+          puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
+          trip.stops.each do |stop_id, time|
+            RedisStore.add_stop(stop_id, trip_id, [timestamp, time].min)
+          end
         end
-        REDIS_CLIENT.zrem("active-trips-list:#{feed_id}", trip_id)
+        RedisStore.remove_from_active_trip_list(feed_id, trip_id)
+        RedisStore.remove_trip_translations(feed_id, trip_id)
+        RedisStore.remove_active_trip(feed_id, trip_id)
       end
     end
 

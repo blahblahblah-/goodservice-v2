@@ -33,13 +33,13 @@ class FeedRetriever
         data = response.body
         Transit_realtime::FeedMessage.decode(data)
       end
-      last_feed_timestamp = REDIS_CLIENT.hget("feed-timestamp", feed_id)
+      last_feed_timestamp = RedisStore.feed_timestamp(feed_id)
       if last_feed_timestamp && last_feed_timestamp == decoded_data.header.timestamp
         puts "Skipping feed #{feed_id} with timestamp #{last_feed_timestamp} has not been updated"
         return
       end
-      REDIS_CLIENT.hset("feed-timestamp", feed_id, decoded_data.header.timestamp)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", Marshal.dump(decoded_data), ex: 3600)
+      RedisStore.update_feed_timestamp(feed_id, decoded_data.header.timestamp)
+      RedisStore.add_feed(feed_id, minutes, half_minute, Marshal.dump(decoded_data))
       ActiveRecord::Base.connection_pool.with_connection do
         FeedProcessor.analyze_feed(feed_id, minutes, half_minute)
       end

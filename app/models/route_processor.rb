@@ -33,7 +33,6 @@ class RouteProcessor
 
     REDIS_CLIENT.pipelined do
       update_scheduled_runtimes(scheduled_trips)
-      REDIS_CLIENT.set("last-update:#{route_id}", timestamp, ex: 3600)
     end
 
     RouteAnalyzer.analyze_route(
@@ -50,13 +49,13 @@ class RouteProcessor
   end
 
   def self.average_travel_time(a_stop, b_stop, timestamp)
-    train_stops_at_b = REDIS_CLIENT.zrevrangebyscore("stops:#{b_stop}", timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT, withscores: true).to_h
-    train_stops_at_a = REDIS_CLIENT.zrangebyscore("stops:#{a_stop}", timestamp - RUNTIME_START_LIMIT, timestamp + 1.minute.to_i, withscores: true).to_h
+    train_stops_at_b = RedisStore.trips_stopped_at(b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)
+    train_stops_at_a = RedisStore.trips_stopped_at(a_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_START_LIMIT)
 
     trains_stopped_at_a = train_stops_at_a.map(&:first)
     trains_traveled = train_stops_at_b.select{ |b_train, _| train_stops_at_a.find {|a_train, _| a_train == b_train } }.keys
 
-    return REDIS_CLIENT.hget("travel-time:supplementary", "#{a_stop}-#{b_stop}").to_i unless trains_traveled.present?
+    return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
 
     trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
   end
@@ -125,7 +124,7 @@ class RouteProcessor
 
     previous_stop = routing[i - 1]
     predicted_time_until_next_stop = trip.time_until_upcoming_stop
-    predicted_time_between_stops = REDIS_CLIENT.hget("travel-time:supplementary", "#{previous_stop}-#{next_stop}").to_f
+    predicted_time_between_stops = RedisStore.supplementary_scheduled_travel_time(previous_stop, next_stop)
     actual_time_between_stops = average_travel_time(previous_stop, next_stop, timestamp)
 
     (predicted_time_until_next_stop / predicted_time_between_stops) * actual_time_between_stops
@@ -182,7 +181,7 @@ class RouteProcessor
         t.stop_times.each_cons(2).each do |a_st, b_st|
           station_ids = "#{a_st.stop_internal_id}-#{b_st.stop_internal_id}"
           time = b_st.departure_time - a_st.departure_time
-          REDIS_CLIENT.hset("travel-time:scheduled", station_ids, time)
+          RedisStore.add_scheduled_travel_time(a_st, b_st, time)
         end
       end
     end
