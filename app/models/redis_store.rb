@@ -16,7 +16,7 @@ class RedisStore
     end
 
     def add_feed(feed_id, minutes, half_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 180)
+      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 60)
     end
 
     # Trips
@@ -105,7 +105,7 @@ class RedisStore
     end
 
     def update_route_status(route_id, data)
-      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 300)
+      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 60)
     end
   end
 end
