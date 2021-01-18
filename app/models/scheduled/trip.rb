@@ -51,8 +51,4 @@ class Scheduled::Trip < ActiveRecord::Base
       }.to_h
     end
   end
-
-  def self.any_scheduled?(route_id)
-    !soon(Time.current.to_i, route_id).empty?
-  end
 end

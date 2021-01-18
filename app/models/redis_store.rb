@@ -92,12 +92,20 @@ class RedisStore
       REDIS_CLIENT.hget("route-status", route_id)
     end
 
-    def route_statuses
+    def route_status_summaries
       REDIS_CLIENT.hgetall("route-status")
     end
 
-    def add_route_status(route_id, data)
+    def add_route_status_summary(route_id, data)
       REDIS_CLIENT.hset("route-status", route_id, data)
+    end
+
+    def route_status(route_id)
+      REDIS_CLIENT.get("route-status:#{route_id}")
+    end
+
+    def update_route_status(route_id, data)
+      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 300)
     end
   end
 end

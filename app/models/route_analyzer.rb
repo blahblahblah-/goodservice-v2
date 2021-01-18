@@ -9,24 +9,33 @@ class RouteAnalyzer
     destination_station_names = destinations(actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
-    results = {
-      destinations: converted_destination_station_names,
+
+    summary = {
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
       service_summaries: convert_to_readable_directions(summaries),
+      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
+      timestamp: timestamp,
+    }.to_json
+
+    detailed_stats = {
+      status: status,
+      direction_statuses: convert_to_readable_directions(direction_statuses),
+      service_summaries: convert_to_readable_directions(summaries),
+      destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       accumulated_extra_travel_time: convert_to_readable_directions(slowness),
       overall_runtime_diff: convert_to_readable_directions(runtime_diff),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       service_changes: service_changes,
-      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
       scheduled_headways: convert_to_readable_directions(scheduled_headways_by_routes),
       actual_headways: convert_to_readable_directions(actual_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
-      scheduled: scheduled_trips.present?,
       timestamp: timestamp,
     }.to_json
-    RedisStore.add_route_status(route_id, results)
+
+    RedisStore.add_route_status_summary(route_id, summary)
+    RedisStore.update_route_status(route_id, detailed_stats)
   end
 
   private
