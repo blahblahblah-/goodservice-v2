@@ -162,6 +162,7 @@ GEM
       nokogiri (>= 1.6)
     rails-html-sanitizer (1.3.0)
       loofah (~> 2.3)
+    rails_autoscale_agent (0.10.2)
     railties (6.1.0)
       actionpack (= 6.1.0)
       activesupport (= 6.1.0)
@@ -245,6 +246,7 @@ DEPENDENCIES
   puma (~> 5.0)
   rack-mini-profiler (~> 2.0)
   rails (~> 6.1.0)
+  rails_autoscale_agent
   redis (~> 4.0)
   sass-rails (>= 6)
   selenium-webdriver
