@@ -4,6 +4,8 @@ class RouteProcessor
 
   class << self
     def process_route(route_id, trips, timestamp)
+      puts "Processing route #{route_id} at #{Time.at(timestamp)}"
+
       trips_by_direction = trips.group_by(&:direction)
 
       routings = determine_routings(trips_by_direction)

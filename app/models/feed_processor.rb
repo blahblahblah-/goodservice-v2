@@ -18,7 +18,7 @@ class FeedProcessor
         throw "Error: Feed #{feed_name} not found"
       end
 
-      puts "Analyzing feed #{feed_name}"
+      puts "Analyzing feed #{feed_name}:#{minutes}:#{half_minute}"
 
       return if feed.entity.empty?
 
