@@ -21,6 +21,9 @@ class HerokuAutoscaler
           new_quantity = number_of_dynos - 1
           heroku.formation.update(ENV['HEROKU_APP_NAME'], 'worker', {"quantity" => new_quantity})
           puts "HerokuAutoscaler: Scaled down to #{new_quantity} dynos"
+
+          # Reset counter
+          RedisStore.update_last_unempty_workqueue_timestamp
         end
       else
         if jobs_in_queue > SCALE_UP_THRESHOLD
