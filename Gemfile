@@ -36,6 +36,7 @@ gem 'parallel'
 gem 'delayed_job_active_record'
 gem 'foreman'
 gem 'platform-api'
+gem 'barnes'
 
 # gem 'rack-cors'
 # gem 'twitter'
