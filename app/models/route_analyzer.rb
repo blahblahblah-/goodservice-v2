@@ -1,20 +1,17 @@
 class RouteAnalyzer
-  def self.analyze_route(route_id, actual_trips, actual_routings, actual_headways_by_routes, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
+  def self.analyze_route(route_id, processed_trips, actual_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
-    max_delayed_time = max_delay(actual_trips)
+    max_delayed_time = max_delay(processed_trips)
     slowness = accumulated_extra_time_between_stops(actual_routings, timestamp)
     runtime_diff = overall_runtime_diff(actual_routings, timestamp)
-    headway_discrepancy = max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
-    direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+    headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
+    direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
-    summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
     summary = {
       status: status,
-      direction_statuses: convert_to_readable_directions(direction_statuses),
-      service_summaries: convert_to_readable_directions(summaries),
-      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
       timestamp: timestamp,
     }.to_json
 
@@ -22,15 +19,15 @@ class RouteAnalyzer
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
       service_summaries: convert_to_readable_directions(summaries),
+      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       accumulated_extra_travel_time: convert_to_readable_directions(slowness),
       overall_runtime_diff: convert_to_readable_directions(runtime_diff),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
-      service_changes: service_changes,
       scheduled_headways: convert_to_readable_directions(scheduled_headways_by_routes),
-      actual_headways: convert_to_readable_directions(actual_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
+      trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
       timestamp: timestamp,
     }.to_json
 
@@ -116,7 +113,7 @@ class RouteAnalyzer
         max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
         selected_routing = actual_trips[direction[:route_direction]].first.first
         selected_trips = actual_trips[direction[:route_direction]].first.last
-        if actual_trips[direction[:route_direction]].keys.size > 1
+        if actual_trips[direction[:route_direction]].size > 1
           routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
           routing_with_least_trips = actual_trips[direction[:route_direction]].min_by { |_, trips| trips.size }
 
@@ -160,9 +157,12 @@ class RouteAnalyzer
     hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
   end
 
-  def self.max_headway_discrepancy(actual_headways_by_routes, scheduled_headways_by_routes)
+  def self.max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
-      actual_headway = determine_headway_to_use(actual_headways_by_routes[direction[:route_direction]])&.max
+      actual_headways_by_routes = processed_trips[direction[:route_direction]].map { |r, trips|
+        [r, trips.map(&:estimated_time_behind_next_train).compact]
+      }.to_h
+      actual_headway = determine_headway_to_use(actual_headways_by_routes)&.max
       scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
       diff = scheduled_headway && actual_headway ? actual_headway - scheduled_headway : 0
       [direction[:route_direction], [diff, 0].max]
@@ -170,7 +170,7 @@ class RouteAnalyzer
   end
 
   def self.determine_headway_to_use(headway_by_routes)
-    if headway_by_routes && headway_by_routes.keys.size > 1
+    if headway_by_routes && headway_by_routes.size > 1
       routing_with_most_headways = headway_by_routes.except('blended').max_by { |_, h| h.size }
 
       if headway_by_routes['blended']
@@ -350,5 +350,24 @@ class RouteAnalyzer
 
   def self.stop_name(stop_id)
     Scheduled::Stop.find_by(internal_id: stop_id)&.stop_name
+  end
+
+  def self.format_processed_trips(processed_trips)
+    processed_trips.map { |direction, trips_by_routes|
+      [direction, trips_by_routes.map { |routing, processed_trips|
+        [routing, processed_trips.map { |trip|
+          {
+            id: trip.id,
+            progress_until_upcoming_stop: trip.progress_until_upcoming_stop,
+            upcoming_stop: trip.upcoming_stop,
+            time_until_upcoming_stop: trip.time_until_upcoming_stop / 60,
+            estimated_time_until_upcoming_stop: trip.estimated_time_until_upcoming_stop,
+            time_behind_next_train: trip.time_behind_next_train,
+            estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
+            delayed_time: trip.delayed_time,
+          }
+        }]
+      }]
+    }.to_h
   end
 end

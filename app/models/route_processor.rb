@@ -22,7 +22,7 @@ class RouteProcessor
         }.to_h]
       }.to_h
 
-      headway_by_routes = determine_actual_headway(trips_by_routes, timestamp)
+      processed_trips = process_trips(trips_by_routes, timestamp)
 
       scheduled_trips = Scheduled::Trip.soon_grouped(timestamp, route_id)
       scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: true)
@@ -40,9 +40,8 @@ class RouteProcessor
 
       RouteAnalyzer.analyze_route(
         route_id,
-        trips_by_routes,
+        processed_trips,
         routings,
-        headway_by_routes,
         timestamp,
         scheduled_trips,
         scheduled_routings,
@@ -78,33 +77,41 @@ class RouteProcessor
       end
     end
 
-    def determine_actual_headway(trips_by_routes, timestamp)
-      trips_by_routes.map { |direction, routes|
-        headway_by_routes = routes.map { |r, trips|
-          ["#{r.first}-#{r.last}-#{r.size}", trips.each_cons(2).map{ |a_trip, b_trip|
-            time_between_trips(a_trip, b_trip, timestamp, r)
-          }.filter { |v| v > 0 }]
+    def process_trips(trip_routes_by_direction, timestamp)
+      trip_routes_by_direction.map { |direction, trips_by_routes|
+        processed_trips_by_routes = trips_by_routes.map { |r, trips|
+          processed_trips = trips.each_cons(2).map { |a_trip, b_trip|
+            Processed::Trip.new(a_trip, b_trip, r)
+          }
+          processed_trips << Processed::Trip.new(trips.last, nil, r)
+          ["#{r.first}-#{r.last}-#{r.size}", processed_trips]
         }.to_h
 
-        if headway_by_routes.size > 1
-          headway_by_routes['blended'] = determine_actual_blended_headway(routes.keys, routes.values.flatten, timestamp)
+        if trips_by_routes.size > 1
+          common_route_processed_trips = determine_common_route_trips(trips_by_routes, timestamp)
+          processed_trips_by_routes['blended'] = common_route_processed_trips if common_route_processed_trips.present?
         end
-
-        [direction, headway_by_routes]
+        [direction, processed_trips_by_routes]
       }.to_h
     end
 
-    def determine_actual_blended_headway(routes, trips, timestamp)
+    def determine_common_route_trips(trips_by_routes, timestamp)
+      routes = trips_by_routes.keys
+      trips = trips_by_routes.values.flatten
       common_start = routes.first.find { |s| routes.all? { |r| r.include?(s) }}
       common_end = routes.first.reverse.find { |s| routes.all? { |r| r.include?(s) }}
 
       return unless common_start && common_end
 
       common_sub_route = routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
-      trips_in_order = common_sub_route.map { |s| trips.find { |t| t.upcoming_stop == s }}.compact
-      trips_in_order.each_cons(2).map{ |a_trip, b_trip|
-        time_between_trips(a_trip, b_trip, timestamp, common_sub_route)
+
+      return unless common_sub_route.size > 1
+
+      trips_in_order = common_sub_route.map { |s| trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }}.flatten.compact
+      processed_trips = trips_in_order.each_cons(2).map{ |a_trip, b_trip|
+        Processed::Trip.new(a_trip, b_trip, common_sub_route)
       }
+      processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route)
     end
 
     def time_between_trips(a_trip, b_trip, timestamp, routing)

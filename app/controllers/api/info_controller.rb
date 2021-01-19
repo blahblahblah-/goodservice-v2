@@ -18,7 +18,7 @@ class Api::InfoController < ApplicationController
             status: scheduled ? 'No Service' : 'Not Scheduled',
             visible: route.visible?,
             scheduled: scheduled,
-          }.merge(route_data)]
+          }.merge(route_data).except('timestamp')]
         }.to_h,
         timestamp: Time.current.to_i
       }
