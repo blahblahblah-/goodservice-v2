@@ -35,7 +35,7 @@ gem 'clockwork'
 gem 'parallel'
 gem 'delayed_job_active_record'
 gem 'foreman'
-gem 'rails_autoscale_agent'
+gem 'platform-api'
 
 # gem 'rack-cors'
 # gem 'twitter'

@@ -16,4 +16,8 @@ module Clockwork
     RedisStore.clear_outdated_trips
     RedisStore.clear_outdated_trip_stops_and_delays
   }
+
+  every(2.minutes, 'autoscaler') {
+    HerokuAutoscaler.run
+  }
 end
