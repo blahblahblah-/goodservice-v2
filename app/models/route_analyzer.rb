@@ -109,39 +109,45 @@ class RouteAnalyzer
         strs << "traveling slowly between #{stop_name(slow_obj[:from])} and #{stop_name(slow_obj[:to])} (taking #{slow_obj[:accumulated_travel_time_diff].round} mins longer)"
       end
 
-      if headway_discrepancy[direction[:route_direction]] && headway_discrepancy[direction[:route_direction]] >= 2
-        max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
-        selected_routing = actual_trips[direction[:route_direction]].first.first
-        selected_trips = actual_trips[direction[:route_direction]].first.last
-        if actual_trips[direction[:route_direction]].size > 1
-          routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
-          routing_with_least_trips = actual_trips[direction[:route_direction]].min_by { |_, trips| trips.size }
+      # if headway_discrepancy[direction[:route_direction]] && headway_discrepancy[direction[:route_direction]] >= 2
+      #   max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
+      #   selected_routing = actual_trips[direction[:route_direction]].first.first
+      #   selected_trips = actual_trips[direction[:route_direction]].first.last
+      #   if actual_trips[direction[:route_direction]].size > 1
+      #     routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
+      #     routing_with_least_trips = actual_trips[direction[:route_direction]].min_by { |_, trips| trips.size }
 
-          all_routes = actual_routings[direction[:route_direction]]
-          common_start = all_routes.first.find { |s| all_routes.all? { |r| r.include?(s) }}
-          common_end = all_routes.first.reverse.find { |s| all_routes.all? { |r| r.include?(s) }}
+      #     all_routes = actual_routings[direction[:route_direction]]
+      #     common_start = all_routes.first.find { |s| all_routes.all? { |r| r.include?(s) }}
+      #     common_end = all_routes.first.reverse.find { |s| all_routes.all? { |r| r.include?(s) }}
 
-          if common_start && common_end
-            all_trips = actual_trips[direction[:route_direction]].values.flatten
-            selected_routing = all_routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
-            selected_trips = selected_routing.map { |s| all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }}.flatten.compact
-          else
-            selected_routing = routing_with_most_trips.first
-            selected_trips = routing_with_most_trips.last
-          end
-        end
+      #     selected_routing = routing_with_most_trips.first
+      #     selected_trips = routing_with_most_trips.last
 
-        headways = selected_trips.each_cons(2).map { |a_trip, b_trip|
-          {
-            prev_trip: a_trip,
-            next_trip: b_trip,
-            time_between: RouteProcessor.time_between_trips(a_trip, b_trip, timestamp, selected_routing)
-          }
-        }.select { |obj| obj[:time_between] > max_scheduled_headway}
-        max_actual_headway = headways.max_by { |obj| obj[:time_between] }[:time_between]
+      #     binding.pry
+      #     if common_start && common_end
+      #       all_trips = actual_trips[direction[:route_direction]].values.flatten.uniq
+      #       common_routing = all_routes.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first
+      #       common_trips = common_routing.map { |s| all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.upcoming_stop_arrival_time }}.flatten.compact
 
-        strs << "have longer wait times between #{stop_name(headways.first[:prev_trip].upcoming_stop)} and #{stop_name(headways.last[:next_trip].upcoming_stop)} (up to #{max_actual_headway.round} mins, normally every #{max_scheduled_headway.round} mins)"
-      end
+      #       if common_trips.present?
+      #         selected_routing = common_routing
+      #         selected_trips = common_trips
+      #       end
+      #     end
+      #   end
+
+      #   headways = selected_trips.each_cons(2).map { |a_trip, b_trip|
+      #     {
+      #       prev_trip: a_trip,
+      #       next_trip: b_trip,
+      #       time_between: RouteProcessor.time_between_trips(a_trip, b_trip, timestamp, selected_routing)
+      #     }
+      #   }.select { |obj| obj[:time_between] > max_scheduled_headway }
+      #   max_actual_headway = headways.max_by { |obj| obj[:time_between] }[:time_between]
+
+      #   strs << "have longer wait times between #{stop_name(headways.first[:prev_trip].upcoming_stop)} and #{stop_name(headways.last[:next_trip].upcoming_stop)} (up to #{max_actual_headway.round} mins, normally every #{max_scheduled_headway.round} mins)"
+      # end
 
       next [direction[:route_direction], nil] unless strs.present?
 
@@ -159,6 +165,7 @@ class RouteAnalyzer
 
   def self.max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
+      return [direction, nil] unless processed_trips[direction[:route_direction]]
       actual_headways_by_routes = processed_trips[direction[:route_direction]].map { |r, trips|
         [r, trips.map(&:estimated_time_behind_next_train).compact]
       }.to_h
@@ -358,10 +365,11 @@ class RouteAnalyzer
         [routing, processed_trips.map { |trip|
           {
             id: trip.id,
-            progress_until_upcoming_stop: trip.progress_until_upcoming_stop,
+            previous_stop: trip.previous_stop,
+            previous_stop_arrival_time: trip.previous_stop_arrival_time,
             upcoming_stop: trip.upcoming_stop,
-            time_until_upcoming_stop: trip.time_until_upcoming_stop / 60,
-            estimated_time_until_upcoming_stop: trip.estimated_time_until_upcoming_stop,
+            upcoming_stop_arrival_time: trip.upcoming_stop_arrival_time,
+            estimated_upcoming_stop_arrival_time: trip.estimated_upcoming_stop_arrival_time,
             time_behind_next_train: trip.time_behind_next_train,
             estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
             delayed_time: trip.delayed_time,

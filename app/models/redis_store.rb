@@ -18,7 +18,7 @@ class RedisStore
     end
 
     def add_feed(feed_id, minutes, half_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: 300)
+      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 300 : 1800))
     end
 
     # Trips
@@ -70,6 +70,10 @@ class RedisStore
 
     def add_stop(stop_id, trip_id, timestamp)
       REDIS_CLIENT.zadd("stops:#{stop_id}", timestamp, trip_id)
+    end
+
+    def trip_stop_time(stop_id, trip_id)
+      REDIS_CLIENT.zscore("stops:#{stop_id}", trip_id)&.to_i
     end
 
     # Travel times

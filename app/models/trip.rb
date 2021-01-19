@@ -24,11 +24,23 @@ class Trip
     stops.keys
   end
 
+  def previous_stop
+    return unless upcoming_stop
+    i = stops.keys.index(upcoming_stop)
+    return unless i && i > 0
+
+    stops.keys[i - 1]
+  end
+
+  def previous_stop_arrival_time
+    previous_stop && stops[previous_stop]
+  end
+
   def upcoming_stop
     stops.find { |_, v| v > timestamp }&.first
   end
 
-  def upcoming_stop_estimated_arrival_time
+  def upcoming_stop_arrival_time
     stops.find { |_, v| v > timestamp }&.last || timestamp
   end
 

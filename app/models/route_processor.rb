@@ -17,7 +17,7 @@ class RouteProcessor
             r.each_cons(stops.length).any?(&stops.method(:==))
           }
           [r, r.map {|s|
-            trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }
+            trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.upcoming_stop_arrival_time }
           }.flatten.compact]
         }.to_h]
       }.to_h
@@ -97,7 +97,7 @@ class RouteProcessor
 
     def determine_common_route_trips(trips_by_routes, timestamp)
       routes = trips_by_routes.keys
-      trips = trips_by_routes.values.flatten
+      trips = trips_by_routes.values.flatten.uniq
       common_start = routes.first.find { |s| routes.all? { |r| r.include?(s) }}
       common_end = routes.first.reverse.find { |s| routes.all? { |r| r.include?(s) }}
 
@@ -107,11 +107,11 @@ class RouteProcessor
 
       return unless common_sub_route.size > 1
 
-      trips_in_order = common_sub_route.map { |s| trips.select { |t| t.upcoming_stop == s }.sort_by { |t| t.upcoming_stop_estimated_arrival_time }}.flatten.compact
+      trips_in_order = common_sub_route.map { |s| trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.upcoming_stop_arrival_time }}.flatten.compact
       processed_trips = trips_in_order.each_cons(2).map{ |a_trip, b_trip|
         Processed::Trip.new(a_trip, b_trip, common_sub_route)
       }
-      processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route)
+      processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route) if trips_in_order.present?
     end
 
     def time_between_trips(a_trip, b_trip, timestamp, routing)
