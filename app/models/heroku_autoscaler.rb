@@ -17,7 +17,7 @@ class HerokuAutoscaler
         last_unempty_timestamp = RedisStore.update_last_unempty_workqueue_timestamp
         if last_unempty_timestamp && (Time.at(last_unempty_timestamp) - Time.current) >= 10.minutes && number_of_dynos > MINIMUM_NUMBER_OF_DYNOS
           new_quantity = number_of_dynos - 1
-          heroku.formation.update(ENV['HEROKU_APP_NAME'), 'worker', {"quantity" => new_quantity)
+          heroku.formation.update(ENV['HEROKU_APP_NAME'), 'worker', {"quantity" => new_quantity})
           puts "HerokuAutoscaler: Scaled down to #{new_quantity} dynos"
         end
       else
