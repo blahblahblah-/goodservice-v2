@@ -6,7 +6,7 @@ class Scheduled::Trip < ActiveRecord::Base
   DAY_IN_MINUTES = 86400
 
   def self.soon(current_timestamp, route_id, time_range: 30.minutes)
-    current_time = Time.at(current_timestamp)
+    current_time = Time.zone.at(current_timestamp)
     from_time = current_time - current_time.beginning_of_day
     to_time = current_time - current_time.beginning_of_day + time_range.to_i
     additional_departure_time_range = from_time..to_time
