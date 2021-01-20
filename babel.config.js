@@ -34,14 +34,14 @@ module.exports = function(api) {
           modules: false,
           exclude: ['transform-typeof-symbol']
         }
-      ],
-      '@babel/preset-react'
+      ]
     ].filter(Boolean),
     plugins: [
       'babel-plugin-macros',
       '@babel/plugin-syntax-dynamic-import',
       isTestEnv && 'babel-plugin-dynamic-import-node',
       '@babel/plugin-transform-destructuring',
+      '@babel/plugin-transform-react-jsx',
       [
         '@babel/plugin-proposal-class-properties',
         {
@@ -65,7 +65,7 @@ module.exports = function(api) {
         {
           async: false
         }
-      ]
+      ],
     ].filter(Boolean)
   }
 }

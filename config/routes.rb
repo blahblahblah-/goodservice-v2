@@ -3,5 +3,6 @@ Rails.application.routes.draw do
     resources :info, only: [:index]
     resources :routes, only: [:show]
   end
+
   root 'index#index'
 end
