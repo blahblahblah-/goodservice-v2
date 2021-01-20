@@ -47,13 +47,13 @@ class RouteAnalyzer
         else
           status = 'No Service'
         end
-      elsif delays[direction] && delays[direction] >= 5
+      elsif delays[direction] && delays[direction] >= 300
         status = 'Delay'
       elsif service_changes[direction_key].present? || service_changes[:both].present?
         status = 'Service Change'
-      elsif slowness[direction] && slowness[direction] >= 5
+      elsif slowness[direction] && slowness[direction] >= 300
         status = 'Slow'
-      elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 2
+      elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 120
         status = 'Not Good'
       end
       [direction, status]
@@ -73,7 +73,7 @@ class RouteAnalyzer
         delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
           trips.select { |t| t.delayed_time >= 300 }
         }.max_by { |trips| trips.map { |t| t.delayed_time }.max || 0 }
-        max_delay_mins = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60
+        max_delay_mins = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60.0
         if delayed_trips.size == 1
           strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay_mins.round} mins)"
         else
@@ -81,7 +81,7 @@ class RouteAnalyzer
         end
       end
 
-      if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 5
+      if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 300
         slow_obj = actual_routings[direction[:route_direction]].map { |r|
           stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
             scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop)
