@@ -5,7 +5,7 @@ import 'semantic-ui-css/semantic.min.css'
 
 class App extends React.Component {
   render() {
-    return (<Header inverted>Hello World!!!</Header>);
+    return (<Header inverted>Hello World!</Header>);
   }
 }
 
