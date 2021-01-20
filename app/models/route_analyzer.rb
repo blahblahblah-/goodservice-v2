@@ -123,9 +123,10 @@ class RouteAnalyzer
         end
 
         trips_with_long_headways = processed_trips.select{ |trip| trip.estimated_time_behind_next_train && trip.estimated_time_behind_next_train >= 120 }
+        max_scheduled_headway_mins = max_scheduled_headway / 60
         max_actual_headway_mins = trips_with_long_headways.max_by { |trip| trip.estimated_time_behind_next_train }.estimated_time_behind_next_train / 60
 
-        strs << "have longer wait times between #{stop_name(trips_with_long_headways.first.upcoming_stop)} and #{stop_name(trips_with_long_headways.last.upcoming_stop)} (up to #{max_actual_headway_mins.round} mins, normally every #{max_actual_headway_mins.round} mins)"
+        strs << "have longer wait times between #{stop_name(trips_with_long_headways.first.upcoming_stop)} and #{stop_name(trips_with_long_headways.last.upcoming_stop)} (up to #{max_actual_headway_mins.round} mins, normally every #{max_scheduled_headway_mins.round} mins)"
       end
 
       next [direction[:route_direction], nil] unless strs.present?
