@@ -116,11 +116,11 @@ class RouteProcessor
 
     def time_between_trips(a_trip, b_trip, timestamp, routing)
       if a_trip.stops_behind(b_trip).present?
-        (time_until_upcoming_stop(a_trip, timestamp, routing) +
+        time_until_upcoming_stop(a_trip, timestamp, routing) +
           a_trip.stops_behind(b_trip).each_cons(2).map { |a_stop, b_stop| average_travel_time(a_stop, b_stop, timestamp) }.sum -
-          time_until_upcoming_stop(b_trip, timestamp, routing)) / 60
+          time_until_upcoming_stop(b_trip, timestamp, routing)
       else
-        (time_until_upcoming_stop(b_trip, timestamp, routing) - time_until_upcoming_stop(a_trip, timestamp, routing)) / 60
+        time_until_upcoming_stop(b_trip, timestamp, routing) - time_until_upcoming_stop(a_trip, timestamp, routing)
       end
     end
 
@@ -179,7 +179,7 @@ class RouteProcessor
           end
         end
       end
-      d.sort.each_cons(2).map { |a,b| (b - a) / 60 }
+      d.sort.each_cons(2).map { |a,b| b - a }
     end
 
     def update_scheduled_runtimes(scheduled_trips)

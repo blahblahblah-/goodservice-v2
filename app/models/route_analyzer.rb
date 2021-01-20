@@ -73,11 +73,11 @@ class RouteAnalyzer
         delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
           trips.select { |t| t.delayed_time >= 300 }
         }.max_by { |trips| trips.map { |t| t.delayed_time }.max || 0 }
-        max_delay = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60
+        max_delay_mins = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60
         if delayed_trips.size == 1
-          strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay.round} mins)"
+          strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay_mins.round} mins)"
         else
-          strs << "delayed between #{stop_name(delayed_trips.first.upcoming_stop)} and #{stop_name(delayed_trips.last.upcoming_stop)} (for #{max_delay.round} mins)"
+          strs << "delayed between #{stop_name(delayed_trips.first.upcoming_stop)} and #{stop_name(delayed_trips.last.upcoming_stop)} (for #{max_delay_mins.round} mins)"
         end
       end
 
@@ -198,12 +198,12 @@ class RouteAnalyzer
             station_ids = "#{a_stop}-#{b_stop}"
             RedisStore.scheduled_travel_time(a_stop, b_stop)
           }.reduce(&:+) || 0
-        ) / 60.0
+        )
         actual_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
             RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
           }.reduce(&:+) || 0
-        ) / 60.0
+        )
         actual_runtime - scheduled_runtime
       }.max]
     }.to_h
@@ -219,7 +219,7 @@ class RouteAnalyzer
             diff = actual_travel_time - scheduled_travel_time
             diff >= 60.0 ? diff : 0
           }.reduce(&:+) || 0
-        ) / 60.0
+        )
       }.max]
     }.to_h
   end
