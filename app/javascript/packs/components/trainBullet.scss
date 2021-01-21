@@ -1,0 +1,60 @@
+.route {
+  width: 2em;
+  height: 2em;
+  font-size: 2em;
+  line-height: 2em;
+  text-align: center;
+  font-weight: bold;
+  color: #fff;
+  margin: .25em;
+
+  &.medium {
+    height: 1.75em;
+    width: 1.75em;
+    font-size: 1.75em;
+    line-height: 1.75em;
+  }
+
+  &.small {
+    height: 1.5em;
+    width: 1.5em;
+    font-size: 1em;
+    line-height: 1.5em;
+    display: inline-block;
+  }
+}
+
+.bullet {
+  -webkit-border-radius: 999px;
+  -moz-border-radius: 999px;
+  border-radius: 999px;
+
+  &.downtown-only {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    height: 0.8em;
+    line-height: 0.1em;
+  }
+
+  &.uptown-only {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    height: 0.8em;
+  }
+}
+
+.diamond {
+  transform:rotate(45deg);
+  -ms-transform:rotate(45deg);
+  -webkit-transform:rotate(45deg);
+}
+
+.diamond-inner {
+  transform:rotate(-45deg);
+  -ms-transform:rotate(-45deg);
+  -webkit-transform:rotate(-45deg);
+}

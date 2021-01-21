@@ -1,0 +1,27 @@
+.train {
+  .train-bullet {
+    float: left;
+
+    .alternate-name {
+      text-align: left;
+    }
+  }
+}
+
+button.ui.segment {
+  background-color: rgba(0,0,0, 0.1);
+  color: white;
+
+  .ui.header {
+    color: white;
+  }
+
+  &:hover, &:active, .active, &:focus {
+    background-color: rgba(0,0,0, 0.3);
+    color: gray;
+
+    .ui.header {
+      color: gray;
+    }
+  }
+}
