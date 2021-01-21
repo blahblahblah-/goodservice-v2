@@ -6,7 +6,7 @@ class RouteAnalyzer
     runtime_diff = overall_runtime_diff(actual_routings, timestamp)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
-    destination_station_names = destinations(actual_routings)
+    destination_station_names = destinations(scheduled_trips, actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
@@ -40,9 +40,10 @@ class RouteAnalyzer
   def self.route_status(delays, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
     direction_statuses = [1, 3].map { |direction|
       direction_key = direction == 3 ? :south : :north
+      scheduled_key = direction == 3 ? 1 : 0
       status = 'Good Service'
       if actual_trips.empty?
-        if scheduled_trips.empty?
+        if scheduled_trips[scheduled_key].empty?
           status = 'Not Scheduled'
         else
           status = 'No Service'
@@ -212,7 +213,7 @@ class RouteAnalyzer
 
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations)
     service_changes_by_directions.map { |direction, service_changes|
-      return [direction, ''] unless service_changes
+      next [direction, ''] unless service_changes
 
       service_changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
 
@@ -230,7 +231,7 @@ class RouteAnalyzer
       end
 
       if service_changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
-        return [direction, "#{sentence_intro} not running."]
+        next [direction, "#{sentence_intro} not running."]
       end
 
       begin_of_route = service_changes.find(&:begin_of_route?)
@@ -329,9 +330,10 @@ class RouteAnalyzer
     }.to_h
   end
 
-  def self.destinations(actual_routings)
-    actual_routings.map { |direction, routings|
-      [direction, routings.map(&:last).uniq.map {|s| stop_name(s)}.compact.uniq.join('/')]
+  def self.destinations(scheduled_trips, actual_routings)
+    scheduled_trips.map { |scheduled_direction, trips|
+      key_translation = scheduled_direction == 0 ? 1 : 3
+      [key_translation, actual_routings[key_translation]&.map(&:last)&.uniq&.map {|s| stop_name(s)}&.compact&.uniq&.join('/') || trips.map(&:destination).uniq.join('/')]
     }.to_h
   end
 
