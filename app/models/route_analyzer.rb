@@ -42,8 +42,8 @@ class RouteAnalyzer
       direction_key = direction == 3 ? :south : :north
       scheduled_key = direction == 3 ? 1 : 0
       status = 'Good Service'
-      if actual_trips.empty?
-        if scheduled_trips[scheduled_key].empty?
+      if !actual_trips[direction]
+        if !scheduled_trips[scheduled_key]
           status = 'Not Scheduled'
         else
           status = 'No Service'
@@ -59,7 +59,10 @@ class RouteAnalyzer
       end
       [direction, status]
     }.to_h
-    status = ['Delay', 'Service Change', 'Slow', 'Not Good', 'No Service', 'Not Scheduled', 'Good Service'].find { |s| direction_statuses.any? { |_, status| s == status } }
+    status = ['Delay', 'Service Change', 'Slow', 'Not Good', 'No Service', 'Good Service', 'Not Scheduled'].find { |s| direction_statuses.any? { |_, status| s == status } }
+    if status == 'No Service' && direction_statuses.any? { |ds| !['No Service', 'Not Scheduled'].include?(ds) }
+      status = 'Partial Service'
+    end
 
     return direction_statuses, status
   end

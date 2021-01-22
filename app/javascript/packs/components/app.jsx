@@ -60,11 +60,20 @@ class App extends React.Component {
         <Segment basic className='trains-segment'>
           <Grid stackable columns={3}>
             {
-              trainKeys.map(trainId => {
-                const train = trains[trainId];
+              trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
+                const nameA = `${a.name} ${a.alternate_name}`;
+                const nameB = `${b.name} ${b.alternate_name}`;
+                if (nameA < nameB) {
+                  return -1;
+                }
+                if (nameA > nameB) {
+                  return 1;
+                }
+                return 0;
+              }).map(train => {
                 const visible = train.visible || train.status !== 'Not Scheduled';
                 return (
-                  <Grid.Column key={train.name + train.alternate_name} style={{display: (visible ? 'block' : 'none')}}>
+                  <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
                     <Train train={train} />
                   </Grid.Column>)
               })

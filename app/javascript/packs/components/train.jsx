@@ -1,6 +1,7 @@
 import React from 'react';
 import { Segment, Header, Button, Responsive, Statistic } from "semantic-ui-react";
-import TrainBullet from './trainBullet.jsx';
+import TrainBullet from './trainBullet';
+import { statusColor } from './utils';
 import './train.scss';
 
 class Train extends React.Component {
@@ -18,19 +19,6 @@ class Train extends React.Component {
       return (
         <span className='alternate-name'>{alt}</span>
       )
-    }
-  }
-
-  color() {
-    const { status } = this.props.train;
-    if (status == 'Good Service') {
-      return 'green';
-    } else if (status == 'Service Change') {
-      return 'orange';
-    } else if (status == 'Not Good') {
-      return 'yellow';
-    } else if (status == 'Delay') {
-      return 'red';
     }
   }
 
@@ -69,9 +57,10 @@ class Train extends React.Component {
   }
 
   renderInfo() {
+    const { status } = this.props.train;
     return (
       <div>
-        <Header as='h3' floated='right' className='status' inverted color={this.color()}>{ this.props.train.status }</Header>
+        <Header as='h3' floated='right' className='status' inverted color={statusColor(status)}>{ status }</Header>
       </div>
     )
   }
