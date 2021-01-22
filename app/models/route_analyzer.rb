@@ -71,7 +71,7 @@ class RouteAnalyzer
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       strs = []
-      intro = "#{destination_stations[direction[:route_direction]]}-bound trains are "
+      intro = "#{destination_stations[direction[:route_direction]].join('/')}-bound trains are "
 
       if delays[direction[:route_direction]] && delays[direction[:route_direction]] >= 300
         delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
@@ -217,6 +217,7 @@ class RouteAnalyzer
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations)
     service_changes_by_directions.map { |direction, service_changes|
       next [direction, ''] unless service_changes
+      destination_names = destination_stations[direction]&.join('/')
 
       service_changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
 
@@ -228,7 +229,7 @@ class RouteAnalyzer
         begin_preposition = 'to/from'
         end_preposition = 'to/from'
       else
-        sentence_intro = "#{destination_stations[direction]}-bound trains are"
+        sentence_intro = "#{destination_names}-bound trains are"
         begin_preposition = 'from'
         end_preposition = 'to'
       end
@@ -336,7 +337,7 @@ class RouteAnalyzer
   def self.destinations(scheduled_trips, actual_routings)
     scheduled_trips.map { |scheduled_direction, trips|
       key_translation = scheduled_direction == 0 ? 1 : 3
-      [key_translation, actual_routings[key_translation]&.map(&:last)&.uniq&.map {|s| stop_name(s)}&.compact&.uniq&.join('/') || trips.map(&:destination).uniq.join('/')]
+      [key_translation, actual_routings[key_translation]&.map(&:last)&.uniq&.map {|s| stop_name(s)}&.compact&.uniq || trips.map(&:destination).uniq]
     }.to_h
   end
 

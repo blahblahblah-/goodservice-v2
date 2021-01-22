@@ -1,5 +1,11 @@
 import React from 'react';
 import { Header, Segment, Grid, Button, Dimmer, Loader } from "semantic-ui-react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
 import Train from './train';
 import 'semantic-ui-css/semantic.min.css'
 
@@ -9,7 +15,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      trains: [],
+      trains: {},
       loading: false,
     };
   }
@@ -41,11 +47,39 @@ class App extends React.Component {
     }
   }
 
-  render() {
+  renderTrains(selectedTrain) {
     const { trains, timestamp } = this.state;
     const trainKeys = Object.keys(trains);
     return (
-      <div>
+      <>
+      {
+        trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
+          const nameA = `${a.name} ${a.alternate_name}`;
+          const nameB = `${b.name} ${b.alternate_name}`;
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        }).map(train => {
+          const visible = train.visible || train.status !== 'Not Scheduled';
+          return (
+            <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
+              <Train train={train} trains={trains} selected={selectedTrain === train.id} />
+            </Grid.Column>)
+        })
+      }
+      </>
+    );
+  }
+
+  render() {
+    const { trains, timestamp, loading } = this.state;
+    const trainKeys = Object.keys(trains);
+    return (
+      <Router>
         <Segment inverted vertical className='header-segment'>
           <Header inverted as='h1' color='blue'>
             goodservice.io
@@ -59,24 +93,21 @@ class App extends React.Component {
         </Segment>
         <Segment basic className='trains-segment'>
           <Grid stackable columns={3}>
-            {
-              trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
-                const nameA = `${a.name} ${a.alternate_name}`;
-                const nameB = `${b.name} ${b.alternate_name}`;
-                if (nameA < nameB) {
-                  return -1;
-                }
-                if (nameA > nameB) {
-                  return 1;
-                }
-                return 0;
-              }).map(train => {
-                const visible = train.visible || train.status !== 'Not Scheduled';
-                return (
-                  <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
-                    <Train train={train} />
-                  </Grid.Column>)
-              })
+            { this.renderLoading() }
+            { trainKeys.length > 0 &&
+              <Switch>
+                <Route path='/trains/:id' render={(props) => {
+                  if (props.match.params.id && trainKeys.includes(props.match.params.id)) {
+                    return this.renderTrains(props.match.params.id);
+                  } else {
+                    return (<Redirect to="/" />);
+                  }
+                }} />
+                <Route path='/' render={() => {
+                  return this.renderTrains(null);
+                }} />
+                <Route render={() => <Redirect to="/" /> } />
+              </Switch>
             }
           </Grid>
         </Segment>
@@ -96,7 +127,7 @@ class App extends React.Component {
             </Grid.Column>
           </Grid>
         </Segment>
-      </div>
+      </Router>
     );
   }
 }

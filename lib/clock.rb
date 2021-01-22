@@ -9,7 +9,7 @@ module Clockwork
 
   every(30.seconds, 'retrieve feeds') {
     ServiceChangeAnalyzer.preload_current_routings
-    FeedRetriever.retrieve_all_feeds
+    FeedRetriever.retrieve_all_feeds(Time.current)
   }
 
   every(30.minutes, 'clean-up', at: ['**:30', '**:00']) {

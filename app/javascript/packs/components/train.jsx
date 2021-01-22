@@ -1,7 +1,11 @@
 import React from 'react';
 import { Segment, Header, Button, Responsive, Statistic } from "semantic-ui-react";
+import { withRouter } from 'react-router-dom';
+
 import TrainBullet from './trainBullet';
+import TrainModal from './trainModal';
 import { statusColor } from './utils';
+
 import './train.scss';
 
 class Train extends React.Component {
@@ -22,15 +26,9 @@ class Train extends React.Component {
     }
   }
 
-  handleClick = e => {
-    const { starredPane, history, showStats, train, location } = this.props
-    if (starredPane) {
-      history.push('/starred/' + train.id);
-    } else if (showStats) {
-      history.push(`/trains/${train.id}/stats${location.hash}`);
-    } else {
-      history.push('/trains/' + train.id);
-    }
+  handleClick = () => {
+    const { history, train } = this.props
+    history.push('/trains/' + train.id);
   }
 
   renderBullet() {
@@ -66,7 +64,7 @@ class Train extends React.Component {
   }
 
   render() {
-    const { train } = this.props;
+    const { train, trains, selected } = this.props;
     // const buttonStyle = {};
     // if (mini) {
     //   buttonStyle.padding = "0";
@@ -75,11 +73,13 @@ class Train extends React.Component {
     //   buttonStyle.minWidth = "2em";
     // }
     return(
-      <Segment as={Button} fluid id={"train-" + train.name} className='train'>
-        { this.renderInfo() }
-        { this.renderBullet() }
-      </Segment>
+      <TrainModal trainId={train.id} trains={trains} selected={selected} trigger={
+        <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
+          { this.renderInfo() }
+          { this.renderBullet() }
+        </Segment>
+      } />
     )
   }
 }
-export default Train;
+export default withRouter(Train);

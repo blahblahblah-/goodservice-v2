@@ -7,7 +7,11 @@ class FeedRetriever
   FEEDS = ["", "-ace", "-bdfm", "-g", "-jz", "-nqrw", "-l", "-7", "-si"]
 
   class << self
-    def retrieve_all_feeds
+    def retrieve_all_feeds(time)
+      if (Time.current - time) > 1.minute
+        puts "Job expired, noop"
+        return
+      end
       minutes = Time.current.min
       half_minute = Time.current.sec / 30
       if ENV['FEED_THREADS']
@@ -22,6 +26,11 @@ class FeedRetriever
     end
 
     def retrieve_feed(feed_id, minutes, half_minute)
+      current_minute = Time.current.min
+      if (current_minute - minutes) > 1
+        puts "Job expired, noop"
+        return
+      end
       puts "Retrieving feed #{feed_id}"
 
       uri = URI.parse("#{BASE_URI}#{feed_id}")

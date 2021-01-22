@@ -11,3 +11,10 @@ export const statusColor = (status) => {
     return 'red';
   }
 };
+
+export const formatStation = (stationName) => {
+  if (!stationName) {
+    return;
+  }
+  return stationName.replace(/ - /g, "–")
+}
