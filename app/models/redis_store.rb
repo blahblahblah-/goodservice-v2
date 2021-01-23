@@ -100,6 +100,10 @@ class RedisStore
       REDIS_CLIENT.hget("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}").to_i
     end
 
+    def scheduled_travel_times(stop_id_pairs)
+      REDIS_CLIENT.mapped_hmget("travel-time:scheduled", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+    end
+
     def add_scheduled_travel_time(stop_id_1, stop_id_2, time)
       REDIS_CLIENT.hset("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}", time)
     end

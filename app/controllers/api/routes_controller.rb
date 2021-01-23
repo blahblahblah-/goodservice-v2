@@ -77,8 +77,10 @@ class Api::RoutesController < ApplicationController
   end
 
   def scheduled_travel_times(pairs)
-    pairs.to_h do |pair|
-      ["#{pair.first}-#{pair.second}", RedisStore.scheduled_travel_time(pair.first, pair.second) || RedisStore.supplementary_scheduled_travel_time(pair.first, pair.second)]
+    results = RedisStore.scheduled_travel_times(pairs)
+    results.to_h do |k, v|
+      stops = k.split("-")
+      [k, v ? v.to_i : RedisStore.supplementary_scheduled_travel_time(stops.first, stops.second)]
     end
   end
 
