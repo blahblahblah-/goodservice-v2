@@ -55,7 +55,7 @@ class RouteProcessor
       train_stops_at_a = RedisStore.trips_stopped_at(a_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_START_LIMIT)
 
       trains_stopped_at_a = train_stops_at_a.map(&:first)
-      trains_traveled = train_stops_at_b.select{ |b_train, _| train_stops_at_a.find {|a_train, _| a_train == b_train } }.keys
+      trains_traveled = train_stops_at_b.select{ |b_train, b_time| train_stops_at_a.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
 
       return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
 
