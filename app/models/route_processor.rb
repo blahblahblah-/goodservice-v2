@@ -13,6 +13,7 @@ class RouteProcessor
       trips_by_routes = trips_by_direction.map { |direction, trips|
         [direction, routings[direction].map {|r|
           trips_selected = trips.select { |t|
+            next false unless t.stop_ids.present?
             stops = t.stop_ids
             r.each_cons(stops.length).any?(&stops.method(:==))
           }
@@ -57,7 +58,7 @@ class RouteProcessor
       trains_stopped_at_a = train_stops_at_a.map(&:first)
       trains_traveled = train_stops_at_b.select{ |b_train, b_time| train_stops_at_a.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
 
-      return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
+      return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
 
       trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
     end

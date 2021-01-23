@@ -72,6 +72,7 @@ class Trip
   def update_delay!
     self.delayed_time = 0
     return unless previous_trip
+    return unless next_stop_time
     return unless (next_stop_time - timestamp) <= 1080
     return if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
     self.delayed_time = previous_trip.delayed_time if previous_trip.delayed_time
@@ -83,7 +84,7 @@ class Trip
   end
 
   def next_stop_time
-    stops.first.last
+    stops.first&.last
   end
 
   def destination

@@ -85,6 +85,7 @@ class FeedProcessor
       }
       direction = entity.trip_update.trip.nyct_trip_descriptor.direction == Transit_realtime::NyctTripDescriptor::Direction::NORTH ? 'N' : 'S'
       return false unless entity.trip_update.stop_time_update.all? {|update| update.stop_id[3] == direction }
+      return false unless entity.trip_update.stop_time_update.present?
       true
     end
 
@@ -98,7 +99,8 @@ class FeedProcessor
         entity.trip_update, direction = reverse_trip_update(entity.trip_update)
       end
 
-      remove_hidden_stops(entity.trip_update)
+      remove_hidden_stops!(entity.trip_update)
+      remove_bad_data!(entity.trip_update, timestamp)
 
       Trip.new(route_id, direction, trip_id, timestamp, entity.trip_update)
     end
@@ -207,8 +209,14 @@ class FeedProcessor
       return trip_update, direction
     end
 
-    def remove_hidden_stops(trip_update)
+    def remove_hidden_stops!(trip_update)
       trip_update.stop_time_update.filter! { |update| valid_stops.include?(update.stop_id[0..2]) }
+    end
+
+    def remove_bad_data!(trip_update, timestamp)
+      first_stop = trip_update.stop_time_update.sort_by { |update| (update.departure || update.arrival).time}.first
+      first_stop_index = trip_update.stop_time_update.index(first_stop)
+      trip_update.stop_time_update.filter! { |update| trip_update.stop_time_update.index(update) >= first_stop_index || (update.departure || update.arrival).time < (first_stop.departure || first_stop.arrival).time }
     end
 
     def valid_stops

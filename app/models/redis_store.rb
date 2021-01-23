@@ -89,7 +89,7 @@ class RedisStore
 
     # Travel times
     def supplementary_scheduled_travel_time(stop_id_1, stop_id_2)
-      REDIS_CLIENT.hget("travel-time:supplementary", "#{stop_id_1}-#{stop_id_2}").to_f
+      REDIS_CLIENT.hget("travel-time:supplementary", "#{stop_id_1}-#{stop_id_2}")&.to_f
     end
 
     def add_supplementary_scheduled_travel_time(stop_id_1, stop_id_2, time)
@@ -97,7 +97,7 @@ class RedisStore
     end
 
     def scheduled_travel_time(stop_id_1, stop_id_2)
-      REDIS_CLIENT.hget("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}").to_i
+      REDIS_CLIENT.hget("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}")&.to_i
     end
 
     def scheduled_travel_times(stop_id_pairs)
