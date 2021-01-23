@@ -82,7 +82,7 @@ class TrainModal extends React.Component {
     const { train, activeMenuItem, timestamp } = this.state;
     const { trains, trigger, selected } = this.props;
     return (
-      <Modal basic size='large' trigger={trigger} open={selected} closeIcon dimmer='blurring'
+      <Modal basic size='fullscreen' trigger={trigger} open={selected} closeIcon dimmer='blurring'
          onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='train-modal'>
         {
           !train &&

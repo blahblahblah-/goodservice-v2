@@ -1,0 +1,19 @@
+.train-modal-direction-pane {
+  .ui.fluid.selection.dropdown {
+    background: #1b1c1d;
+
+    .divider.text, .dropdown.icon {
+      color: white;
+    }
+  }
+
+  .trip-table {
+    .delayed {
+      color: #ff695e;
+    }
+
+    .long-headway {
+      color: #ffe21f;
+    }
+  }
+}

@@ -1,6 +1,12 @@
-.train-modal .ui.menu.header-menu {
-  .item.no-service {
-    text-decoration: line-through;
-    color: #999999;
+.ui.fullscreen.modal.train-modal {
+  .close.icon {
+    color: white;
+  }
+
+  .ui.menu.header-menu {
+    .item.no-service {
+      text-decoration: line-through;
+      color: #999999;
+    }
   }
 }

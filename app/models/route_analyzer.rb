@@ -20,12 +20,13 @@ class RouteAnalyzer
       direction_statuses: convert_to_readable_directions(direction_statuses),
       service_summaries: convert_to_readable_directions(summaries),
       service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
+      service_changes: service_changes,
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       accumulated_extra_travel_time: convert_to_readable_directions(slowness),
       overall_runtime_diff: convert_to_readable_directions(runtime_diff),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
-      scheduled_headways: convert_to_readable_directions(scheduled_headways_by_routes),
+      scheduled_headways: convert_scheduled_to_readable_directions(scheduled_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
       trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
       timestamp: timestamp,
@@ -145,6 +146,10 @@ class RouteAnalyzer
 
   def self.convert_to_readable_directions(hash)
     hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
+  end
+
+  def self.convert_scheduled_to_readable_directions(hash)
+    hash.map { |direction, data| [direction == 1 ? :south : :north, data] }.to_h
   end
 
   def self.max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
@@ -347,8 +352,8 @@ class RouteAnalyzer
   end
 
   def self.format_processed_trips(processed_trips)
-    processed_trips.map { |direction, trips_by_routes|
-      [direction, trips_by_routes.map { |routing, processed_trips|
+    processed_trips.to_h { |direction, trips_by_routes|
+      [direction, trips_by_routes.to_h { |routing, processed_trips|
         [routing, processed_trips.map { |trip|
           {
             id: trip.id,
@@ -364,6 +369,6 @@ class RouteAnalyzer
           }
         }]
       }]
-    }.to_h
+    }
   end
 end

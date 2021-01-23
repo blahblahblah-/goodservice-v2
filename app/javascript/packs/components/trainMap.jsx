@@ -35,7 +35,7 @@ class TrainMap extends React.Component {
       return;
     }
 
-    const southRoutings = routings.south;
+    const southRoutings = routings.south.map((obj) => [...obj]);
 
     const northRoutings = routings.north.map((obj) => {
       return [...obj].reverse();
