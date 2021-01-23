@@ -1,5 +1,5 @@
 class Processed::Trip
-  delegate :id, :stops_behind, :timestamp, :upcoming_stop, :time_until_upcoming_stop, :delayed_time, :upcoming_stop_arrival_time, to: :trip
+  delegate :id, :stops_behind, :timestamp, :upcoming_stop, :time_until_upcoming_stop, :delayed_time, :upcoming_stop_arrival_time, :destination, to: :trip
 
   attr_reader :trip, :previous_stop_arrival_time, :previous_stop,
     :estimated_upcoming_stop_arrival_time, :estimated_time_behind_next_train, :time_behind_next_train

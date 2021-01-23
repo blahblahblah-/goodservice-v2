@@ -2,6 +2,7 @@ class RedisStore
   INACTIVE_TRIP_TIMEOUT = 30.minutes.to_i
   DATA_RETENTION = 60.minutes.to_i
   DELAYS_RETENTION = 1.day.to_i
+  ROUTE_UPDATE_TIMEOUT = 1.minute.to_i
 
   class << self
     # Feeds
@@ -82,8 +83,8 @@ class RedisStore
       REDIS_CLIENT.zadd("routes-stop:#{stop_id}:#{direction}", timestamp, route_id)
     end
 
-    def routes_stop_at(stop_id, direction, max_time, min_time)
-      REDIS_CLIENT.zrevrangebyscore("routes-stop:#{stop_id}:#{direction}", max_time, min_time)
+    def routes_stop_at(stop_id, direction, timestamp)
+      REDIS_CLIENT.zrangebyscore("routes-stop:#{stop_id}:#{direction}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
 

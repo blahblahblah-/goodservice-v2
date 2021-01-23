@@ -44,6 +44,7 @@ class Api::RoutesController < ApplicationController
         route_data = {}
       else
         route_data[:stops] = stops_info(route_data['actual_routings'])
+        route_data[:transfers] = transfers_info(route_data['actual_routings'], route_id, route_data['timestamp'])
         pairs = route_pairs(route_data['actual_routings'])
         route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
         route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
@@ -70,6 +71,27 @@ class Api::RoutesController < ApplicationController
   def stops_info(routings)
     stations = routings.map { |_, r| r }.flatten.uniq
     Scheduled::Stop.where(internal_id: stations).pluck(:internal_id, :stop_name).to_h
+  end
+
+  def transfers_info(routings, route_id, timestamp)
+    stations = routings.map { |_, r| r }.flatten.uniq
+    stations.to_h { |stop_id|
+      arr = []
+      routes_by_direction = [1, 3].to_h { |direction|
+        [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp) - [route_id]]
+      }
+      routes = routes_by_direction.values.flatten.uniq.sort
+      [stop_id, routes.to_h { |route_id|
+        directions_array = []
+        if routes_by_direction[1].include?(route_id)
+          directions_array << "north"
+        end
+        if routes_by_direction[3].include?(route_id)
+          directions_array << "south"
+        end
+        [route_id, directions_array]
+      }]
+    }.filter { |_, v| v.present? }
   end
 
   def route_pairs(routings)

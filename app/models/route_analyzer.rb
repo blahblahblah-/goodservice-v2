@@ -359,6 +359,7 @@ class RouteAnalyzer
             estimated_upcoming_stop_arrival_time: trip.estimated_upcoming_stop_arrival_time,
             time_behind_next_train: trip.time_behind_next_train,
             estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
+            destination_stop: trip.destination,
             delayed_time: trip.delayed_time,
           }
         }]
