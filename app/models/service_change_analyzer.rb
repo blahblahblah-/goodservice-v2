@@ -121,6 +121,7 @@ class ServiceChangeAnalyzer
         if actual&.size == 2 && (actual[0] & actual[1]).size <= 1
           actual.each_with_index do |a, i|
             ar = a.map { |s| s[0..2] }
+            changes[i] = [] unless changes[i]
             changes[i] << ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], ar, ar.first, ar)
           end
         end

@@ -205,7 +205,7 @@ class FeedProcessor
     end
 
     def remove_hidden_stops(trip_update)
-      trip_update.stop_time_update.filter! { |update| valid_stops.include?(update.stop_id) }
+      trip_update.stop_time_update.filter! { |update| valid_stops.include?(update.stop_id[0..2]) }
     end
 
     def valid_stops

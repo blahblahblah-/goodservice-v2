@@ -94,7 +94,7 @@ CSV.foreach(Rails.root.join('import', 'stop_times.txt'), headers: true) do |row|
   str = row['departure_time']
   array = str.split(':').map(&:to_i)
   s.departure_time = array[0] * 3600 + array[1] * 60 + array[2]
-  s.stop_internal_id = row['stop_id']
+  s.stop_internal_id = row['stop_id'][0..2]
   s.stop_sequence = row['stop_sequence']
   s.save!
   puts "#{s.trip_internal_id} at #{s.stop_internal_id} saved"

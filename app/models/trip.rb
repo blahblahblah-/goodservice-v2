@@ -8,7 +8,7 @@ class Trip
     @id = id
     @timestamp = timestamp
     @stops = trip_update.stop_time_update.to_h {|update|
-      [update.stop_id, (update.departure || update.arrival).time]
+      [update.stop_id[0..2], (update.departure || update.arrival).time]
     }
   end
 
