@@ -1,8 +1,7 @@
 import React from 'react';
 import { Header, Segment, Statistic, Grid } from "semantic-ui-react";
 
-import TrainBullet from './trainBullet';
-import { statusColor, formatStation } from './utils';
+import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
 
 class TrainModalDirectionPane extends React.Component {
   directionStatus() {
@@ -24,24 +23,7 @@ class TrainModalDirectionPane extends React.Component {
     }
 
     const summaries = ['both', direction].map((key) => train.service_change_summaries[key]).flat();
-    return summaries.map((change, i) => {
-      let tmp = [formatStation(change)];
-      let matched;
-      while (matched = tmp.find((c) => typeof c === 'string' && c.match(/\<[A-Z0-9]*\>/))) {
-        const regexResult = matched.match(/\<([A-Z0-9]*)\>/);
-        let j = tmp.indexOf(matched);
-        const selectedTrain = trains[regexResult[1]];
-        const selectedTrainBullet = (<TrainBullet name={selectedTrain.name} color={selectedTrain.color}
-              textColor={selectedTrain.text_color} style={{display: "inline-block"}} key={selectedTrain.id} size='small' />);
-        const parts = matched.split(regexResult[0]);
-        let newMatched = parts.flatMap((x) => [x, selectedTrainBullet]);
-        newMatched.pop();
-        tmp[j] = newMatched;
-        tmp = tmp.flat();
-      }
-
-      return (<Header as='h4' inverted key={i}>{tmp}</Header>);
-    });
+    return replaceTrainBulletsInParagraphs(trains, summaries);
   }
 
   renderSummary() {

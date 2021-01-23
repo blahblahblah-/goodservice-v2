@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Grid, Menu } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Grid, Menu, Header } from "semantic-ui-react";
 import { withRouter } from 'react-router-dom';
 
 import TrainBullet from './trainBullet';
@@ -79,8 +79,8 @@ class TrainModal extends React.Component {
   handleItemClick = (_, { name }) => this.setState({ activeMenuItem: name })
 
   render() {
-    const { train, trains, activeMenuItem } = this.state;
-    const { trigger, selected } = this.props;
+    const { train, activeMenuItem, timestamp } = this.state;
+    const { trains, trigger, selected } = this.props;
     return (
       <Modal basic size='large' trigger={trigger} open={selected} closeIcon dimmer='blurring'
          onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='train-modal'>
@@ -106,10 +106,10 @@ class TrainModal extends React.Component {
                         <Menu.Item name='overall' active={activeMenuItem === 'overall'} onClick={this.handleItemClick}>
                           Overall
                         </Menu.Item>
-                        <Menu.Item name='north' active={activeMenuItem === 'north'} color={this.noService('north') ? 'grey' : 'black'} className={this.noService('north') ? 'no-service' : ''} onClick={this.handleItemClick}>
+                        <Menu.Item name='north' active={activeMenuItem === 'north'} className={this.noService('north') ? 'no-service' : ''} onClick={this.handleItemClick}>
                           To {this.formatDestinations(train.destinations?.north)}
                         </Menu.Item>
-                        <Menu.Item name='south' active={activeMenuItem === 'south'} color={this.noService('south') ? 'grey' : 'black'} className={this.noService('south') ? 'no-service' : ''} onClick={this.handleItemClick}>
+                        <Menu.Item name='south' active={activeMenuItem === 'south'} className={this.noService('south') ? 'no-service' : ''} onClick={this.handleItemClick}>
                           To {this.formatDestinations(train.destinations?.south)}
                         </Menu.Item>
                       </Menu>
@@ -127,6 +127,9 @@ class TrainModal extends React.Component {
                     activeMenuItem !== 'overall' &&
                       <TrainModalDirectionPane train={train} trains={trains} direction={activeMenuItem} />
                   }
+                  <Header inverted as='h5'>
+                    Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
+                  </Header>
                 </Modal.Description>
               </Modal.Content>
             </>
