@@ -151,6 +151,9 @@ class FeedProcessor
         stop_ids = station_ids.split('-')
         RedisStore.add_supplementary_scheduled_travel_time(stop_ids.first, stop_ids.second, time) if time > 0
       end
+      trip.upcoming_stops.each do |stop_id|
+        RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp)
+      end
       RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip)
       RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp)
     end

@@ -60,10 +60,12 @@ class RedisStore
       REDIS_CLIENT.hdel("active-trips:#{feed_id}", trip_id)
     end
 
+    # Delays
     def add_delay(route_id, direction, trip_id, timestamp)
       REDIS_CLIENT.zadd("delay:#{route_id}:#{direction}", timestamp, trip_id)
     end
 
+    # Trip stops
     def trips_stopped_at(stop_id, max_time, min_time)
       REDIS_CLIENT.zrevrangebyscore("stops:#{stop_id}", max_time, min_time, withscores: true).to_h
     end
@@ -75,6 +77,15 @@ class RedisStore
     def trip_stop_time(stop_id, trip_id)
       REDIS_CLIENT.zscore("stops:#{stop_id}", trip_id)&.to_i
     end
+
+    def add_route_to_route_stop(route_id, stop_id, direction, timestamp)
+      REDIS_CLIENT.zadd("routes-stop:#{stop_id}:#{direction}", timestamp, route_id)
+    end
+
+    def routes_stop_at(stop_id, direction, max_time, min_time)
+      REDIS_CLIENT.zrevrangebyscore("routes-stop:#{stop_id}:#{direction}", max_time, min_time)
+    end
+
 
     # Travel times
     def supplementary_scheduled_travel_time(stop_id_1, stop_id_2)
