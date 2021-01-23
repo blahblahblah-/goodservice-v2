@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header, Segment, Statistic, Grid } from "semantic-ui-react";
 
+import TrainMap from './trainMap';
 import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
 
 class TrainModalOverallPane extends React.Component {
@@ -31,16 +32,16 @@ class TrainModalOverallPane extends React.Component {
   }
 
   render() {
-    const { train } = this.props;
+    const { train, trains } = this.props;
     return (
       <Segment basic>
         <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={6}>
-                      Hello
+              <TrainMap trains={trains} routings={train.actual_routings} color={train.color} stops={train.stops} transfersInfo={train.transfers} />
             </Grid.Column>
             <Grid.Column width={10}>
-              <Statistic.Group widths={1} color={statusColor(train.status)} size='small' inverted>
+              <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{train.status}</Statistic.Value>
                   <Statistic.Label>Status</Statistic.Label>

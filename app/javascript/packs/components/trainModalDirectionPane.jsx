@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header, Segment, Statistic, Grid } from "semantic-ui-react";
 
+import TrainMap from './trainMap';
 import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
 
 class TrainModalDirectionPane extends React.Component {
@@ -33,30 +34,35 @@ class TrainModalDirectionPane extends React.Component {
       return out;
     }
     if (train.service_summaries[direction]) {
-      out.push(<Header as='h4' inverted>{formatStation(train.service_summaries[direction])}</Header>)
+      out.push(<Header as='h4' inverted key='1'>{formatStation(train.service_summaries[direction])}</Header>)
     }
     return out;
   }
 
   render() {
-    const { train } = this.props;
+    const { trains, train, direction } = this.props;
     return (
       <Segment basic>
         <Grid textAlign='center'>
-          <Grid.Column>
-            <Statistic.Group widths={1} color={statusColor(this.directionStatus())} size='small' inverted>
-              <Statistic>
-                <Statistic.Value>{ this.directionStatus() }</Statistic.Value>
-                <Statistic.Label>Status</Statistic.Label>
-              </Statistic>
-            </Statistic.Group>
-            {
-              this.renderServiceChanges()
-            }
-            {
-              this.renderSummary()
-            }
-          </Grid.Column>
+          <Grid.Row>
+            <Grid.Column width={6}>
+              <TrainMap trains={trains} routings={{ north: [], south: train.actual_routings[direction] }} color={train.color} stops={train.stops} transfersInfo={train.transfers} />
+            </Grid.Column>
+            <Grid.Column width={10}>
+              <Statistic.Group widths={1} color={ statusColor(this.directionStatus()) } size='small' inverted>
+                <Statistic>
+                  <Statistic.Value>{ this.directionStatus() }</Statistic.Value>
+                  <Statistic.Label>Status</Statistic.Label>
+                </Statistic>
+              </Statistic.Group>
+              {
+                this.renderServiceChanges()
+              }
+              {
+                this.renderSummary()
+              }
+            </Grid.Column>
+         </Grid.Row>
         </Grid>
       </Segment>
     )

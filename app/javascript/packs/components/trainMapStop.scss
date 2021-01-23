@@ -1,0 +1,79 @@
+.train-map-stop {
+  .container {
+    min-height: 50px;
+    display: flex;
+
+    .left-margin {
+      min-width: 12px;
+    }
+
+    .station-name {
+      display: inline;
+      margin: auto 0;
+      cursor: pointer;
+    }
+
+    .transfers {
+      display: inline-block;
+      margin: auto 0;
+    }
+
+    .both-stop {
+      border: 1px #999 solid;
+      height: 10px;
+      width: 10px;
+      border-radius: 50%;
+      position: relative;
+      background-color: white;
+      left: 5px;
+      top: 20px;
+      cursor: pointer;
+    }
+
+    .north-stop {
+      border: 1px #999 solid;
+      height: 5px;
+      width: 10px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      position: relative;
+      background-color: white;
+      left: 5px;
+      top: 20px;
+      cursor: pointer;
+    }
+
+    .south-stop {
+      border: 1px #999 solid;
+      height: 5px;
+      width: 10px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      position: relative;
+      background-color: white;
+      left: 5px;
+      top: 25px;
+      cursor: pointer;
+    }
+
+    .branch-corner {
+      overflow: hidden;
+      width: 40px;
+      display: inline-block;
+    }
+
+    .branch-start {
+      height: 35px;
+      width: 30px;
+      border-top-right-radius: 50%;
+      display: block;
+    }
+
+    .branch-end {
+      height: 100%;
+      width: 30px;
+      border-bottom-right-radius: 50%;
+      display: block;
+    }
+  }
+}
