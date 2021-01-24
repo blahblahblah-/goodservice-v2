@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table } from "semantic-ui-react";
+import { Modal, Table, Header } from "semantic-ui-react";
 import { withRouter } from 'react-router-dom';
 
 import TrainBullet from './trainBullet';
@@ -65,6 +65,10 @@ class TripModal extends React.Component {
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' /><br />
           Trip: {selectedTrip.id} <br />
           To: { formatStation(train.stops[selectedTrip.destination_stop]) }
+          {
+            selectedTrip.delayed_time >= 300 && 
+            <Header as='h5' color='red' inverted>Delayed for {Math.round(selectedTrip.delayed_time / 60)} mins</Header>
+          }
         </Modal.Header>
         <Modal.Content scrolling>
           <Modal.Description>

@@ -55,7 +55,6 @@ export const formatMinutes = (minutes, markDue) => {
   if (markDue) {
     return 'Due';
   }
-  return '0 mins';
 };
 
 export const routingHash = (routing) => {

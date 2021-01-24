@@ -173,7 +173,7 @@ class TrainModalDirectionPane extends React.Component {
     return (
       <Segment basic className='train-modal-direction-pane'>
 
-        <Grid textAlign='center'>
+        <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={4}>
             {

@@ -184,7 +184,7 @@ class RedisStore
     end
 
     def clear_outdated_trip_stops_and_delays
-      all_stops = Scheduled::Stop.where('internal_id like ? or internal_id like ?', '%N', '%S').pluck(:internal_id)
+      all_stops = Scheduled::Stop.pluck(:internal_id)
       all_stops.each do |stop_id|
         trip_stops_removed = REDIS_CLIENT.zremrangebyscore("stops:#{stop_id}", '-inf', Time.current.to_i - DATA_RETENTION)
         puts "Removed #{trip_stops_removed} outdated stops for #{stop_id}"
