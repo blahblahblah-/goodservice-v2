@@ -124,7 +124,7 @@ class TrainModal extends React.Component {
           train &&
             <>
               <Modal.Header>
-                <Grid>
+                <Grid stackable>
                   <Grid.Row>
                     <Grid.Column width={4} textAlign='center'>
                       <TrainBullet name={train.name} color={train.color}

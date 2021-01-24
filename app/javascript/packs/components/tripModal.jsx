@@ -75,7 +75,7 @@ class TripModal extends React.Component {
             <Table fixed inverted unstackable className='trip-table'>
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell rowSpan={2} width={8}>
+                  <Table.HeaderCell rowSpan={2} width={4}>
                     Station
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
@@ -86,16 +86,16 @@ class TripModal extends React.Component {
                   </Table.HeaderCell>
                 </Table.Row>
                 <Table.Row>
-                  <Table.HeaderCell width={2}>
+                  <Table.HeaderCell width={3}>
                     ETA
                   </Table.HeaderCell>
-                  <Table.HeaderCell width={2}>
+                  <Table.HeaderCell width={3}>
                     Arrival Time
                   </Table.HeaderCell>
-                  <Table.HeaderCell width={2}>
+                  <Table.HeaderCell width={3}>
                     ETA
                   </Table.HeaderCell>
-                  <Table.HeaderCell width={2}>
+                  <Table.HeaderCell width={3}>
                     Arrival Time
                   </Table.HeaderCell>
                 </Table.Row>

@@ -1,4 +1,9 @@
-.train-modal-direction-pane {
+.ui.segment.train-modal-direction-pane {
+  @media only screen and (max-width: 767px) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .ui.fluid.selection.dropdown {
     background: #1b1c1d;
 
@@ -16,4 +21,15 @@
       color: #ffe21f;
     }
   }
+
+  .ui.stackable.grid>.row>.column.trip-table-cell {
+    @media only screen and (max-width: 767px) {
+      margin-left: -1rem !important;
+      margin-right: -1rem !important;
+
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
+
 }
