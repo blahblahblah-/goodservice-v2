@@ -175,7 +175,7 @@ class TrainModalDirectionPane extends React.Component {
 
         <Grid textAlign='center' stackable>
           <Grid.Row>
-            <Grid.Column width={4}>
+            <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
                 <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
@@ -246,6 +246,12 @@ class TrainModalDirectionPane extends React.Component {
                   }
                 </Table>
               }
+            </Grid.Column>
+            <Grid.Column width={4} className='mobile-map-cell'>
+            {
+              train.actual_routings && train.actual_routings[direction] &&
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
+            }
             </Grid.Column>
          </Grid.Row>
         </Grid>
