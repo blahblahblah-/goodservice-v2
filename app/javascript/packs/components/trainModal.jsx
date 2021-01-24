@@ -110,7 +110,7 @@ class TrainModal extends React.Component {
     }
     return (
       <Modal basic size='fullscreen' trigger={trigger} open={selected} closeIcon dimmer='blurring'
-         onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='train-modal'>
+         onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className={tripModal ? 'train-modal dimmable dimmed blurring' : 'train-modal'}>
         {
           !train &&
           <Dimmer active>

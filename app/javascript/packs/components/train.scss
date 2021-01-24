@@ -1,16 +1,7 @@
-.train {
-  .train-bullet {
-    float: left;
-
-    .alternate-name {
-      text-align: left;
-    }
-  }
-}
-
-button.ui.segment {
+button.ui.segment.train {
   background-color: rgba(0,0,0, 0.1);
   color: white;
+  min-height: 8em;
 
   .ui.header {
     color: white;
@@ -22,6 +13,15 @@ button.ui.segment {
 
     .ui.header {
       color: gray;
+    }
+  }
+
+  .train-bullet {
+    float: left;
+
+    .alternate-name {
+      margin-left: .2em;
+      text-align: left;
     }
   }
 }

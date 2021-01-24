@@ -210,7 +210,7 @@ class TrainModalDirectionPane extends React.Component {
                 <Header as='h3' inverted textAlign='left'>Trains on shared section only</Header>
               }
               { train.trips && train.trips[direction] &&
-                <Table fixed inverted className='trip-table'>
+                <Table fixed inverted unstackable className='trip-table'>
                   <Table.Header>
                     <Table.Row>
                       <Table.HeaderCell rowSpan='2' width={4}>

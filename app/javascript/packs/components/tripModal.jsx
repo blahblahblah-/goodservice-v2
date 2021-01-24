@@ -72,7 +72,7 @@ class TripModal extends React.Component {
         </Modal.Header>
         <Modal.Content scrolling>
           <Modal.Description>
-            <Table fixed inverted className='trip-table'>
+            <Table fixed inverted unstackable className='trip-table'>
               <Table.Header>
                 <Table.Row>
                   <Table.HeaderCell rowSpan={2} width={8}>
