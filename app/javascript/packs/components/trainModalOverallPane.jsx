@@ -38,7 +38,7 @@ class TrainModalOverallPane extends React.Component {
         <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={4}>
-              <TrainMap trains={trains} routings={train.actual_routings} color={train.color} stops={train.stops} transfersInfo={train.transfers} />
+              <TrainMap trains={trains} train={train} routings={train.actual_routings} />
             </Grid.Column>
             <Grid.Column width={12}>
               <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>

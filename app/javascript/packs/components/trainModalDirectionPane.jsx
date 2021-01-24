@@ -194,7 +194,7 @@ class TrainModalDirectionPane extends React.Component {
             {
               train.actual_routings && train.actual_routings[direction] &&
 
-                <TrainMap trains={trains} routings={{ south: routingToMap, north: [] }} color={train.color} stops={train.stops} transfersInfo={train.transfers} />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
             }
             </Grid.Column>
             <Grid.Column width={12}>

@@ -97,7 +97,7 @@ class TrainModal extends React.Component {
               <Modal.Header>
                 <Grid>
                   <Grid.Row>
-                    <Grid.Column width={4}>
+                    <Grid.Column width={4} textAlign='center'>
                       <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' />
                       <p>{train.alternate_name}</p>

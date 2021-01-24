@@ -4,7 +4,20 @@
     display: flex;
 
     .left-margin {
-      min-width: 12px;
+      min-width: 40px;
+    }
+
+    .travel-time {
+      min-width: 40px;
+      max-width: 40px;
+      margin: auto 0;
+      display: inline;
+      text-align: center;
+      margin-top: 0 !important;
+
+      .warning {
+        color: #ff695e;
+      }
     }
 
     .station-name {

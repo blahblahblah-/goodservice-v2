@@ -43,7 +43,8 @@ class TrainMapStop extends React.Component {
   }
 
   renderLine(isActiveBranch, index, branchStart, branchEnd) {
-    const { color, branchStops, arrivalTime } = this.props;
+    const { branchStops, arrivalTime, train } = this.props;
+    const color = train.color;
     const stopExists = branchStops[index];
     const branchStartHere = branchStart !== null && branchStart == index;
     const branchEndHere = branchEnd !== null && branchEnd == index;
@@ -101,26 +102,73 @@ class TrainMapStop extends React.Component {
     )
   }
 
+  renderTravelTime() {
+    const { stopId, previousStopId, train } = this.props;
+    if (!previousStopId || !stopId) {
+      return;
+    }
+    const lookupString = `${previousStopId}-${stopId}`;
+    const estimatedTravelTime = train.estimated_travel_times[lookupString];
+    const scheduledTravelTime = train.scheduled_travel_times[lookupString];
+
+    if (!estimatedTravelTime || !scheduledTravelTime) {
+      return;
+    }
+
+    if (!estimatedTravelTime) {
+      const roundedScheduledTime = Math.round(scheduledTravelTime / 60);
+      return `${roundedScheduledTime} min`;
+    }
+
+    const roundedEstimatedTime = Math.round(estimatedTravelTime / 60);
+
+    if (!scheduledTravelTime) {
+      return `${roundedEstimatedTime} min`;
+    }
+
+    const diff = estimatedTravelTime - scheduledTravelTime;
+
+    if (Math.abs(diff) >= 60) {
+      const roundedDiff = Math.round(diff / 60);
+      if (roundedDiff > 0) {
+        return (
+          <>
+            <>
+              {roundedEstimatedTime} min<br/>
+            </>
+            <span className='warning'>
+              (+{roundedDiff} min)
+            </span>
+          </>
+        );
+      }
+      return (
+        <>
+          <>
+            {roundedEstimatedTime} min<br/>
+          </>
+          <>
+            ({roundedDiff} min)
+          </>
+        </>
+      );
+    }
+    return `${roundedEstimatedTime} min`;
+  }
+
   render() {
-    const { stop, transfers, trains, activeBranches, branchStart, branchEnd, arrivalTime } = this.props;
-    const eta = arrivalTime && Math.round(arrivalTime / 60);
+    const { stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime } = this.props;
     return (
       <li className='train-map-stop'>
         <div className='container'>
           {
-            arrivalTime &&
-            <Header as='h6'
-            style={{minWidth: "20px", maxWidth: "20px", margin: "auto 0 auto 10px", display: "inline", textAlign: "center"}} inverted>
-              { eta > 0 &&
-                <span title={new Date(Date.now() + arrivalTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>{ eta } min</span>
-              }
-              { eta <= 0 &&
-                <span>Due</span>
-              }
+            showTravelTime &&
+            <Header as='h6' className='travel-time' inverted>
+              { this.renderTravelTime() }
             </Header>
           }
           {
-            !arrivalTime &&
+            !showTravelTime &&
             <div className='left-margin'></div>
           }
           { activeBranches.map((obj, index) => {
