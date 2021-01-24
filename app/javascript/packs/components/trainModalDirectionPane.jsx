@@ -201,7 +201,7 @@ class TrainModalDirectionPane extends React.Component {
               <Statistic.Group widths={1} color={ statusColor(this.directionStatus()) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{ this.directionStatus() }</Statistic.Value>
-                  <Statistic.Label>Status</Statistic.Label>
+                  <Statistic.Label>{train.destinations && train.destinations[direction] ? `${formatStation(train.destinations[direction].join('/'))}-bound trains Status` : 'Status' }</Statistic.Label>
                 </Statistic>
               </Statistic.Group>
               {
@@ -222,8 +222,8 @@ class TrainModalDirectionPane extends React.Component {
                 />
               }
               {
-                train.trips && train.trips[direction] && selectedRouting === 'blended' &&
-                <Header as='h3' inverted textAlign='left'>Trains on shared route only</Header>
+                train.trips && train.trips[direction] && selectedRouting === 'blended' && Object.keys(routings).length > 1 &&
+                <Header as='h3' inverted textAlign='left'>Trains on shared section only</Header>
               }
               { train.trips && train.trips[direction] &&
                 <Table fixed inverted className='trip-table'>
