@@ -22,7 +22,7 @@ export const formatStation = (stationName) => {
     return;
   }
   return stationName.replace(/ - /g, "–")
-}
+};
 
 export const replaceTrainBulletsInParagraphs = (trains, array_of_strs) => {
   return array_of_strs.map((change, i) => {
@@ -43,4 +43,21 @@ export const replaceTrainBulletsInParagraphs = (trains, array_of_strs) => {
 
     return (<Header as='h4' inverted key={i}>{tmp}</Header>);
   });
+};
+
+export const formatMinutes = (minutes, markDue) => {
+  if (minutes > 1) {
+    return `${minutes} mins`;
+  }
+  if (minutes > 0) {
+    return `${minutes} min`;
+  }
+  if (markDue) {
+    return 'Due';
+  }
+  return '0 mins';
+};
+
+export const routingHash = (routing) => {
+  return `${routing[0]}-${routing[routing.length-1]}-${routing.length}`;
 }

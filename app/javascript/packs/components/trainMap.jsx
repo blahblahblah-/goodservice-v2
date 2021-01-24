@@ -14,12 +14,12 @@ class TrainMap extends React.Component {
       return;
     }
 
-    routings.south.forEach((r) => {
+    routings.south?.forEach((r) => {
       r.forEach((stopId) => {
         southStops[stopId] = true;
       });
     });
-    routings.north.forEach((r) => {
+    routings.north?.forEach((r) => {
       r.forEach((stopId) => {
         northStops[stopId] = true;
       });
@@ -35,11 +35,11 @@ class TrainMap extends React.Component {
       return;
     }
 
-    const southRoutings = routings.south.map((obj) => [...obj]);
+    const southRoutings = routings.south?.map((obj) => [...obj]) || [];
 
-    const northRoutings = routings.north.map((obj) => {
+    const northRoutings = routings.north?.map((obj) => {
       return [...obj].reverse();
-    });
+    }) || [];
 
     const allRoutings = southRoutings.concat(northRoutings).sort((a, b) => {
       return b.length - a.length ;

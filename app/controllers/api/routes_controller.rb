@@ -47,6 +47,7 @@ class Api::RoutesController < ApplicationController
         route_data[:transfers] = transfers_info(route_data['actual_routings'], route_id, route_data['timestamp'])
         pairs = route_pairs(route_data['actual_routings'])
         route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
+        route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
         route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
       end
       {
@@ -103,6 +104,14 @@ class Api::RoutesController < ApplicationController
     results.to_h do |k, v|
       stops = k.split("-")
       [k, v ? v.to_i : RedisStore.supplementary_scheduled_travel_time(stops.first, stops.second)]
+    end
+  end
+
+  def supplementary_travel_times(pairs)
+    results = RedisStore.supplementary_scheduled_travel_times(pairs)
+    results.to_h do |k, v|
+      stops = k.split("-")
+      [k, v ? v.to_i : RedisStore.scheduled_travel_time(stops.first, stops.second)]
     end
   end
 

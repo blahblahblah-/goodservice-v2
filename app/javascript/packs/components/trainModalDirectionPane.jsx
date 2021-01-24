@@ -1,8 +1,9 @@
 import React from 'react';
 import { Header, Segment, Statistic, Grid, Dropdown, Table } from "semantic-ui-react";
+import { Link } from 'react-router-dom';
 
 import TrainMap from './trainMap';
-import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
+import { statusColor, formatStation, formatMinutes, replaceTrainBulletsInParagraphs, routingHash } from './utils';
 
 import './trainModalDirectionPane.scss';
 
@@ -21,7 +22,7 @@ class TrainModalDirectionPane extends React.Component {
     }
     if (prevProps.train === train && prevProps.direction === direction) {
       const prevRoutingHashes = Object.keys(routings);
-      const currRoutingHashes = train.actual_routings[direction].map((r) => this.hashRouting(r));
+      const currRoutingHashes = train.actual_routings[direction].map((r) => routingHash(r));
       const isIdentical = prevRoutingHashes.length === currRoutingHashes.length && prevRoutingHashes.every((value, index) => value === currRoutingHashes[index])
 
       if (!isIdentical) {
@@ -29,7 +30,7 @@ class TrainModalDirectionPane extends React.Component {
         let newSelectedRouting = selectedRouting;
 
         train.actual_routings[direction].forEach((r) => {
-          newRoutings[this.hashRouting(r)] = r;
+          newRoutings[routingHash(r)] = r;
         });
 
         if (newSelectedRouting !== 'blended') {
@@ -48,14 +49,10 @@ class TrainModalDirectionPane extends React.Component {
       return;
     }
     train.actual_routings[direction].forEach((r) => {
-      routings[this.hashRouting(r)] = r;
+      routings[routingHash(r)] = r;
     });
 
     this.setState({ routings: routings, selectedRouting: 'blended' })
-  }
-
-  hashRouting(routing) {
-    return `${routing[0]}-${routing[routing.length-1]}-${routing.length}`
   }
 
   directionStatus() {
@@ -116,7 +113,7 @@ class TrainModalDirectionPane extends React.Component {
   };
 
   renderTripsTableBody() {
-    const { train, direction } = this.props;
+    const { train, direction, match } = this.props;
     const { selectedRouting } = this.state;
     const currentTime = Date.now() / 1000;
     let trips = train.trips[direction][selectedRouting];
@@ -138,27 +135,29 @@ class TrainModalDirectionPane extends React.Component {
             const delayInfo = delayed ? `(delayed for ${Math.round(trip.delayed_time / 60)} mins)` : '';
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);
             const upcomingStopArrivalTime = Math.round((trip.upcoming_stop_arrival_time - currentTime) / 60);
-            const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train && Math.round(trip.estimated_time_behind_next_train / 60);
-            const timeBehindNextTrain = trip.time_behind_next_train && Math.round(trip.time_behind_next_train / 60);
+            const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null && Math.round(trip.estimated_time_behind_next_train / 60);
+            const timeBehindNextTrain = trip.time_behind_next_train !== null && Math.round(trip.time_behind_next_train / 60);
             return (
               <Table.Row key={trip.id} className={delayed && 'delayed'}>
                 <Table.Cell>
-                  {trip.id} to {formatStation(train.stops[trip.destination_stop])} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
+                  <Link to={`/trains/${train.id}/${trip.id}`}>
+                    {trip.id} to {formatStation(train.stops[trip.destination_stop])} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
+                  </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { this.formatMinutes(estimatedTimeUntilUpcomingStop) }
+                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) }
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { this.formatMinutes(upcomingStopArrivalTime)}
+                  { formatMinutes(upcomingStopArrivalTime, true)}
                 </Table.Cell>
                 <Table.Cell>
                   { formatStation(train.stops[trip.upcoming_stop]) }
                 </Table.Cell>
-                <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway && 'long-headway'}>
-                  { estimatedTimeBehindNextTrain && this.formatMinutes(estimatedTimeBehindNextTrain) }
+                <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
+                  { estimatedTimeBehindNextTrain !== null && formatMinutes(estimatedTimeBehindNextTrain, false) }
                 </Table.Cell>
-                <Table.Cell className={timeBehindNextTrain > maxScheduledHeadway && 'long-headway'}>
-                  { timeBehindNextTrain && this.formatMinutes(timeBehindNextTrain) }
+                <Table.Cell className={timeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
+                  { timeBehindNextTrain !== null && formatMinutes(timeBehindNextTrain, false) }
                 </Table.Cell>
               </Table.Row>
             )
@@ -167,29 +166,18 @@ class TrainModalDirectionPane extends React.Component {
       </Table.Body>
     );
   }
-
-  formatMinutes(minutes) {
-    if (minutes > 1) {
-      return `${minutes} mins`
-    }
-    if (minutes > 0) {
-      return `${minutes} min`
-    }
-    return `Due`
-  }
-
   render() {
     const { trains, train, direction } = this.props;
     const { selectedRouting, routings } = this.state;
-    const routingToMap = selectedRouting == 'blended' ? train.actual_routings[direction] :[routings[selectedRouting]];
+    const routingToMap = selectedRouting == 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
     return (
       <Segment basic className='train-modal-direction-pane'>
+
         <Grid textAlign='center'>
           <Grid.Row>
             <Grid.Column width={4}>
             {
               train.actual_routings && train.actual_routings[direction] &&
-
                 <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
             }
             </Grid.Column>

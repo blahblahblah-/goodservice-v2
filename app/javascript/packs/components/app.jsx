@@ -96,7 +96,7 @@ class App extends React.Component {
             { this.renderLoading() }
             { trainKeys.length > 0 &&
               <Switch>
-                <Route path='/trains/:id' render={(props) => {
+                <Route path='/trains/:id/:tripId?' render={(props) => {
                   if (props.match.params.id && trainKeys.includes(props.match.params.id)) {
                     return this.renderTrains(props.match.params.id);
                   } else {

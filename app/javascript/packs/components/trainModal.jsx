@@ -1,11 +1,12 @@
 import React from 'react';
 import { Modal, Dimmer, Loader, Grid, Menu, Header } from "semantic-ui-react";
-import { withRouter } from 'react-router-dom';
+import { withRouter, Redirect } from 'react-router-dom';
 
 import TrainBullet from './trainBullet';
 import TrainModalOverallPane from './trainModalOverallPane';
 import TrainModalDirectionPane from './trainModalDirectionPane';
-import { formatStation } from './utils';
+import TripModal from './tripModal';
+import { formatStation, routingHash } from './utils';
 
 import './trainModal.scss'
 
@@ -81,7 +82,32 @@ class TrainModal extends React.Component {
 
   render() {
     const { train, activeMenuItem, timestamp } = this.state;
-    const { trains, trigger, selected } = this.props;
+    const { trains, trigger, selected, match } = this.props;
+    let tripModal = null;
+    if (train && match.params.id === train.id && match.params.tripId) {
+      let routingKey = null;
+      let trip = null;
+      const direction = ['north', 'south'].find((direction) => {
+        routingKey = Object.keys(train.trips[direction]).find((routingKey) => {
+          trip = train.trips[direction][routingKey].find((trip) => {
+            return trip.id === match.params.tripId;
+          });
+          return trip;
+        });
+        return routingKey;
+      })
+      if (!trip) {
+        return (<Redirect to={`/trains/${train.id}`} />);
+      }
+      const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
+      tripModal = (
+        <TripModal train={train} selectedTrip={trip} routing={routing} />
+      );
+
+      if (activeMenuItem !== direction) {
+        this.setState({ activeMenuItem: direction });
+      }
+    }
     return (
       <Modal basic size='fullscreen' trigger={trigger} open={selected} closeIcon dimmer='blurring'
          onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='train-modal'>
@@ -90,6 +116,9 @@ class TrainModal extends React.Component {
           <Dimmer active>
             <Loader inverted></Loader>
           </Dimmer>
+        }
+        {
+          tripModal
         }
         {
           train &&
