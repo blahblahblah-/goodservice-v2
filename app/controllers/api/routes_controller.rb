@@ -8,7 +8,7 @@ class Api::RoutesController < ApplicationController
         routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
           route_data_encoded = data_hash[route.internal_id]
           route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
-          if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
+          if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
             route_data = {}
           else
             timestamps << route_data['timestamp']
@@ -40,7 +40,7 @@ class Api::RoutesController < ApplicationController
       scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
       route_data_encoded = RedisStore.route_status(route_id)
       route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
-      if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
+      if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
         route_data = {}
       else
         route_data[:stops] = stops_info(route_data['actual_routings'])
