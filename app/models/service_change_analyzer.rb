@@ -140,7 +140,7 @@ class ServiceChangeAnalyzer
 
         changes.each do |c|
           c.affects_some_trains = d.each_index.select { |i|
-            !d[i].include?(c) && c.applicable_to_routing?(actual_routings[c.direction].unshift(nil).push(nil))
+            !d[i].include?(c) && c.applicable_to_routing?(actual_routings[c.direction].dup.unshift(nil).push(nil))
           }.present?
         end
 
