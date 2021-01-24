@@ -71,7 +71,7 @@ class RouteProcessor
 
     def determine_routings_for_direction(trips)
       trips.map(&:stop_ids).reverse.inject([]) do |memo, stops_array|
-        unless memo.any? { |array| (stops_array - array).empty? }
+        unless memo.any? { |array| array.each_cons(stops_array.length).any?(&stops_array.method(:==)) || stops_array.each_cons(array.length).any?(&array.method(:==)) }
           memo << stops_array
         end
         memo
