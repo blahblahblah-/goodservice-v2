@@ -27,6 +27,7 @@ class TrainModal extends React.Component {
     if (selected) {
       this.fetchData();
       this.timer = setInterval(() => this.fetchData(), 30000);
+      this.setState({ activeMenuItem: 'overall' });
     } else {
       clearInterval(this.timer);
     }
