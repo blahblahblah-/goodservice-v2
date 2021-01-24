@@ -25,23 +25,19 @@ class TrainModalDirectionPane extends React.Component {
       const isIdentical = prevRoutingHashes.length === currRoutingHashes.length && prevRoutingHashes.every((value, index) => value === currRoutingHashes[index])
 
       if (!isIdentical) {
+        let newRoutings = {};
         let newSelectedRouting = selectedRouting;
-        const newRoutings = {};
+
+        train.actual_routings[direction].forEach((r) => {
+          newRoutings[this.hashRouting(r)] = r;
+        });
+
         if (newSelectedRouting !== 'blended') {
           newSelectedRouting = currRoutingHashes.includes(newSelectedRouting) ? newSelectedRouting : 'blended';
         }
-        train.actual_routings[direction].forEach((r) => {
-          routings[this.hashRouting(r)] = r;
-        });
+
         this.setState({ routings: newRoutings, selectedRouting: newSelectedRouting })
       }
-    } else {
-      const routings = {};
-      train.actual_routings[direction].forEach((r) => {
-        routings[this.hashRouting(r)] = r;
-      });
-
-      this.setState({ routings: routings, selectedRouting: 'blended' })
     }
   }
 
