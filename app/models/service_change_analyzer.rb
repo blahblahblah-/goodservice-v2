@@ -25,14 +25,10 @@ class ServiceChangeAnalyzer
             changes << [ServiceChanges::NoTrainServiceChange.new(direction[:route_direction], [], nil, nil)]
           end
         else
-          actual.each do |a|
+          actual.each do |actual_routing|
             routing_changes = []
             ongoing_service_change = nil
-            if a.any? { |s| s[-1] != direction[:suffix] }
-              next
-            end
-            actual_routing = a.map { |s| s[0..2] }
-            scheduled_routing = scheduled&.map { |sr| sr.map { |s| s[0..2] }}&.min_by { |sr| (actual_routing - sr).size + (sr - actual_routing).size }
+            scheduled_routing = scheduled&.min_by { |sr| (actual_routing - sr).size + (sr - actual_routing).size }
 
             if !scheduled_routing
               changes << [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing)]
@@ -119,8 +115,7 @@ class ServiceChangeAnalyzer
           end
         end
         if actual&.size == 2 && (actual[0] & actual[1]).size <= 1
-          actual.each_with_index do |a, i|
-            ar = a.map { |s| s[0..2] }
+          actual.each_with_index do |ar, i|
             changes[i] = [] unless changes[i]
             changes[i] << ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], ar, ar.first, ar)
           end
@@ -145,7 +140,7 @@ class ServiceChangeAnalyzer
 
         changes.each do |c|
           c.affects_some_trains = d.each_index.select { |i|
-            !d[i].include?(c) && c.applicable_to_routing?(actual_routings[c.direction].map { |s2| s2[0..2] }.unshift(nil).push(nil))
+            !d[i].include?(c) && c.applicable_to_routing?(actual_routings[c.direction].unshift(nil).push(nil))
           }.present?
         end
 
@@ -207,7 +202,7 @@ class ServiceChangeAnalyzer
         route_pair = routing_set.find do |route_id, direction|
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
-              routings.any? {|r| normalize_routing(r).each_cons(sc.length).any?(&sc.method(:==))}
+              routings.any? {|r| r.each_cons(sc.length).any?(&sc.method(:==))}
             end
           end
         end
@@ -230,7 +225,7 @@ class ServiceChangeAnalyzer
             route_pairs = [first_station_sequence, second_station_sequence].map do |station_sequence|
               route_pair = routing_set.find do |route_id, direction|
                 route_id[0] != current_route_id[0] && direction.any? do |_, routings|
-                  routings.any? {|r| normalize_routing(r).each_cons(station_sequence.length).any?(&station_sequence.method(:==))}
+                  routings.any? {|r| r.each_cons(station_sequence.length).any?(&station_sequence.method(:==))}
                 end
               end
               route_pair
@@ -244,23 +239,17 @@ class ServiceChangeAnalyzer
       reroute_service_change.related_routes = route_pairs.map {|r| r[0] } if route_pairs.compact.size == 2
     end
 
-    def normalize_routing(routing)
-      routing.map { |r| r[0..2] }
-    end
-
     def truncate_service_change_overlaps_with_different_routing?(service_change, routings)
       if service_change.begin_of_route?
         routings.any? do |r|
-          normalized_routing = normalize_routing(r)
-          next if normalized_routing == service_change.routing
-          i = normalized_routing.index(service_change.destination)
+          next if r == service_change.routing
+          i = r.index(service_change.destination)
           i && i > 0
         end
       else
         routings.any? do |r|
-          normalized_routing = normalize_routing(r)
-          next if normalized_routing == service_change.routing
-          i = normalized_routing.index(service_change.first_station)
+          next if r == service_change.routing
+          i = r.index(service_change.first_station)
           i && i < r.size - 1
         end
       end
