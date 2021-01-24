@@ -1,6 +1,7 @@
 import React from 'react';
 import { Segment, Header } from "semantic-ui-react";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 import './trainBullet.scss';
 
 class TrainBullet extends React.Component {
@@ -50,21 +51,21 @@ class TrainBullet extends React.Component {
   render() {
     const { link, id, linkedView, alternateName } = this.props;
     const view = linkedView && '/' + linkedView || ""
-    // if (link) {
-    //   return(
-    //     <Link to={'/trains/' + id + view}>
-    //       <div className={this.classNames()} style={this.style()}>
-    //         <div className={this.innerClassNames()} style={this.innerStyle()}>{this.name()}<sup>{alternateName}</sup></div>
-    //       </div>
-    //     </Link>
-    //   )
-    // } else {
+    if (link) {
+      return(
+        <Link to={'/trains/' + id + view}>
+          <div className={this.classNames()} style={this.style()}>
+            <div className={this.innerClassNames()} style={this.innerStyle()}>{this.name()}<sup>{alternateName}</sup></div>
+          </div>
+        </Link>
+      )
+    } else {
       return(
         <div className={this.classNames()} style={this.style()}>
           <div className={this.innerClassNames()} style={this.innerStyle()}>{this.name()}<sup>{alternateName}</sup></div>
         </div>
       )
-    // }
+    }
   }
 }
 export default TrainBullet

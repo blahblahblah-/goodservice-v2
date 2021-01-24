@@ -76,10 +76,15 @@ class Api::RoutesController < ApplicationController
 
   def transfers_info(routings, route_id, timestamp)
     stations = routings.map { |_, r| r }.flatten.uniq
+    transfers = Scheduled::Transfer.where("from_stop_internal_id <> to_stop_internal_id and from_stop_internal_id in (?)", stations)
     stations.to_h { |stop_id|
       arr = []
       routes_by_direction = [1, 3].to_h { |direction|
-        [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp) - [route_id]]
+        routes = RedisStore.routes_stop_at(stop_id, direction, timestamp) - [route_id]
+        transfers.select { |t| t.from_stop_internal_id == stop_id }.each { |t|
+          routes << RedisStore.routes_stop_at(t.to_stop_internal_id, direction, timestamp) - [route_id]
+        }
+        [direction, routes.flatten.uniq]
       }
       routes = routes_by_direction.values.flatten.uniq.sort
       [stop_id, routes.to_h { |route_id|
