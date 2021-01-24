@@ -1,6 +1,6 @@
 class RouteProcessor
-  RUNTIME_END_LIMIT = 30.minutes.to_i
-  RUNTIME_START_LIMIT = 40.minutes.to_i
+  RUNTIME_END_LIMIT = 60.minutes.to_i
+  RUNTIME_START_LIMIT = 70.minutes.to_i
 
   class << self
     def process_route(route_id, trips, timestamp)
