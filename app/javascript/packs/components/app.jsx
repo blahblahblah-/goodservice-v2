@@ -11,6 +11,7 @@ import { groupBy } from 'lodash';
 
 import Train from './train';
 import TrainBullet from './trainBullet';
+import AboutModal from './aboutModal';
 
 import 'semantic-ui-css/semantic.min.css'
 
@@ -132,11 +133,12 @@ class App extends React.Component {
             goodservice.io
             <Header.Subheader>
               New York City Subway Status Page
+                <AboutModal trigger={(<sup>[<span className="about-link">?</span>]</sup>)} />
             </Header.Subheader>
           </Header>
         </Segment>
         <Segment inverted vertical className='blogpost-segment'>
-          Blog post goes here
+
         </Segment>
         <Segment basic className='trains-segment'>
             { this.renderLoading() }

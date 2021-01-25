@@ -2,11 +2,11 @@ body {
   background: #1b1c1d !important;
 }
 
-.header-segment {
+.ui.inverted.segment.header-segment {
   padding: 2em 2em 1em 2em;
 }
 
-.blogpost-segment {
+.ui.inverted.segment.blogpost-segment {
   background-color: #333333;
   padding: 1em 2em;
 }
@@ -31,4 +31,8 @@ body {
   .train-status-row {
     padding-bottom: 0;
   }
+}
+
+.about-link {
+  cursor: pointer;
 }
