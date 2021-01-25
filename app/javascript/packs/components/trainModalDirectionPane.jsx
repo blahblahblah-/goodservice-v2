@@ -250,7 +250,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} trips={train.trips[direction][selectedRouting]} showTravelTime />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime  trips={train.trips[direction][selectedRouting] || train.trips[direction][Object.keys(train.trips[direction])[0]]} />
             }
             </Grid.Column>
          </Grid.Row>
