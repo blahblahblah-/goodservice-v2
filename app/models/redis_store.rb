@@ -131,7 +131,7 @@ class RedisStore
     end
 
     def update_route_status(route_id, data)
-      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 60)
+      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 300)
     end
 
     # Routings
