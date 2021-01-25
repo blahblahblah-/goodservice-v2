@@ -129,7 +129,7 @@ class App extends React.Component {
     return (
       <Router>
         <Segment inverted vertical className='header-segment'>
-          <Header inverted as='h1' color='blue'>
+          <Header inverted as='h1' color='yellow'>
             goodservice.io
             <Header.Subheader>
               New York City Subway Status Page

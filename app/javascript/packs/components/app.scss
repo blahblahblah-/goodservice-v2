@@ -11,10 +11,10 @@ body {
   padding: 1em 2em;
 }
 
-.trains-segment {
-  background-color: rgba(255, 255, 255, 0.15);
-  margin: 0;
-  padding: 0;
+.ui.basic.segment.trains-segment {
+  background-color: #002D72;
+  padding: 2em;
+  margin-top: 0;
 }
 
 .ui.grid.train-grid {
