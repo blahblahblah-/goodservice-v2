@@ -72,7 +72,7 @@ class Train extends React.Component {
   render() {
     const { train, trains, selected, mini } = this.props;
     return(
-      <TrainModal trainId={train.id} trains={trains} selected={selected} trigger={
+      <TrainModal trainId={train.id} trains={trains} selected={selected} mini={mini} trigger={
         <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
           { !mini && this.renderInfo() }
           { this.renderBullet() }
