@@ -46,9 +46,12 @@ class Api::RoutesController < ApplicationController
         route_data[:stops] = stops_info(route_data['actual_routings'])
         route_data[:transfers] = transfers_info(route_data['actual_routings'], route_id, route_data['timestamp'])
         pairs = route_pairs(route_data['actual_routings'])
-        route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
-        route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
-        route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
+
+        if pairs.present?
+          route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
+          route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
+          route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
+        end
       end
       {
         id: route.internal_id,
