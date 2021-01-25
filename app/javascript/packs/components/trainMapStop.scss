@@ -69,6 +69,26 @@
       // cursor: pointer;
     }
 
+    .trip-at {
+      height: 16px;
+      width: 16px;
+      position: relative;
+      background-color: rgba(0,0,0,.4);
+      border-radius: 50%;
+      left: -4px;
+      top: -7px;
+    }
+
+    .trip-before {
+      height: 16px;
+      width: 16px;
+      position: relative;
+      border-radius: 50%;
+      background-color: rgba(0,0,0,.4);
+      left: -4px;
+      top: -34px;
+    }
+
     .branch-corner {
       overflow: hidden;
       width: 40px;

@@ -163,7 +163,7 @@ class TrainMap extends React.Component {
   }
 
   render() {
-    const { routings, trains, train, showTravelTime } = this.props;
+    const { routings, trains, train, showTravelTime, trips } = this.props;
     const color = train.color;
     const stops = train.stops;
     const transfersInfo = train.transfers;
@@ -260,7 +260,7 @@ class TrainMap extends React.Component {
                   <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} stop={stop} southStop={stopPattern.southStops[stopId]}
                     northStop={stopPattern.northStops[stopId]} transfers={transfers} branchStops={branchStops} branchStart={branchStart}
                     branchEnd={branchEnd} activeBranches={activeBranches} showTravelTime={showTravelTime}
-                    />
+                    trips={trips && trips.filter((t) => t.upcoming_stop === stopId )}/>
                 );
                 previousStopId = stopId;
                 return results;

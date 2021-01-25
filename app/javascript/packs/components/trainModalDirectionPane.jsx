@@ -138,7 +138,7 @@ class TrainModalDirectionPane extends React.Component {
             const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null && Math.round(trip.estimated_time_behind_next_train / 60);
             const timeBehindNextTrain = trip.time_behind_next_train !== null && Math.round(trip.time_behind_next_train / 60);
             return (
-              <Table.Row key={trip.id} className={delayed && 'delayed'}>
+              <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
                   <Link to={`/trains/${train.id}/${trip.id}`}>
                     {trip.id} to {formatStation(train.stops[trip.destination_stop])} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
@@ -178,7 +178,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={train.trips[direction][selectedRouting] || train.trips[direction][Object.keys(train.trips[direction])[0]]} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>
@@ -250,7 +250,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} trips={train.trips[direction][selectedRouting]} showTravelTime />
             }
             </Grid.Column>
          </Grid.Row>

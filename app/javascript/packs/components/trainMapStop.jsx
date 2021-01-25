@@ -10,11 +10,33 @@ import './trainMapStop.scss'
 class TrainMapStop extends React.Component {
 
   renderStop() {
-    const { southStop, northStop} = this.props;
+    const { southStop, northStop, train, trips } = this.props;
+
+    const time = Date.now() / 1000;
+    const stopsBefore = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) > 60);
+    const stopsAt = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) <= 60);
+    const tripContainer = [];
+
+    if (stopsBefore && stopsBefore.length > 0) {
+      tripContainer.push(
+        <Link to={`/trains/${train.id}/${stopsBefore[0].id}`}>
+          <div className='trip-before' key='trip-before'></div>
+        </Link>
+      );
+    }
+
+    if (stopsAt && stopsAt.length > 0) {
+      tripContainer.push(
+        <Link to={`/trains/${train.id}/${stopsAt[0].id}`}>
+          <div className='trip-at' key='trip-at'></div>
+        </Link>
+      );
+    }
 
     if (southStop && northStop) {
       return (
         <div className='both-stop'>
+          { tripContainer }
         </div>
       )
     }
@@ -22,12 +44,14 @@ class TrainMapStop extends React.Component {
     if (northStop) {
       return (
         <div className='north-stop'>
+          { tripContainer }
         </div>
       )
     }
 
     return (
       <div className='south-stop'>
+        { tripContainer }
       </div>
     )
   }
@@ -42,7 +66,7 @@ class TrainMapStop extends React.Component {
     )
   }
 
-  renderLine(isActiveBranch, index, branchStart, branchEnd) {
+  renderLine(isActiveBranch, index, branchStart, branchEnd, trips) {
     const { branchStops, arrivalTime, train } = this.props;
     const color = train.color;
     const stopExists = branchStops[index];
@@ -77,7 +101,7 @@ class TrainMapStop extends React.Component {
     return (
       <div key={index} style={{minWidth: (branching ? "120px" : (arrivalTime ? "45px" : "60px")), display: "flex"}}>
         {
-          this.renderMainLine(background, margin, stopExists)
+          this.renderMainLine(background, margin, stopExists, trips)
         }
         {
           branching &&
@@ -157,7 +181,7 @@ class TrainMapStop extends React.Component {
   }
 
   render() {
-    const { stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime } = this.props;
+    const { stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
     return (
       <li className='train-map-stop'>
         <div className='container'>
@@ -172,7 +196,7 @@ class TrainMapStop extends React.Component {
             <div className='left-margin'></div>
           }
           { activeBranches.map((obj, index) => {
-              return this.renderLine(obj, index, branchStart, branchEnd);
+              return this.renderLine(obj, index, branchStart, branchEnd, trips);
             })
           }
           <Header as='h5' className='station-name' inverted>

@@ -89,7 +89,7 @@ class TrainModal extends React.Component {
       let routingKey = null;
       let trip = null;
       const direction = ['north', 'south'].find((direction) => {
-        routingKey = Object.keys(train.trips[direction]).find((routingKey) => {
+        routingKey = train.trips[direction] && Object.keys(train.trips[direction]).find((routingKey) => {
           trip = train.trips[direction][routingKey].find((trip) => {
             return trip.id === match.params.tripId;
           });
