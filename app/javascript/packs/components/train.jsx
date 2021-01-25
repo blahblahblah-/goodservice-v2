@@ -32,13 +32,19 @@ class Train extends React.Component {
   }
 
   renderBullet() {
-    const { train } = this.props;
-    // if (mini && train.alternate_name) {
-    //   return (
-    //     <TrainBullet name={train.name} alternateName={train.alternate_name[0]} color={train.color} size={'small'}
-    //           textColor={train.text_color} style={{ float: 'left' }} />
-    //   )
-    // }
+    const { train, mini } = this.props;
+    if (mini) {
+      if (train.alternate_name) {
+        return (
+          <TrainBullet name={train.name} alternateName={train.alternate_name[0]} color={train.color} size='small'
+                textColor={train.text_color} style={{ float: 'left' }} />
+        );
+      }
+      return (
+        <TrainBullet name={train.name} color={train.color} size='small'
+              textColor={train.text_color} style={{ float: 'left' }} />
+      );
+    }
     if (train.alternate_name) {
       return (
         <div className='train-bullet'>
@@ -64,18 +70,11 @@ class Train extends React.Component {
   }
 
   render() {
-    const { train, trains, selected } = this.props;
-    // const buttonStyle = {};
-    // if (mini) {
-    //   buttonStyle.padding = "0";
-    //   buttonStyle.border = "none";
-    //   buttonStyle.background = "none";
-    //   buttonStyle.minWidth = "2em";
-    // }
+    const { train, trains, selected, mini } = this.props;
     return(
       <TrainModal trainId={train.id} trains={trains} selected={selected} trigger={
         <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
-          { this.renderInfo() }
+          { !mini && this.renderInfo() }
           { this.renderBullet() }
         </Segment>
       } />

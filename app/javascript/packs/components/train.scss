@@ -1,7 +1,6 @@
 button.ui.segment.train {
   background-color: rgba(0,0,0, 0.1);
   color: white;
-  min-height: 8em;
 
   .ui.header {
     color: white;
@@ -23,5 +22,16 @@ button.ui.segment.train {
       margin-left: .2em;
       text-align: left;
     }
+  }
+
+  @media only screen and (max-width: 767px) {
+    padding: 0;
+    border: none;
+    background: none;
+    min-width: 2em;
+  }
+
+  @media only screen and (min-width: 768px) {
+    min-height: 8em;
   }
 }

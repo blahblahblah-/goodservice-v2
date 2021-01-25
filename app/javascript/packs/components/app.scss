@@ -16,3 +16,19 @@ body {
   margin: 0;
   padding: 0;
 }
+
+.ui.grid.train-grid {
+  @media only screen and (max-width: 767px) {
+    display: none;
+  }
+}
+
+.ui.grid.mobile-train-grid {
+  @media only screen and (min-width: 768px) {
+    display: none;
+  }
+
+  .train-status-row {
+    padding-bottom: 0;
+  }
+}

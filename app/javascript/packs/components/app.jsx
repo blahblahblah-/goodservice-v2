@@ -6,10 +6,23 @@ import {
   Route,
   Redirect,
 } from 'react-router-dom';
+import { groupBy } from 'lodash';
+
 import Train from './train';
 import 'semantic-ui-css/semantic.min.css'
 
 const API_URL = '/api/routes';
+
+const STATUSES = {
+  'Delay': 'red',
+  'No Service': 'black',
+  'Service Change': 'orange',
+  'Slow': 'yellow',
+  'Not Good': 'yellow',
+  'Good Service': 'green',
+  'Not Scheduled': 'black'
+};
+
 
 class App extends React.Component {
   constructor(props) {
@@ -50,27 +63,55 @@ class App extends React.Component {
   renderTrains(selectedTrain) {
     const { trains, timestamp } = this.state;
     const trainKeys = Object.keys(trains);
+    let groups = groupBy(trains, 'status');
     return (
       <>
-      {
-        trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
-          const nameA = `${a.name} ${a.alternate_name}`;
-          const nameB = `${b.name} ${b.alternate_name}`;
-          if (nameA < nameB) {
-            return -1;
+        <Grid columns={3} className='train-grid'>
+        {
+          trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
+            const nameA = `${a.name} ${a.alternate_name}`;
+            const nameB = `${b.name} ${b.alternate_name}`;
+            if (nameA < nameB) {
+              return -1;
+            }
+            if (nameA > nameB) {
+              return 1;
+            }
+            return 0;
+          }).map(train => {
+            const visible = train.visible || train.status !== 'Not Scheduled';
+            return (
+              <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
+                <Train train={train} trains={trains} selected={selectedTrain === train.id} />
+              </Grid.Column>)
+          })
+        }
+        </Grid>
+        <Grid className='mobile-train-grid'>
+          {
+            Object.keys(STATUSES).filter((s) => groups[s]).map((status) => {
+              return (
+                <React.Fragment key={status}>
+                  <Grid.Row columns={1} className='train-status-row'>
+                    <Grid.Column><Header size='small' color={STATUSES[status]} inverted>{status}</Header></Grid.Column>
+                  </Grid.Row>
+                  <Grid.Row columns={6} textAlign='center'>
+                    {
+                      groups[status].map(train => {
+                        const visible = train.visible || train.status !== 'Not Scheduled';
+                        return (
+                          <Grid.Column key={train.name + train.alternate_name} style={{display: (visible ? 'block' : 'none')}}>
+                            <Train train={train} trains={trains} selected={selectedTrain === train.id} mini={true} />
+                          </Grid.Column>
+                        )
+                      })
+                    }
+                  </Grid.Row>
+                </React.Fragment>
+              )
+            })
           }
-          if (nameA > nameB) {
-            return 1;
-          }
-          return 0;
-        }).map(train => {
-          const visible = train.visible || train.status !== 'Not Scheduled';
-          return (
-            <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
-              <Train train={train} trains={trains} selected={selectedTrain === train.id} />
-            </Grid.Column>)
-        })
-      }
+        </Grid>
       </>
     );
   }
@@ -92,7 +133,6 @@ class App extends React.Component {
           Blog post goes here
         </Segment>
         <Segment basic className='trains-segment'>
-          <Grid stackable columns={3}>
             { this.renderLoading() }
             { trainKeys.length > 0 &&
               <Switch>
@@ -109,7 +149,6 @@ class App extends React.Component {
                 <Route render={() => <Redirect to="/" /> } />
               </Switch>
             }
-          </Grid>
         </Segment>
         <Segment inverted vertical style={{padding: '1em 2em'}}>
           <Grid>
