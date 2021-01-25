@@ -82,9 +82,9 @@ class TrainModal extends React.Component {
 
   render() {
     const { train, activeMenuItem, timestamp } = this.state;
-    const { trains, trigger, selected, match, mini } = this.props;
+    const { trains, trigger, selected, match } = this.props;
     let tripModal = null;
-    let className = '';
+    let className = 'train-modal';
     if (train && match.params.id === train.id && match.params.tripId) {
       let routingKey = null;
       let trip = null;
@@ -108,12 +108,7 @@ class TrainModal extends React.Component {
       if (activeMenuItem !== direction) {
         this.setState({ activeMenuItem: direction });
       }
-      className = 'dimmable dimmed blurring';
-    }
-    if (mini) {
-      className = className + ' mobile-train-modal';
-    } else {
-      className = className + ' train-modal';
+      className = 'train-modal dimmable dimmed blurring';
     }
     return (
       <Modal basic size='fullscreen' trigger={trigger} open={selected} closeIcon dimmer='blurring'

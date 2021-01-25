@@ -5,10 +5,13 @@ import {
   Switch,
   Route,
   Redirect,
+  Link,
 } from 'react-router-dom';
 import { groupBy } from 'lodash';
 
 import Train from './train';
+import TrainBullet from './trainBullet';
+
 import 'semantic-ui-css/semantic.min.css'
 
 const API_URL = '/api/routes';
@@ -101,7 +104,10 @@ class App extends React.Component {
                         const visible = train.visible || train.status !== 'Not Scheduled';
                         return (
                           <Grid.Column key={train.name + train.alternate_name} style={{display: (visible ? 'block' : 'none')}}>
-                            <Train train={train} trains={trains} selected={selectedTrain === train.id} mini={true} />
+                            <Link to={`/trains/${train.id}`}>
+                              <TrainBullet name={train.name} alternateName={train.alternate_name && train.alternate_name[0]} color={train.color} size='small'
+                                              textColor={train.text_color} style={{ float: 'left' }} />
+                            </Link>
                           </Grid.Column>
                         )
                       })

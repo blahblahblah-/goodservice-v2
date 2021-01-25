@@ -35,15 +35,3 @@ button.ui.segment.train {
     min-height: 8em;
   }
 }
-
-.ui.fullscreen.modal.active.train-modal {
-  @media only screen and (max-width: 767px) {
-    display: none !important;
-  }
-}
-
-// .ui.fullscreen.modal.active.mobile-train-modal {
-//   @media only screen and (min-width: 768px) {
-//     display: none !important;
-//   }
-// }

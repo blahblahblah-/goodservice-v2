@@ -32,19 +32,7 @@ class Train extends React.Component {
   }
 
   renderBullet() {
-    const { train, mini } = this.props;
-    if (mini) {
-      if (train.alternate_name) {
-        return (
-          <TrainBullet name={train.name} alternateName={train.alternate_name[0]} color={train.color} size='small'
-                textColor={train.text_color} style={{ float: 'left' }} />
-        );
-      }
-      return (
-        <TrainBullet name={train.name} color={train.color} size='small'
-              textColor={train.text_color} style={{ float: 'left' }} />
-      );
-    }
+    const { train } = this.props;
     if (train.alternate_name) {
       return (
         <div className='train-bullet'>
@@ -70,11 +58,11 @@ class Train extends React.Component {
   }
 
   render() {
-    const { train, trains, selected, mini } = this.props;
+    const { train, trains, selected } = this.props;
     return(
-      <TrainModal trainId={train.id} trains={trains} selected={selected} mini={mini} trigger={
+      <TrainModal trainId={train.id} trains={trains} selected={selected} trigger={
         <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
-          { !mini && this.renderInfo() }
+          { this.renderInfo() }
           { this.renderBullet() }
         </Segment>
       } />
