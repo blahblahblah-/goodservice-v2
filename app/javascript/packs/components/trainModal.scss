@@ -1,4 +1,8 @@
-.ui.fullscreen.modal.active.train-modal, .ui.fullscreen.modal.active.mobile-train-modal {
+.ui.fullscreen.modal.active.train-modal {
+  @media only screen and (max-width: 767px) {
+    width: 100% !important;
+  }
+
   .close.icon {
     color: white;
   }
