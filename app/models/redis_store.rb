@@ -162,7 +162,7 @@ class RedisStore
 
     # Dynos
     def last_unempty_workqueue_timestamp
-      REDIS_CLIENT.get("last-unempty-workqueue-timestamp").to_i
+      REDIS_CLIENT.get("last-unempty-workqueue-timestamp")&.to_i
     end
 
     def update_last_unempty_workqueue_timestamp
@@ -170,7 +170,7 @@ class RedisStore
     end
 
     def last_scaleup_timestamp
-      REDIS_CLIENT.set("last-scaleup-timestamp", Time.current.to_i)
+      REDIS_CLIENT.get("last-scaleup-timestamp", Time.current.to_i)&.to_i
     end
 
     def update_last_scaleup_timestamp
