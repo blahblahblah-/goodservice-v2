@@ -7,6 +7,7 @@ class HerokuAutoscalerWorker
   MINIMUM_NUMBER_OF_DYNOS = 1
   MAXIMUM_NUMBER_OF_DYNOS = 10
   SCALEUP_DELAY = 2.minutes.to_i
+  SCALE_DOWN_THRESHOLD = ENV['AUTOSCALER_SCALE_DOWN_THRESHOLD']&.to_i || 0
 
   def perform
     return unless ENV['HEROKU_OAUTH_TOKEN'] && ENV['HEROKU_APP_NAME']
@@ -16,9 +17,10 @@ class HerokuAutoscalerWorker
 
     number_of_dynos = info['quantity']
     queue_latency = Sidekiq::Queue.new.latency
-    puts "HerokuAutoscaler: #{number_of_dynos} dynos, queue latency #{queue_latency}"
+    jobs_in_queue = Sidekiq::Queue.new.size
+    puts "HerokuAutoscaler: #{number_of_dynos} dynos, queue latency #{queue_latency}, #{jobs_in_queue} jobs"
 
-    if queue_latency == 0
+    if jobs_in_queue <= SCALE_DOWN_THRESHOLD
       last_unempty_timestamp = RedisStore.last_unempty_workqueue_timestamp
       if last_unempty_timestamp && (Time.current - Time.zone.at(last_unempty_timestamp) >= 10.minutes) && number_of_dynos > MINIMUM_NUMBER_OF_DYNOS
         new_quantity = number_of_dynos - 1
