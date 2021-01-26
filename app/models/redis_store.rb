@@ -170,7 +170,7 @@ class RedisStore
     end
 
     def last_scaleup_timestamp
-      REDIS_CLIENT.get("last-scaleup-timestamp", Time.current.to_i)&.to_i
+      REDIS_CLIENT.get("last-scaleup-timestamp")&.to_i
     end
 
     def update_last_scaleup_timestamp
