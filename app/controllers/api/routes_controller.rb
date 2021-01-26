@@ -36,21 +36,34 @@ class Api::RoutesController < ApplicationController
   def show
     route_id = params[:id]
     data = Rails.cache.fetch("status:#{route_id}", expires_in: 30.seconds) do
+      time_check = Time.current
       route = Scheduled::Route.find_by!(internal_id: route_id)
       scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
       route_data_encoded = RedisStore.route_status(route_id)
       route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+      time_check2 = Time.current
+      puts "Loaded data #{(time_check2 - time_check)* 1000}ms"
       if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
         route_data = {}
       else
         route_data[:stops] = stops_info(route_data['actual_routings'])
+        time_check3 = Time.current
+        puts "Loaded stops #{(time_check3 - time_check2)* 1000}ms"
         route_data[:transfers] = transfers_info(route_data['actual_routings'], route_id, route_data['timestamp'])
+        time_check4 = Time.current
+        puts "Loaded transfers #{(time_check4 - time_check3)* 1000}ms"
         pairs = route_pairs(route_data['actual_routings'])
 
         if pairs.present?
           route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
+          time_check5 = Time.current
+          puts "Loaded scheduled travel times #{(time_check5 - time_check4)* 1000}ms"
           route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
+          time_check6 = Time.current
+          puts "Loaded supplementary travel times #{(time_check6 - time_check5)* 1000}ms"
           route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
+          time_check7 = Time.current
+        puts "Loaded estimated travel times #{(time_check7 - time_check6)* 1000}ms"
         end
       end
       {
