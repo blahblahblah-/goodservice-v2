@@ -190,7 +190,7 @@ class RouteAnalyzer
         )
         actual_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
-            RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
+            RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
           }.reduce(&:+) || 0
         )
         actual_runtime - scheduled_runtime
