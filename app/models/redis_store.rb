@@ -169,6 +169,14 @@ class RedisStore
       REDIS_CLIENT.set("last-unempty-workqueue-timestamp", Time.current.to_i)
     end
 
+    def last_scaleup_timestamp
+      REDIS_CLIENT.set("last-scaleup-timestamp", Time.current.to_i)
+    end
+
+    def update_last_scaleup_timestamp
+      REDIS_CLIENT.set("last-timestamp-timestamp", Time.current.to_i)
+    end
+
     # Maintenance
     def clear_outdated_trips
       FeedRetriever::FEEDS.each do |feed_id|
