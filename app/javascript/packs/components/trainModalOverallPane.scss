@@ -10,4 +10,14 @@
       display: none;
     }
   }
+
+  .ui.stackable.grid>.row>.column.status-cell {
+    @media only screen and (max-width: 767px) {
+      margin-left: -1rem !important;
+      margin-right: -1rem !important;
+
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+  }
 }

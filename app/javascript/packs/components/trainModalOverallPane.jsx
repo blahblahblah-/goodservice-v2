@@ -42,7 +42,7 @@ class TrainModalOverallPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
               <TrainMap trains={trains} train={train} routings={train.actual_routings} />
             </Grid.Column>
-            <Grid.Column width={12}>
+            <Grid.Column width={12} className='status-cell'>
               <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{train.status}</Statistic.Value>
