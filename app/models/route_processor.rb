@@ -13,8 +13,8 @@ class RouteProcessor
       trips_by_routes = trips_by_direction.map { |direction, trips|
         [direction, routings[direction].map {|r|
           trips_selected = trips.select { |t|
-            next false unless t.stop_ids.present?
-            stops = t.stop_ids
+            next false unless t.upcoming_stops.present?
+            stops = t.upcoming_stops
             r.each_cons(stops.length).any?(&stops.method(:==))
           }
           [r, r.map {|s|
@@ -70,8 +70,13 @@ class RouteProcessor
     end
 
     def determine_routings_for_direction(trips)
-      trips.map(&:stop_ids).reverse.inject([]) do |memo, stops_array|
-        unless memo.any? { |array| array.each_cons(stops_array.length).any?(&stops_array.method(:==)) || stops_array.each_cons(array.length).any?(&array.method(:==)) }
+      trips.map(&:upcoming_stops).reverse.inject([]) do |memo, stops_array|
+        if (shorter_array = memo.find { |array| stops_array.each_cons(array.size).any?(&array.method(:==)) })
+          if stops_array.size > shorter_array.size
+            memo.delete(shorter_array)
+            memo << stops_array
+          end
+        elsif stops_array.present? && !memo.any? { |array| array.each_cons(stops_array.size).any?(&stops_array.method(:==)) }
           memo << stops_array
         end
         memo
@@ -196,7 +201,5 @@ class RouteProcessor
         [direction,  result]
       }.to_h
     end
-
-    handle_asynchronously :process_route, priority: 2
   end
 end

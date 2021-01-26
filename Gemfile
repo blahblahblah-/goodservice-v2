@@ -34,7 +34,7 @@ gem 'bootsnap', '>= 1.4.4', require: false
 gem 'gtfs-realtime-bindings'
 gem 'clockwork'
 gem 'parallel'
-gem 'delayed_job_active_record'
+gem 'sidekiq'
 gem 'foreman'
 gem 'platform-api'
 gem 'barnes'

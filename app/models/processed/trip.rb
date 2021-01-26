@@ -1,5 +1,5 @@
 class Processed::Trip
-  delegate :id, :stops_behind, :timestamp, :upcoming_stop, :time_until_upcoming_stop, :delayed_time, :upcoming_stop_arrival_time, :destination, to: :trip
+  delegate :id, :stops_behind, :timestamp, :upcoming_stop, :time_until_upcoming_stop, :delayed_time, :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, to: :trip
 
   attr_reader :trip, :previous_stop_arrival_time, :previous_stop,
     :estimated_upcoming_stop_arrival_time, :estimated_time_behind_next_train, :time_behind_next_train
@@ -46,7 +46,7 @@ class Processed::Trip
         estimated_time_for_next_trip_until_its_upcoming_stop
       @time_behind_next_train = time_until_upcoming_stop +
         trip.stops_behind(next_trip).each_cons(2).map { |a_stop, b_stop|
-          RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)
+          stops[b_stop] - stops[a_stop]
         }.sum -
         next_trip.time_until_upcoming_stop
     else

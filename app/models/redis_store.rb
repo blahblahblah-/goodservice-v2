@@ -22,6 +22,15 @@ class RedisStore
       REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 300 : 1800))
     end
 
+    # Route Trips
+    def route_trips(route_id, timestamp)
+      REDIS_CLIENT.get("route-trips:#{route_id}:#{timestamp}")
+    end
+
+    def add_route_trips(route_id, timestamp, marshaled_data)
+      REDIS_CLIENT.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 300)
+    end
+
     # Trips
     def active_trip_list(feed_id, timestamp)
       REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
@@ -197,8 +206,5 @@ class RedisStore
         end
       end
     end
-
-    handle_asynchronously :clear_outdated_trips, priority: 3
-    handle_asynchronously :clear_outdated_trip_stops_and_delays, priority: 3
   end
 end

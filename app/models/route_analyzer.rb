@@ -2,7 +2,7 @@ class RouteAnalyzer
   def self.analyze_route(route_id, processed_trips, actual_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
-    slowness = accumulated_extra_time_between_stops(actual_routings, timestamp)
+    slowness = accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
     runtime_diff = overall_runtime_diff(actual_routings, timestamp)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
@@ -89,8 +89,8 @@ class RouteAnalyzer
       if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 300
         slow_obj = actual_routings[direction[:route_direction]].map { |r|
           stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
-            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop)
-            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
             {
               from: a_stop,
               to: b_stop,
@@ -185,7 +185,7 @@ class RouteAnalyzer
         scheduled_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
             station_ids = "#{a_stop}-#{b_stop}"
-            RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop)
+            RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
           }.reduce(&:+) || 0
         )
         actual_runtime = (
@@ -198,12 +198,14 @@ class RouteAnalyzer
     }.to_h
   end
 
-  def self.accumulated_extra_time_between_stops(actual_routings, timestamp)
+  def self.accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
     actual_routings.map { |direction, routings|
       [direction, routings.map { |r|
+        key = "#{r.first}-#{r.last}-#{r.size}"
+        trips = processed_trips[direction][key]
         (
           r.each_cons(2).map { |a_stop, b_stop|
-            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop)
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
             actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp)
             diff = actual_travel_time - scheduled_travel_time
             diff >= 60.0 ? diff : 0
@@ -343,7 +345,7 @@ class RouteAnalyzer
     [1, 0].map { |scheduled_direction|
       trips = scheduled_trips[scheduled_direction]
       key_translation = scheduled_direction == 0 ? 1 : 3
-      [key_translation, actual_routings[key_translation]&.map(&:last)&.uniq&.map {|s| stop_name(s)}&.compact&.uniq || trips.map(&:destination).uniq]
+      [key_translation, actual_routings[key_translation]&.map(&:last)&.uniq&.map {|s| stop_name(s)}&.compact&.uniq || trips&.map(&:destination)&.uniq]
     }.to_h
   end
 

@@ -52,6 +52,10 @@ class Trip
     stops.select { |_, v| v > timestamp }.map(&:first)
   end
 
+  def upcoming_stops_by_at_least_a_minute
+    stops.select { |_, v| v >= (timestamp + 1.minute) }.map(&:first)
+  end
+
   def stops_behind(trip)
     i = upcoming_stops.index(trip.upcoming_stop)
     return [] unless i && i > 0

@@ -264,6 +264,10 @@ class ServiceChangeAnalyzer
         end
       end
 
+      refresh_routings(timestamp)
+    end
+
+    def refresh_routings(timestamp)
       puts "Refresh current routings"
       data = Scheduled::Trip.soon_grouped(timestamp, nil).map { |route_id, trips_by_direction|
         [route_id, trips_by_direction.map { |direction, trips|
@@ -308,11 +312,5 @@ class ServiceChangeAnalyzer
     def interchangeable_transfers
       @interchangeable_transfers ||= Scheduled::Transfer.where("from_stop_internal_id <> to_stop_internal_id and interchangeable_platforms = true").group_by(&:to_stop_internal_id)
     end
-
-    def preload_current_routings
-      current_routings(Time.current.to_i)
-    end
-
-    handle_asynchronously :preload_current_routings, priority: 0
   end
 end

@@ -222,7 +222,5 @@ class FeedProcessor
     def valid_stops
       @valid_stops ||= Scheduled::Stop.pluck(:internal_id).to_set
     end
-
-    handle_asynchronously :analyze_feed, priority: 1
   end
 end
