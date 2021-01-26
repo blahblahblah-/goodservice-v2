@@ -6,6 +6,7 @@ class HerokuAutoscalerWorker
 
   MINIMUM_NUMBER_OF_DYNOS = 1
   MAXIMUM_NUMBER_OF_DYNOS = 10
+  SCALEUP_DELAY = 2.minutes.to_i
 
   def perform
     return unless ENV['HEROKU_OAUTH_TOKEN'] && ENV['HEROKU_APP_NAME']
@@ -29,10 +30,11 @@ class HerokuAutoscalerWorker
       end
     else
       if queue_latency > 30
-        if number_of_dynos < MAXIMUM_NUMBER_OF_DYNOS
+        if number_of_dynos < MAXIMUM_NUMBER_OF_DYNOS && (!RedisStore.last_scaleup_timestamp || RedisStore.last_scaleup_timestamp < Time.current.to_i  - SCALEUP_DELAY)
           new_quantity = number_of_dynos + 1
           heroku.formation.update(ENV['HEROKU_APP_NAME'], 'worker', {"quantity" => new_quantity})
           puts "HerokuAutoscaler: Scaled up to #{new_quantity} dynos"
+          RedisStore.update_last_scaleup_timestamp
         end
       end
       RedisStore.update_last_unempty_workqueue_timestamp
