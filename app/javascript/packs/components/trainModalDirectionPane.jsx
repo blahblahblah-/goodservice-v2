@@ -166,6 +166,7 @@ class TrainModalDirectionPane extends React.Component {
       </Table.Body>
     );
   }
+
   render() {
     const { trains, train, direction } = this.props;
     const { selectedRouting, routings } = this.state;

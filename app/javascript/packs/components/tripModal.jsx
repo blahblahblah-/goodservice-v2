@@ -15,7 +15,8 @@ class TripModal extends React.Component {
     const { train, selectedTrip, routing } = this.props;
     const currentTime = Date.now() / 1000;
     const i = routing.indexOf(selectedTrip.upcoming_stop);
-    const remainingStops = routing.slice(i);
+    const j = routing.indexOf(selectedTrip.destination_stop) + 1;
+    const remainingStops = routing.slice(i, j);
     let previousStopId = null;
     let currentEstimatedTime = selectedTrip.estimated_upcoming_stop_arrival_time;
     let currentArrivalTime = selectedTrip.upcoming_stop_arrival_time;
