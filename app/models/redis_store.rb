@@ -107,7 +107,11 @@ class RedisStore
     end
 
     def supplementary_scheduled_travel_times(stop_id_pairs)
-      REDIS_CLIENT.mapped_hmget("travel-time:supplementary", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+      if stop_id_pairs.present?
+        REDIS_CLIENT.mapped_hmget("travel-time:supplementary", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+      else
+        {}
+      end
     end
 
     def add_supplementary_scheduled_travel_time(stop_id_1, stop_id_2, time)
@@ -119,7 +123,11 @@ class RedisStore
     end
 
     def scheduled_travel_times(stop_id_pairs)
-      REDIS_CLIENT.mapped_hmget("travel-time:scheduled", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+      if stop_id_pairs.present?
+        REDIS_CLIENT.mapped_hmget("travel-time:scheduled", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+      else
+        {}
+      end
     end
 
     def add_scheduled_travel_time(stop_id_1, stop_id_2, time)
