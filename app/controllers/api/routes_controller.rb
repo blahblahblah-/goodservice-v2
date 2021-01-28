@@ -61,7 +61,7 @@ class Api::RoutesController < ApplicationController
           route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
           time_check6 = Time.current
           puts "Loaded supplementary travel times #{(time_check6 - time_check5)* 1000}ms"
-          route_data[:estimated_travel_times] = estimated_travel_times(pairs, route_data['timestamp'])
+          route_data[:estimated_travel_times] = estimated_travel_times(route_data['actual_routings'], pairs, route_data['timestamp'])
           time_check7 = Time.current
         puts "Loaded estimated travel times #{(time_check7 - time_check6)* 1000}ms"
         end
@@ -146,9 +146,14 @@ class Api::RoutesController < ApplicationController
     end
   end
 
-  def estimated_travel_times(pairs, timestamp)
+  def estimated_travel_times(routings, pairs, timestamp)
+    travel_times = routings.map{ |_, r| r.map { |routing|
+      RouteProcessor.batch_average_travel_times(routing, timestamp)
+    }}.flatten.reduce({}, :merge)
+
     pairs.to_h { |pair|
-      ["#{pair.first}-#{pair.second}", RouteProcessor.average_travel_time(pair.first, pair.second, timestamp)]
+      pair_str = "#{pair.first}-#{pair.second}"
+      [pair_str, travel_times[pair_str]]
     }.compact
   end
 end

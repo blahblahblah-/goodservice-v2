@@ -55,12 +55,34 @@ class RouteProcessor
       train_stops_at_b = RedisStore.trips_stopped_at(b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)
       train_stops_at_a = RedisStore.trips_stopped_at(a_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_START_LIMIT)
 
-      trains_stopped_at_a = train_stops_at_a.map(&:first)
       trains_traveled = train_stops_at_b.select{ |b_train, b_time| train_stops_at_a.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
 
       return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
 
       trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
+    end
+
+    def batch_average_travel_times(stops, timestamp)
+      futures = {}
+
+      REDIS_CLIENT.pipelined do
+        futures = stops.to_h { |stop_id|
+          [stop_id, RedisStore.trips_stopped_at_as_arrays(stop_id, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)]
+        }
+      end
+
+      return {} if futures.empty?
+
+      futures.each_cons(2).to_h { |(a_stop, a_future), (b_stop, b_future)|
+        a_times = a_future.value.to_h
+        b_times = b_future.value.to_h
+
+        trains_traveled = b_times.select{ |b_train, b_time| a_times.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
+
+        next ["#{a_stop}-#{b_stop}", RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless trains_traveled.present?
+
+        ["#{a_stop}-#{b_stop}", trains_traveled.map { |train_id| b_times[train_id] - a_times[train_id] }.sum / trains_traveled.size]
+      }
     end
 
     def determine_routings(trips_by_direction)
@@ -118,19 +140,6 @@ class RouteProcessor
         Processed::Trip.new(a_trip, b_trip, common_sub_route)
       }
       processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route) if trips_in_order.present?
-    end
-
-    def time_until_upcoming_stop(trip, timestamp, routing)
-      next_stop = trip.upcoming_stop
-      i = routing.index(next_stop)
-      return trip.time_until_upcoming_stop unless i && i > 0
-
-      previous_stop = routing[i - 1]
-      predicted_time_until_next_stop = trip.time_until_upcoming_stop
-      predicted_time_between_stops = RedisStore.supplementary_scheduled_travel_time(previous_stop, next_stop)
-      actual_time_between_stops = average_travel_time(previous_stop, next_stop, timestamp)
-
-      (predicted_time_until_next_stop / predicted_time_between_stops) * actual_time_between_stops
     end
 
     def determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)

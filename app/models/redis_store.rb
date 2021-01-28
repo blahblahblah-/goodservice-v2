@@ -80,6 +80,10 @@ class RedisStore
       REDIS_CLIENT.zrevrangebyscore("stops:#{stop_id}", max_time, min_time, withscores: true).to_h
     end
 
+    def trips_stopped_at_as_arrays(stop_id, max_time, min_time)
+      REDIS_CLIENT.zrevrangebyscore("stops:#{stop_id}", max_time, min_time, withscores: true)
+    end
+
     def add_stop(stop_id, trip_id, timestamp)
       REDIS_CLIENT.zadd("stops:#{stop_id}", timestamp, trip_id)
     end
