@@ -88,9 +88,12 @@ class RouteAnalyzer
 
       if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 300
         slow_obj = actual_routings[direction[:route_direction]].map { |r|
+          travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
+          scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
           stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
-            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
-            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
+            pairs_str = "#{a_stop}-#{b_stop}"
+            scheduled_travel_time = scheduled_times[pairs_str].to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+            actual_travel_time = travel_times[pairs_str].to_i || 0
             {
               from: a_stop,
               to: b_stop,
@@ -182,15 +185,18 @@ class RouteAnalyzer
   def self.overall_runtime_diff(actual_routings, timestamp)
     actual_routings.map { |direction, routings|
       [direction, routings.map { |r|
+        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
+        scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
         scheduled_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
             station_ids = "#{a_stop}-#{b_stop}"
-            RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+            scheduled_times[station_ids].to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
           }.reduce(&:+) || 0
         )
         actual_runtime = (
           r.each_cons(2).map { |a_stop, b_stop|
-            RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
+            station_ids = "#{a_stop}-#{b_stop}"
+            travel_times[station_ids].to_i || 0
           }.reduce(&:+) || 0
         )
         actual_runtime - scheduled_runtime

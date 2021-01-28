@@ -85,6 +85,11 @@ class RouteProcessor
       }
     end
 
+    def batch_scheduled_travel_time(stops)
+      pairs = stops.each_cons(2).map { |a, b| [a, b] }
+      RedisStore.scheduled_travel_times(pairs).to_h
+    end
+
     def determine_routings(trips_by_direction)
       trips_by_direction.map { |direction, t|
         [direction, determine_routings_for_direction(t)]
