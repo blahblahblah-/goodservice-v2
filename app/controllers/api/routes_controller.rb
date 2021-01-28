@@ -93,14 +93,24 @@ class Api::RoutesController < ApplicationController
   def transfers_info(routings, route_id, timestamp)
     stations = routings.map { |_, r| r }.flatten.uniq
     transfers = Scheduled::Transfer.where("from_stop_internal_id <> to_stop_internal_id and from_stop_internal_id in (?)", stations)
-    stations.to_h { |stop_id|
+    futures = {}
+
+    REDIS_CLIENT.pipelined do
+      futures = stations.to_h { |stop_id|
+        [stop_id, [1, 3].to_h { |direction|
+          f = [RedisStore.routes_stop_at(stop_id, direction, timestamp)]
+          transfers.select { |t| t.from_stop_internal_id == stop_id }.each { |t|
+            f << RedisStore.routes_stop_at(t.to_stop_internal_id, direction, timestamp)
+          }
+          [direction, f]
+        }]
+      }
+    end
+
+    futures.to_h { |stop_id, futures_by_direction|
       arr = []
-      routes_by_direction = [1, 3].to_h { |direction|
-        routes = RedisStore.routes_stop_at(stop_id, direction, timestamp) - [route_id]
-        transfers.select { |t| t.from_stop_internal_id == stop_id }.each { |t|
-          routes << RedisStore.routes_stop_at(t.to_stop_internal_id, direction, timestamp) - [route_id]
-        }
-        [direction, routes.flatten.uniq]
+      routes_by_direction = futures_by_direction.to_h { |direction, futures|
+        [direction, futures.map(&:value).flatten.uniq - [route_id]]
       }
       routes = routes_by_direction.values.flatten.uniq.sort
       [stop_id, routes.to_h { |route_id|
