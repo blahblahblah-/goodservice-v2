@@ -191,7 +191,7 @@ class RedisStore
 
     # Maintenance
     def clear_outdated_trips
-      FeedRetriever::FEEDS.each do |feed_id|
+      FeedRetrieverSpawningWorker::FEEDS.each do |feed_id|
         active_trip_list_removed = REDIS_CLIENT.zremrangebyscore("active-trips-list:#{feed_id}", '-inf', Time.current.to_i - DATA_RETENTION)
         puts "Removed #{active_trip_list_removed} outdated trips from active trips list for #{feed_id}"
 
