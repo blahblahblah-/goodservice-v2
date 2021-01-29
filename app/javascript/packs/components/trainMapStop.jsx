@@ -19,7 +19,7 @@ class TrainMapStop extends React.Component {
 
     if (stopsBefore && stopsBefore.length > 0) {
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${stopsBefore[0].id}`}>
+        <Link to={`/trains/${train.id}/${stopsBefore[0].id}`} key={stopsBefore[0].id}>
           <div className='trip-before' key='trip-before'></div>
         </Link>
       );
@@ -27,7 +27,7 @@ class TrainMapStop extends React.Component {
 
     if (stopsAt && stopsAt.length > 0) {
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${stopsAt[0].id}`}>
+        <Link to={`/trains/${train.id}/${stopsAt[0].id}`} key={stopsAt[0].id}>
           <div className='trip-at' key='trip-at'></div>
         </Link>
       );
@@ -127,11 +127,11 @@ class TrainMapStop extends React.Component {
   }
 
   renderTravelTime() {
-    const { stopId, previousStopId, train } = this.props;
+    const { stopId, previousStopId, train, overrideStopId } = this.props;
     if (!previousStopId || !stopId) {
       return;
     }
-    const lookupString = `${previousStopId}-${stopId}`;
+    const lookupString = `${previousStopId}-${overrideStopId || stopId}`;
     const estimatedTravelTime = train.estimated_travel_times[lookupString];
     const scheduledTravelTime = train.scheduled_travel_times[lookupString];
 

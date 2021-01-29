@@ -170,6 +170,8 @@ class TrainMap extends React.Component {
     const segments = this.generateSegments();
     const stopPattern = this.calculateStops();
     let previousStopId;
+    let branchedStopId;
+    let overrideStopId;
 
     let currentBranches = [0];
     if (segments) {
@@ -185,6 +187,7 @@ class TrainMap extends React.Component {
                 const currentMaxBranch = currentBranches[currentBranches.length - 1];
                 let transfers = transfersInfo[stopId] || [];
                 let stop = stops[stopId];
+                overrideStopId = null;
 
                 if (stopId === "") {
                   segments.branches.splice(0, 1);
@@ -199,11 +202,13 @@ class TrainMap extends React.Component {
                       return segments.branches[obj].includes(stopId);
                     });
                     const branchesToTraverse = [...currentBranches];
+                    branchedStopId = stopId;
                     if (currentBranchIncludesStop || currentBranchIncludesStop === 0) {
                       branchStart = currentBranchIncludesStop;
                       segments.branches[potentialBranchIndex].splice(0, 1);
                     } else {
                       branchesToTraverse.push(potentialBranchIndex);
+                      overrideStopId = potentialBranch[potentialBranch.length - 1];
                     }
 
                     branchesToTraverse.forEach((obj) => {
@@ -242,6 +247,7 @@ class TrainMap extends React.Component {
                         segments.branches[obj].splice(i, 1);
                       }
                     });
+                    previousStopId = branchedStopId;
                   } else {
                     currentBranches.forEach((obj) => {
                       let branchStopsHere = segments.branches[obj].includes(stopId);
@@ -257,7 +263,7 @@ class TrainMap extends React.Component {
                   return isStopping || segments.branches[index].length > 0;
                 });
                 const results = (
-                  <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} stop={stop} southStop={stopPattern.southStops[stopId]}
+                  <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} overrideStopId={overrideStopId} stop={stop} southStop={stopPattern.southStops[stopId]}
                     northStop={stopPattern.northStops[stopId]} transfers={transfers} branchStops={branchStops} branchStart={branchStart}
                     branchEnd={branchEnd} activeBranches={activeBranches} showTravelTime={showTravelTime}
                     trips={trips && trips.filter((t) => t.upcoming_stop === stopId )}/>

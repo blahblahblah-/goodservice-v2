@@ -62,7 +62,7 @@ class TripModal extends React.Component {
   render() {
     const { selectedTrip, train } = this.props;
     return (
-      <Modal basic size='large' className='trip-modal' open={selectedTrip} closeIcon dimmer='blurring' onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick>
+      <Modal basic size='large' className='trip-modal' open={!!selectedTrip} closeIcon dimmer='blurring' onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick>
         <Modal.Header>
           <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' /><br />
