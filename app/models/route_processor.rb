@@ -65,14 +65,11 @@ class RouteProcessor
     def batch_average_travel_times(stops, timestamp)
       futures = {}
 
-      time_check = Time.current
       REDIS_CLIENT.pipelined do
         futures = stops.to_h { |stop_id|
           [stop_id, RedisStore.trips_stopped_at_as_arrays(stop_id, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)]
         }
       end
-      time_check2 = Time.current
-      puts "Loaded stop times for batch average travel times #{(time_check2 - time_check)* 1000}ms"
 
       return {} if futures.empty?
 
