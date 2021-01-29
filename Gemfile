@@ -32,9 +32,9 @@ gem 'hiredis'
 gem 'bootsnap', '>= 1.4.4', require: false
 
 gem 'gtfs-realtime-bindings'
-gem 'clockwork'
 gem 'parallel'
 gem 'sidekiq'
+gem "sidekiq-cron", "~> 1.1"
 gem 'foreman'
 gem 'platform-api'
 gem 'barnes'
