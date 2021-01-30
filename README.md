@@ -2,11 +2,11 @@
 
 This is a Rails app that generates live route maps, detects headway discrepancies, track delays and compare runtimes to the schedule on the New York City Subway system by comparing the data for live countdown clocks with the static schedule data provided by the MTA.
 
-goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) lower the time to process feed data to be under 30 seconds at all times so that data can be refreshed every 30 seconds instead of every minute, 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times like in the past for calculations, we are keep tracking of trips in relation . With these changes, the app no longer uses the concept of lines.
+goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) reduce the time to process feed data to be under 30 seconds at all times so that data can be refreshed every 30 seconds instead of every minute, 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times like in the past for calculations, we are keep tracking of trips in relation each other in order to figure out the time between trains. With these changes, the app no longer uses the concept of lines.
 
-The biggest change is using Redis as the primary persistence source, and relying on [Delayed::Job](https://github.com/collectiveidea/delayed_job) gem and a custom written Heroku Autoscaler to scale horizontally when there are more trains running.
+The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large.
 
-Soon to be live at [https://www.goodservice.io](https://www.goodservice.io/).
+See it live at [https://preview.goodservice.io](https://preview.goodservice.io/).
 
 ## Running locally
 
