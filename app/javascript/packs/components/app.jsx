@@ -8,6 +8,7 @@ import {
   Link,
 } from 'react-router-dom';
 import { groupBy } from 'lodash';
+import { Helmet } from "react-helmet";
 
 import Train from './train';
 import TrainBullet from './trainBullet';
@@ -147,6 +148,11 @@ class App extends React.Component {
                 <sup>[<Link to='/about'>?</Link>]</sup>
             </Header.Subheader>
           </Header>
+          <Helmet>
+            <title>goodservice.io - New York City Subway Status Page</title>
+            <meta property="og:title" content="goodservice.io" />
+            <meta name="twitter:title" content="goodservice.io" />
+          </Helmet>
         </Segment>
         <Segment inverted vertical className='blogpost-segment'>
 

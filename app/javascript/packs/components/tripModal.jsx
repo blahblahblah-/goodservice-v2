@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Table, Header } from "semantic-ui-react";
 import { withRouter } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
 import { formatStation, formatMinutes } from './utils';
@@ -61,13 +62,22 @@ class TripModal extends React.Component {
 
   render() {
     const { selectedTrip, train } = this.props;
+    const destinationStationName = formatStation(train.stops[selectedTrip.destination_stop]);
+    const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     return (
       <Modal basic size='large' className='trip-modal' open={!!selectedTrip} closeIcon dimmer='blurring' onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick>
+        <Helmet>
+          <title>{title}</title>
+          <meta property="og:title" content={title} />
+          <meta name="twitter:title" content={title} />
+          <meta property="og:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
+          <meta name="twitter:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
+        </Helmet>
         <Modal.Header>
           <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' /><br />
           Trip: {selectedTrip.id} <br />
-          To: { formatStation(train.stops[selectedTrip.destination_stop]) }
+          To: { destinationStationName }
           {
             selectedTrip.delayed_time >= 300 && 
             <Header as='h5' color='red' inverted>Delayed for {Math.round(selectedTrip.delayed_time / 60)} mins</Header>

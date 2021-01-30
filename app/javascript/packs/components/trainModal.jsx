@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Dimmer, Loader, Grid, Menu, Header } from "semantic-ui-react";
 import { withRouter, Redirect } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
 import TrainModalOverallPane from './trainModalOverallPane';
@@ -83,6 +84,7 @@ class TrainModal extends React.Component {
   render() {
     const { train, activeMenuItem, timestamp } = this.state;
     const { trains, trigger, selected, match } = this.props;
+    const title = `goodservice.io - ${train?.alternate_name ? `S - ${train?.alternate_name}` : train?.name} Train`;
     let tripModal = null;
     let className = 'train-modal';
     if (train && match.params.id === train.id && match.params.tripId) {
@@ -125,6 +127,13 @@ class TrainModal extends React.Component {
         {
           train &&
             <>
+              <Helmet>
+                <title>{title}</title>
+                <meta property="og:title" content={title} />
+                <meta name="twitter:title" content={title} />
+                <meta property="og:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
+                <meta name="twitter:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
+              </Helmet>
               <Modal.Header>
                 <Grid stackable>
                   <Grid.Row>
