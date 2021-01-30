@@ -181,9 +181,15 @@ class App extends React.Component {
         <Segment inverted vertical style={{padding: '1em 2em'}}>
           <Grid>
             <Grid.Column width={7}>
-              <Button circular className='medium-icon' icon='medium m' onClick={() => window.open("https://www.medium.com/good-service")} />
-              <Button circular color='twitter' icon='twitter' onClick={() => window.open("https://twitter.com/goodservice_io")} />
-              <Button circular className='slack-icon' icon={{ className: 'slack-icon' }}  onClick={() => window.open("/slack")} />
+              <a href='https://www.medium.com/good-service' target='_blank'>
+                <Button circular className='medium-icon' icon='medium m' />
+              </a>
+              <a href='https://twitter.com/goodservice_io' target='_blank'>
+                <Button circular color='twitter' icon='twitter' />
+              </a>
+              <a href='https://www.goodservice.io/slack' target='_blank'>
+                <Button circular className='slack-icon' icon={{ className: 'slack-icon' }} />
+              </a>
             </Grid.Column>
             <Grid.Column width={9} textAlign='right'>
               <Header inverted as='h5'>
