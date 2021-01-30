@@ -1,12 +1,17 @@
 import React from 'react';
 import { Header, Modal } from 'semantic-ui-react';
+import { withRouter } from 'react-router-dom';
 
 class AboutModal extends React.Component {
+  handleOnClose = () => {
+    const { history } = this.props;
+    return history.push('/');
+  };
 
   render() {
     return(
       <Modal basic
-        trigger={this.props.trigger}
+        open={this.props.open} onClose={this.handleOnClose}
         closeIcon dimmer="blurring" closeOnDocumentClick closeOnDimmerClick>
         <Modal.Header>
           What is Good Service?
@@ -59,4 +64,4 @@ class AboutModal extends React.Component {
     )
   }
 }
-export default AboutModal;
+export default withRouter(AboutModal);

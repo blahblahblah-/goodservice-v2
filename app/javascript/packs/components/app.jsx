@@ -64,6 +64,17 @@ class App extends React.Component {
     }
   }
 
+  renderAbout() {
+    return (
+      <>
+        <AboutModal open={true} />
+        {
+          this.renderTrains(null)
+        }
+      </>
+    );
+  }
+
   renderTrains(selectedTrain) {
     const { trains, timestamp } = this.state;
     const trainKeys = Object.keys(trains);
@@ -133,7 +144,7 @@ class App extends React.Component {
             goodservice.io
             <Header.Subheader>
               New York City Subway Status Page
-                <AboutModal trigger={(<sup>[<span className="about-link">?</span>]</sup>)} />
+                <sup>[<Link to='/about'>?</Link>]</sup>
             </Header.Subheader>
           </Header>
         </Segment>
@@ -150,6 +161,9 @@ class App extends React.Component {
                   } else {
                     return (<Redirect to="/" />);
                   }
+                }} />
+                <Route path='/about' render={() => {
+                  return this.renderAbout();
                 }} />
                 <Route path='/' render={() => {
                   return this.renderTrains(null);
