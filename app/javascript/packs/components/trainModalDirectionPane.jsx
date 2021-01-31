@@ -20,7 +20,7 @@ class TrainModalDirectionPane extends React.Component {
     if (!train.actual_routings || !train.actual_routings[direction]) {
       return;
     }
-    if (prevProps.train === train && prevProps.direction === direction) {
+    if (prevProps.train === train) {
       const prevRoutingHashes = Object.keys(routings);
       const currRoutingHashes = train.actual_routings[direction].map((r) => routingHash(r));
       const isIdentical = prevRoutingHashes.length === currRoutingHashes.length && prevRoutingHashes.every((value, index) => value === currRoutingHashes[index])
