@@ -45,16 +45,17 @@ export const replaceTrainBulletsInParagraphs = (trains, array_of_strs) => {
   });
 };
 
-export const formatMinutes = (minutes, markDue) => {
-  if (minutes > 1) {
-    return `${minutes} mins`;
-  }
+export const formatMinutes = (minutes, markDue, prefixPositiveValues) => {
   if (minutes > 0) {
+    if (prefixPositiveValues) {
+      return `+${minutes} min`;
+    }
     return `${minutes} min`;
   }
   if (markDue) {
     return 'Due';
   }
+  return `${minutes} min`;
 };
 
 export const routingHash = (routing) => {

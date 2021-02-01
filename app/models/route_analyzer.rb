@@ -374,6 +374,7 @@ class RouteAnalyzer
             estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
             destination_stop: trip.destination,
             delayed_time: trip.delayed_time,
+            schedule_discrepancy: trip.schedule_discrepancy,
           }
         }]
       }]

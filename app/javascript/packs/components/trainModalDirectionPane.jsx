@@ -137,6 +137,7 @@ class TrainModalDirectionPane extends React.Component {
             const upcomingStopArrivalTime = Math.round((trip.upcoming_stop_arrival_time - currentTime) / 60);
             const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null && Math.round(trip.estimated_time_behind_next_train / 60);
             const timeBehindNextTrain = trip.time_behind_next_train !== null && Math.round(trip.time_behind_next_train / 60);
+            const scheduleDiscrepancy = trip.schedule_discrepancy !== null && Math.round(trip.schedule_discrepancy / 60);
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
@@ -158,6 +159,9 @@ class TrainModalDirectionPane extends React.Component {
                 </Table.Cell>
                 <Table.Cell className={timeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
                   { timeBehindNextTrain !== null && formatMinutes(timeBehindNextTrain, false) }
+                </Table.Cell>
+                <Table.Cell>
+                  { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
                 </Table.Cell>
               </Table.Row>
             )
@@ -214,7 +218,7 @@ class TrainModalDirectionPane extends React.Component {
                 <Table fixed inverted unstackable size='small' compact className='trip-table'>
                   <Table.Header>
                     <Table.Row>
-                      <Table.HeaderCell rowSpan='2' width={4}>
+                      <Table.HeaderCell rowSpan='2' width={3}>
                         Train ID / Destination
                       </Table.HeaderCell>
                       <Table.HeaderCell colSpan='3'>
@@ -222,6 +226,9 @@ class TrainModalDirectionPane extends React.Component {
                       </Table.HeaderCell>
                       <Table.HeaderCell colSpan='2'>
                         Time Behind Next Train
+                      </Table.HeaderCell>
+                      <Table.HeaderCell rowSpan='2'>
+                        Schedule Discrepancy
                       </Table.HeaderCell>
                     </Table.Row>
                     <Table.Row>
