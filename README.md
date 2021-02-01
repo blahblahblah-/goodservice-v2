@@ -2,7 +2,7 @@
 
 This is a Rails app that generates live route maps, detects headway discrepancies, track delays and compare runtimes to the schedule on the New York City Subway system by comparing the data for live countdown clocks with the static schedule data provided by the MTA.
 
-goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) reduce the time to process feed data to be under 30 seconds at all times so that data can be refreshed every 30 seconds instead of every minute, 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times like in the past for calculations, we are keep tracking of trips in relation each other in order to figure out the time between trains. With these changes, the app no longer uses the concept of lines.
+goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) reduce the time to process feed data to be under 30 seconds at all times, so that data can be refreshed every 30 seconds instead of every minute, 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times like in the past for calculations, we are keeping track of trips in relation each other in order to figure out the time between trains. With these changes, the app no longer uses the concept of lines.
 
 The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large.
 
@@ -10,7 +10,7 @@ See it live at [https://preview.goodservice.io](https://preview.goodservice.io/)
 
 ## Running locally
 
-To run locally, you'll need a couple things. First, the app has only been tested with Ruby 2.7.2 and Rails 6.1. We suggest managing this with `rbenv`. It also depends on Redis, Postgres, Yarn, and Semantic UI React. If you are on a Mac with Homebrew installed, you can get all these requirements with the following commands:
+To run locally, you'll need a couple things. First, the app requires Ruby 2.7.2 and Rails 6.1. We suggest managing this with `rbenv`. It also depends on Redis, Postgres, Yarn, and Semantic UI React. If you are on a Mac with Homebrew installed, you can get all these requirements with the following commands:
 
 ```
 # Ruby dependencies
@@ -49,9 +49,14 @@ This is a Rails app that uses React as a view manager. As such, there are a lot 
 
 ### Server side: Rails
 
-The server performs two major functions: First, it runs a cron job that queues up a delayed job to retrieve new data every 30 seconds, before processing it. THe results are data stored in Redis. This cron job is located in `/lib/clock.rb`.
+Regularly occuring jobs are scheduled with [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron), and are defined in the [Sidekiq initializer](https://github.com/blahblahblah-/goodservice-v2/blob/main/config/initializers/sidekiq.rb).
 
-Second, it serves up data by the cron job with a set of API endpoints. In particular, a Redis cache maintains all the headway info that is served by API (described below). All of the models that are used to process this information live in `/app/models`. `/app/models/redis_store.rb` manages all I/O operations with Redis.
+The order of operation to process the feeds within the every 30 seconds cycle is:
+FeedRetrieverSpawningWorker > FeedRetrieverWorker > FeedProcessorWorker > FeedProcessor > RouteProcessor > RouteAnalyzer
+
+Static schedule data is stored in Postgres and their associated ActiveRecord classes are in the `Scheduled` namespace. No other data is currently stored in Postgres.
+
+The primary persistence source is Redis. The class [`RedisStore`](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/models/redis_store.rb) provides the interfaces used to interact with the Redis client.
 
 ### Client side: React
 
@@ -59,7 +64,7 @@ The client side view libraries are a React app that is compiled by the `webpacke
 
 ### In the middle: An API
 
-The React front end is fed by an API that Rails serves. The routes are specified in the `/app/controllers` directory. Specifically, dynamically-generated routes are specified in `/config/routes.rb`. The `/api/routes` route is probably most interesting as it drives the main React app.
+The React front end is fed by an API that Rails serves. The routes are specified in the `/app/controllers/api` directory. Specifically, dynamically-generated routes are specified in `/config/routes.rb`. There are only 2 endpoints for now, and they're both in the Api::RoutesController class, which serve the data as `/api/routes`
 
 
 ## Other resources
