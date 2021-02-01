@@ -47,7 +47,9 @@ class Trip
   end
 
   def scheduled_upcoming_stop_arrival_time
-    schedule.find { |_, v| v > timestamp }&.last || timestamp
+    if upcoming_stop
+      schedule[upcoming_stop] || timestamp
+    end
   end
 
   def time_until_upcoming_stop
