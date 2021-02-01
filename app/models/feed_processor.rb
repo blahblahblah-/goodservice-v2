@@ -138,6 +138,9 @@ class FeedProcessor
         previous_update = Marshal.load(marshaled_previous_update)
         trip.previous_trip = previous_update
         trip.previous_trip.previous_trip = nil
+        if trip.previous_trip.schedule
+          trip.schedule = trip.previous_trip.schedule
+        end
       end
     end
 

@@ -1,15 +1,17 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :delayed_time
+  attr_accessor :id, :previous_trip, :delayed_time, :schedule
 
   def initialize(route_id, direction, id, timestamp, trip_update)
     @route_id = route_id
     @direction = direction
     @id = id
     @timestamp = timestamp
-    @stops = trip_update.stop_time_update.to_h {|update|
+    stop_time_hash = trip_update.stop_time_update.to_h {|update|
       [update.stop_id[0..2], (update.departure || update.arrival).time]
     }
+    @stops = stop_time_hash
+    @schedule = stop_time_hash
   end
 
   def similar(trip)
