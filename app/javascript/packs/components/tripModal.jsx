@@ -8,14 +8,36 @@ import { formatStation, formatMinutes } from './utils';
 
 import './tripModal.scss';
 
+const API_URL_PREFIX = '/api/routes/';
+
 class TripModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  componentDidMount() {
+    this.fetchData();
+    this.timer = setInterval(() => this.fetchData(), 30000);
+  }
+
+  fetchData() {
+    const { train, selectedTrip } = this.props;
+
+    fetch(`${API_URL_PREFIX}${train.id}/trips/${selectedTrip.id.replace('..', '-')}`)
+      .then(response => response.json())
+      .then(data => this.setState({ trip: data, timestamp: data.timestamp}))
+  }
+
   handleOnClose = () => {
     const { history, train } = this.props;
+    clearInterval(this.timer);
     return history.push(`/trains/${train.id}`);
   };
 
   renderTableBody() {
     const { train, selectedTrip, routing } = this.props;
+    const { trip } = this.state;
     const currentTime = Date.now() / 1000;
     const i = routing.indexOf(selectedTrip.upcoming_stop);
     const j = routing.indexOf(selectedTrip.destination_stop) + 1;
@@ -29,7 +51,9 @@ class TripModal extends React.Component {
           remainingStops.map((stopId) => {
             if (previousStopId) {
               currentEstimatedTime += train.estimated_travel_times[`${previousStopId}-${stopId}`];
-              currentArrivalTime += train.supplementary_travel_times[`${previousStopId}-${stopId}`];
+              if (trip) {
+                currentArrivalTime = trip.stop_times[stopId];
+              }
             }
             const timeUntilEstimatedTime = Math.round((currentEstimatedTime - currentTime) / 60);
             const timeUntilArrivalTime = Math.round((currentArrivalTime - currentTime) / 60);
@@ -45,10 +69,10 @@ class TripModal extends React.Component {
                   {new Date(currentEstimatedTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}
                 </Table.Cell>
                 <Table.Cell>
-                  { formatMinutes(timeUntilArrivalTime, true) }
+                  { trip && formatMinutes(timeUntilArrivalTime, true) }
                 </Table.Cell>
                 <Table.Cell>
-                  {new Date(currentArrivalTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}
+                  { trip && new Date(currentArrivalTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}
                 </Table.Cell>
               </Table.Row>
             );
