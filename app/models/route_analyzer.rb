@@ -1,5 +1,5 @@
 class RouteAnalyzer
-  def self.analyze_route(route_id, processed_trips, actual_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
+  def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
     slowness = accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
@@ -28,6 +28,7 @@ class RouteAnalyzer
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       scheduled_headways: convert_scheduled_to_readable_directions(scheduled_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
+      common_routings: convert_to_readable_directions(common_routings),
       trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
       timestamp: timestamp,
     }.to_json

@@ -10,6 +10,8 @@ class RouteProcessor
 
       routings = determine_routings(trips_by_direction)
 
+      common_routings = determine_common_routings(routings)
+
       trips_by_routes = trips_by_direction.map { |direction, trips|
         [direction, routings[direction].map {|r|
           trips_selected = trips.select { |t|
@@ -43,6 +45,7 @@ class RouteProcessor
         route_id,
         processed_trips,
         routings,
+        common_routings,
         timestamp,
         scheduled_trips,
         scheduled_routings,
@@ -94,6 +97,17 @@ class RouteProcessor
       trips_by_direction.map { |direction, t|
         [direction, determine_routings_for_direction(t)]
       }.to_h
+    end
+
+    def determine_common_routings(routings_by_direction)
+      routings_by_direction.to_h do |direction, routings|
+        common_start = routings.first.find { |s| routings.all? { |r| r.include?(s) }}
+        common_end = routings.first.reverse.find { |s| routings.all? { |r| r.include?(s) }}
+
+        next [direction, nil] unless common_start && common_end
+
+        [direction, routings.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first]
+      end
     end
 
     def determine_routings_for_direction(trips)

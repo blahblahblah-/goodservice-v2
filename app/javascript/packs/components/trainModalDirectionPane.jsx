@@ -112,15 +112,9 @@ class TrainModalDirectionPane extends React.Component {
     this.setState({ [name]: value });
   };
 
-  renderTripsTableBody() {
+  renderTripsTableBody(selectedRouting, trips) {
     const { train, direction, match } = this.props;
-    const { selectedRouting } = this.state;
     const currentTime = Date.now() / 1000;
-    let trips = train.trips[direction][selectedRouting];
-    if (!trips) {
-      const key = Object.keys(train.trips[direction])[0];
-      trips = train.trips[direction][key];
-    }
     let scheduledHeadways = train.scheduled_headways[direction] && train.scheduled_headways[direction][selectedRouting];
     if (!scheduledHeadways && train.scheduled_headways[direction]) {
       const key = Object.keys(train.scheduled_headways[direction])[0];
@@ -171,6 +165,141 @@ class TrainModalDirectionPane extends React.Component {
     );
   }
 
+  renderBlendedTripsTables(train, direction) {
+    const commonRouting = train.common_routings[direction];
+    const commonRoutingTrips = train.trips[direction].blended || [];
+
+    const routesBefore = Object.keys(train.trips[direction]).filter((key) => {
+      if (key === 'blended') {
+        return false;
+      }
+      const a = key.split('-');
+      const trips = train.trips[direction][key];
+      return !commonRouting || !commonRouting.includes(a[0]);
+    });
+
+    const routesAfter = Object.keys(train.trips[direction]).filter((key) => {
+      if (key === 'blended') {
+        return false;
+      }
+      const a = key.split('-');
+      const trips = train.trips[direction][key];
+      return commonRouting && !commonRouting.includes(a[1]);
+    });
+
+    const componentArray = [];
+
+    routesBefore.forEach((key) => {
+      if (!commonRouting) {
+        const a = key.split('-');
+        const start  = a[0];
+        const end = a[1];
+        const selectedTrips = train.trips[direction][key];
+        componentArray.push(this.renderHeadingWithTable(key, selectedTrips, start, end));
+      } else {
+        const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+        const i = routing.indexOf(commonRouting[0]);
+        const subrouting = routing.slice(0, i);
+        const selectedTrips = train.trips[direction][key].filter((t) => subrouting.includes(t.upcoming_stop));
+        componentArray.push(this.renderHeadingWithTable(key, selectedTrips, subrouting[0], commonRouting[0]));
+      }
+    });
+
+    if (commonRoutingTrips.length > 0) {
+      componentArray.push(this.renderHeadingWithTable('blended', commonRoutingTrips, commonRouting[0], commonRouting[commonRouting.length - 1]));
+    }
+
+    routesAfter.forEach((key) => {
+      const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+      const i = routing.indexOf(commonRouting[commonRouting.length - 1]);
+      const subrouting = routing.slice(i + 1);
+      const selectedTrips = train.trips[direction][key].filter((t) => subrouting.includes(t.upcoming_stop));
+      componentArray.push(this.renderHeadingWithTable(key, selectedTrips, commonRouting[commonRouting.length - 1], subrouting[subrouting.length - 1]));
+    });
+
+    return (
+      <div>
+        {
+          componentArray
+        }
+      </div>
+    );
+  }
+
+  renderHeadingWithTable(selectedRouting, trips, start, end) {
+    const { train, direction } = this.props;
+    const startName = formatStation(train.stops[start]);
+    const endName = formatStation(train.stops[end]);
+
+    return (
+      <div key={`${start}-${end}`} className='table-with-heading'>
+        <Header as='h3' inverted textAlign='left'>{startName} ➜ {endName}</Header>
+        { this.renderTable(selectedRouting, trips) }
+      </div>
+    );
+  }
+
+  renderSingleTable(train, direction) {
+    const { selectedRouting } = this.state;
+
+    let trips = train.trips[direction][selectedRouting];
+    let routing = selectedRouting;
+
+    if (!trips) {
+      const key = Object.keys(train.trips[direction])[0];
+      trips = train.trips[direction][key];
+
+      if (selectedRouting === 'blended') {
+        routing = key;
+      }
+    }
+
+    return this.renderTable(routing, trips);
+  }
+
+  renderTable(selectedRouting, trips) {
+    return (
+      <Table fixed inverted unstackable size='small' compact className='trip-table'>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell rowSpan='2' width={3}>
+              Train ID / Destination
+            </Table.HeaderCell>
+            <Table.HeaderCell colSpan='3'>
+              Time Until Next Stop
+            </Table.HeaderCell>
+            <Table.HeaderCell colSpan='2'>
+              Time Behind Next Train
+            </Table.HeaderCell>
+            <Table.HeaderCell rowSpan='2'>
+              Schedule Discrepancy
+            </Table.HeaderCell>
+          </Table.Row>
+          <Table.Row>
+            <Table.HeaderCell width={2}>
+              Our Estimate
+            </Table.HeaderCell>
+            <Table.HeaderCell width={2}>
+              Official
+            </Table.HeaderCell>
+            <Table.HeaderCell width={3}>
+              Stop Name
+            </Table.HeaderCell>
+            <Table.HeaderCell width={2}>
+              Our Estimate
+            </Table.HeaderCell>
+            <Table.HeaderCell width={2}>
+              Official
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        {
+          this.renderTripsTableBody(selectedRouting, trips)
+        }
+      </Table>
+    );
+  }
+
   render() {
     const { trains, train, direction } = this.props;
     const { selectedRouting, routings } = this.state;
@@ -183,7 +312,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={train.trips[direction][selectedRouting] || train.trips[direction][Object.keys(train.trips[direction])[0]]} />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>
@@ -212,53 +341,16 @@ class TrainModalDirectionPane extends React.Component {
               }
               {
                 train.trips && train.trips[direction] && selectedRouting === 'blended' && Object.keys(routings).length > 1 &&
-                <Header as='h3' inverted textAlign='left'>Trains on shared section only</Header>
+                this.renderBlendedTripsTables(train, direction)
               }
-              { train.trips && train.trips[direction] &&
-                <Table fixed inverted unstackable size='small' compact className='trip-table'>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.HeaderCell rowSpan='2' width={3}>
-                        Train ID / Destination
-                      </Table.HeaderCell>
-                      <Table.HeaderCell colSpan='3'>
-                        Time Until Next Stop
-                      </Table.HeaderCell>
-                      <Table.HeaderCell colSpan='2'>
-                        Time Behind Next Train
-                      </Table.HeaderCell>
-                      <Table.HeaderCell rowSpan='2'>
-                        Schedule Discrepancy
-                      </Table.HeaderCell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.HeaderCell width={2}>
-                        Our Estimate
-                      </Table.HeaderCell>
-                      <Table.HeaderCell width={2}>
-                        Official
-                      </Table.HeaderCell>
-                      <Table.HeaderCell width={3}>
-                        Stop Name
-                      </Table.HeaderCell>
-                      <Table.HeaderCell width={2}>
-                        Our Estimate
-                      </Table.HeaderCell>
-                      <Table.HeaderCell width={2}>
-                        Official
-                      </Table.HeaderCell>
-                    </Table.Row>
-                  </Table.Header>
-                  {
-                    this.renderTripsTableBody()
-                  }
-                </Table>
+              { train.trips && train.trips[direction] && (Object.keys(routings).length === 1 || selectedRouting !== 'blended') &&
+                this.renderSingleTable(train, direction)
               }
             </Grid.Column>
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime  trips={train.trips[direction][selectedRouting] || train.trips[direction][Object.keys(train.trips[direction])[0]]} />
+                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
          </Grid.Row>

@@ -165,8 +165,12 @@ class TrainModal extends React.Component {
                       <TrainModalOverallPane train={train} trains={trains} />
                   }
                   {
-                    activeMenuItem !== 'overall' &&
-                      <TrainModalDirectionPane train={train} trains={trains} direction={activeMenuItem} />
+                    activeMenuItem === 'north' &&
+                      <TrainModalDirectionPane train={train} trains={trains} direction='north' />
+                  }
+                  {
+                    activeMenuItem === 'south' &&
+                      <TrainModalDirectionPane train={train} trains={trains} direction='south' />
                   }
                   <Header inverted as='h5'>
                     Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
