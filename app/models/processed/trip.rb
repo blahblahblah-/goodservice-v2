@@ -59,7 +59,7 @@ class Processed::Trip
   end
 
   def self.determine_previous_stop_and_arrival_time(current_trip, routing)
-    return current_trip.past_stops.keys.last, current_trip.past_stops.values.last
+    return current_trip.past_stops&.keys.last, current_trip.past_stops&.values.last
   end
 
   def self.extrapolate_time_until_upcoming_stop(current_trip, routing)
