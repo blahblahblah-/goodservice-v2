@@ -67,7 +67,7 @@ class Trip
   end
 
   def update_stops_made!
-    @past_stops.merge!(stops_made)
+    (@past_stops || {}).merge!(stops_made)
   end
 
   def stops_made
