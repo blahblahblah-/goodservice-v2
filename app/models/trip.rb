@@ -44,7 +44,7 @@ class Trip
   end
 
   def scheduled_upcoming_stop_arrival_time
-    schedule ? schedule[upcoming_stop] : upcoming_stop_arrival_time
+    schedule ? (schedule[upcoming_stop] || upcoming_stop_arrival_time) : upcoming_stop_arrival_time
   end
 
   def time_until_upcoming_stop
