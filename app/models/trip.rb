@@ -118,6 +118,10 @@ class Trip
     self.delayed_time += (destination_time - previous_trip.destination_time)
   end
 
+  def effective_delayed_time
+    [schedule_discrepancy, 0].min + delayed_time
+  end
+
   def time_between_stops(time_limit)
     stops.select { |_, time| time <= timestamp + time_limit}.each_cons(2).map { |a, b| ["#{a.first}-#{b.first}", b.last - a.last]}.to_h
   end
@@ -141,5 +145,9 @@ class Trip
   def previous_stop_schedule_discrepancy
     return 0 unless previous_stop
     previous_stop_arrival_time - scheduled_previous_stop_arrival_time
+  end
+
+  def delayed?
+    effective_delayed_time >= FeedProcessor::DELAY_THRESHOLD
   end
 end

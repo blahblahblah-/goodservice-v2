@@ -50,7 +50,7 @@ class RouteAnalyzer
         else
           status = 'No Service'
         end
-      elsif delays[direction] && delays[direction] >= 300
+      elsif delays[direction] && delays[direction] >= FeedProcessor::DELAY_THRESHOLD
         status = 'Delay'
       elsif service_changes[direction_key].present? || service_changes[:both].present?
         status = 'Service Change'
@@ -75,11 +75,11 @@ class RouteAnalyzer
       strs = []
       intro = "#{destination_stations[direction[:route_direction]].join('/')}-bound trains are "
 
-      if delays[direction[:route_direction]] && delays[direction[:route_direction]] >= 300
+      if delays[direction[:route_direction]] && delays[direction[:route_direction]] >= FeedProcessor::DELAY_THRESHOLD
         delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
-          trips.select { |t| t.delayed_time >= 300 }
-        }.max_by { |trips| trips.map { |t| t.delayed_time }.max || 0 }
-        max_delay_mins = delayed_trips.max_by { |t| t.delayed_time }.delayed_time / 60.0
+          trips.select { |t| t.effective_delayed_time >= FeedProcessor::DELAY_THRESHOLD }
+        }.max_by { |trips| trips.map { |t| t.effective_delayed_time }.max || 0 }
+        max_delay_mins = delayed_trips.max_by { |t| t.effective_delayed_time }.effective_delayed_time / 60.0
         if delayed_trips.size == 1
           strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay_mins.round} mins)"
         else
@@ -224,7 +224,7 @@ class RouteAnalyzer
 
   def self.max_delay(actual_trips)
     actual_trips.map { |direction, trips|
-      [direction, trips.values.flatten.map(&:delayed_time).max]
+      [direction, trips.values.flatten.map(&:effective_delayed_time).max]
     }.to_h
   end
 
@@ -376,6 +376,7 @@ class RouteAnalyzer
             destination_stop: trip.destination,
             delayed_time: trip.delayed_time,
             schedule_discrepancy: trip.schedule_discrepancy,
+            is_delayed: trip.delayed?,
           }
         }]
       }]
