@@ -150,8 +150,8 @@ class FeedProcessor
     def update_trip(feed_id, timestamp, trip)
       process_stops(trip)
       trip.update_delay!
-      if trip.delayed_time >= DELAY_THRESHOLD
-        puts "Delay detected for #{trip.id} for #{trip.delayed_time}"
+      if trip.effective_delayed_time >= DELAY_THRESHOLD
+        puts "Delay detected for #{trip.id} for #{trip.effective_delayed_time}"
         RedisStore.add_delay(trip.route_id, trip.direction, trip.id, trip.timestamp)
       end
       marshaled_trip = Marshal.dump(trip)
@@ -167,7 +167,7 @@ class FeedProcessor
     end
 
     def process_stops(trip)
-      if trip.previous_trip && trip.previous_trip.delayed_time < EXCESSIVE_DELAY_THRESHOLD && trip.previous_stop_schedule_discrepancy > SCHEDULE_DISCREPANCY_THRESHOLD
+      if trip.previous_trip && trip.previous_trip.effective_delayed_time < EXCESSIVE_DELAY_THRESHOLD && trip.previous_stop_schedule_discrepancy > SCHEDULE_DISCREPANCY_THRESHOLD
         trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
           RedisStore.add_travel_time(stops_str, travel_time, trip.timestamp)
         end
