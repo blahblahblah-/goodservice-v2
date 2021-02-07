@@ -35,6 +35,10 @@ class Trip
     past_stops&.values&.last
   end
 
+  def scheduled_previous_stop_arrival_time
+    schedule ? (schedule[previous_stop] || previous_stop_arrival_time) : previous_stop_arrival_time
+  end
+
   def upcoming_stop
     stops.find { |_, v| v > timestamp }&.first
   end
@@ -132,5 +136,10 @@ class Trip
 
   def schedule_discrepancy
     upcoming_stop_arrival_time - scheduled_upcoming_stop_arrival_time
+  end
+
+  def previous_stop_schedule_discrepancy
+    return 0 unless previous_stop
+    previous_stop_arrival_time - scheduled_previous_stop_arrival_time
   end
 end

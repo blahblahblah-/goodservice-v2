@@ -167,7 +167,7 @@ class FeedProcessor
     end
 
     def process_stops(trip)
-      if trip.previous_trip && trip.previous_trip.delayed_time < EXCESSIVE_DELAY_THRESHOLD && trip.schedule_discrepancy > SCHEDULE_DISCREPANCY_THRESHOLD
+      if trip.previous_trip && trip.previous_trip.delayed_time < EXCESSIVE_DELAY_THRESHOLD && trip.previous_stop_schedule_discrepancy > SCHEDULE_DISCREPANCY_THRESHOLD
         trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
           RedisStore.add_travel_time(stops_str, travel_time, trip.timestamp)
         end
