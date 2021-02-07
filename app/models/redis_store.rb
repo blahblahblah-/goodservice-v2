@@ -211,6 +211,11 @@ class RedisStore
         puts "Removed #{trip_stops_removed} outdated stops for #{stop_id}"
       end
 
+      REDIS_CLIENT.keys("travel-time:actual:*").each do |key|
+        travel_times_removed = REDIS_CLIENT.zremrangebyscore(key, '-inf', Time.current.to_i - DATA_RETENTION)
+        puts "Removed #{travel_times_removed} outdated travel times between #{key}"
+      end
+
       Scheduled::Route.all.pluck(:internal_id).each do |route_id|
         [1, 3].each do |direction|
           delays_removed = REDIS_CLIENT.zremrangebyscore("delay:#{route_id}:#{direction}", '-inf', Time.current.to_i - DELAYS_RETENTION)
