@@ -6,6 +6,8 @@ class FeedProcessor
   SI_FEED = '-si'
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
   DELAY_THRESHOLD = 5.minutes.to_i
+  EXCESSIVE_DELAY_THRESHOLD = 10.minutes.to_i
+  SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTARY_TIME_LOOKUP = 20.minutes.to_i
 
   class << self
@@ -141,6 +143,7 @@ class FeedProcessor
         if trip.previous_trip.schedule
           trip.schedule = trip.previous_trip.schedule
         end
+        trip.past_stops = trip.previous_trip.past_stops
       end
     end
 
@@ -164,10 +167,12 @@ class FeedProcessor
     end
 
     def process_stops(trip)
-      # TODO: M train shuffle
-      trip.stops_made.each do |stop_id, timestamp|
-        RedisStore.add_stop(stop_id, trip.id, timestamp)
+      if trip.previous_trip && trip.previous_trip.delayed_time < EXCESSIVE_DELAY_THRESHOLD && trip.schedule_discrepancy > SCHEDULE_DISCREPANCY_THRESHOLD
+        trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
+          RedisStore.add_travel_time(stops_str, travel_time, trip.timestamp)
+        end
       end
+      trip.update_stops_made!
     end
 
     def complete_trips(feed_id, timestamp)
@@ -178,8 +183,23 @@ class FeedProcessor
           trip = Marshal.load(marshaled_trip)
           next unless trip.stops.size < 4
           puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
-          trip.stops.each do |stop_id, time|
-            RedisStore.add_stop(stop_id, trip_id, [timestamp, time].min)
+          stops_hash = {}
+
+          if trip.past_stops.present?
+            last_stop_id = trip.past_stops.keys.last
+            stops_hash[last_stop_id] = trip.past_stops[last_stop_id]
+          end
+
+          stops_hash.merge!(trip.stops.select { |_, time|
+            time > trip.timestamp
+          }).each_cons(2) do |(a_stop, a_timestamp), (b_stop, b_timestamp)|
+            stops_str = "#{a_stop}-#{b_stop}"
+            a_stop_time = [timestamp, a_timestamp].min
+            b_stop_time = [timestamp, b_timestamp].min
+
+            break if a_stop_time == b_stop_time
+            travel_time = b_stop_time - a_stop_time
+            RedisStore.add_travel_time(stops_str, travel_time, timestamp)
           end
         end
         RedisStore.remove_from_active_trip_list(feed_id, trip_id)

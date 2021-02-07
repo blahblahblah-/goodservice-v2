@@ -55,36 +55,41 @@ class RouteProcessor
     end
 
     def average_travel_time(a_stop, b_stop, timestamp)
-      train_stops_at_b = RedisStore.trips_stopped_at(b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)
-      train_stops_at_a = RedisStore.trips_stopped_at(a_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_START_LIMIT)
+      travel_times = RedisStore.travel_times_at(a_stop, b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)
 
-      trains_traveled = train_stops_at_b.select{ |b_train, b_time| train_stops_at_a.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
+      return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?
 
-      return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) unless trains_traveled.present?
-
-      trains_traveled.map { |train_id| train_stops_at_b[train_id] - train_stops_at_a[train_id] }.sum / trains_traveled.size
+      travel_times.map { |combined_str|
+        array = combined_str.split("-")
+        array[1].to_i
+      }.sum / travel_times.size
     end
 
     def batch_average_travel_times(stops, timestamp)
       futures = {}
 
       REDIS_CLIENT.pipelined do
-        futures = stops.to_h { |stop_id|
-          [stop_id, RedisStore.trips_stopped_at_as_arrays(stop_id, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)]
+        futures = stops.each_cons(2).to_h { |a_stop, b_stop|
+          stops_str = "#{a_stop}-#{b_stop}"
+          [stops_str, RedisStore.travel_times_at(a_stop, b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)]
         }
       end
 
       return {} if futures.empty?
 
-      futures.each_cons(2).to_h { |(a_stop, a_future), (b_stop, b_future)|
-        a_times = a_future.value.to_h
-        b_times = b_future.value.to_h
+      futures.to_h { |stops_str, travel_times_future|
+        travel_times = travel_times_future.value
+        array = stops_str.split('-')
+        a_stop = array[0]
+        b_stop = array[1]
 
-        trains_traveled = b_times.select{ |b_train, b_time| a_times.find {|a_train, a_time| a_train == b_train && b_time > a_time } }.keys
+        next [stops_str, RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless travel_times.present?
 
-        next ["#{a_stop}-#{b_stop}", RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless trains_traveled.present?
-
-        ["#{a_stop}-#{b_stop}", trains_traveled.map { |train_id| b_times[train_id] - a_times[train_id] }.sum / trains_traveled.size]
+        [stops_str, travel_times.map { |combined_str|
+            array = combined_str.split("-")
+            array[1].to_i
+          }.sum / travel_times.size
+        ]
       }
     end
 

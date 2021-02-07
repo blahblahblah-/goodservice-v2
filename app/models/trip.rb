@@ -1,6 +1,6 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :delayed_time, :schedule
+  attr_accessor :id, :previous_trip, :delayed_time, :schedule, :past_stops
 
   def initialize(route_id, direction, id, timestamp, trip_update)
     @route_id = route_id
@@ -12,6 +12,7 @@ class Trip
     }
     @stops = stop_time_hash
     @schedule = stop_time_hash
+    @past_stops = {}
   end
 
   def similar(trip)
@@ -27,15 +28,11 @@ class Trip
   end
 
   def previous_stop
-    return unless upcoming_stop
-    i = stops.keys.index(upcoming_stop)
-    return unless i && i > 0
-
-    stops.keys[i - 1]
+    past_stops&.keys&.last
   end
 
   def previous_stop_arrival_time
-    previous_stop && stops[previous_stop]
+    past_stops&.values&.last
   end
 
   def upcoming_stop
@@ -47,9 +44,7 @@ class Trip
   end
 
   def scheduled_upcoming_stop_arrival_time
-    if upcoming_stop
-      schedule[upcoming_stop] || timestamp
-    end
+    schedule ? schedule[upcoming_stop] : upcoming_stop_arrival_time
   end
 
   def time_until_upcoming_stop
@@ -71,14 +66,42 @@ class Trip
     upcoming_stops[0..i]
   end
 
+  def update_stops_made!
+    @past_stops.merge!(stops_made)
+  end
+
   def stops_made
-    return [] unless previous_trip
+    return {} unless previous_trip
 
     previous_trip.stops.select { |stop_id, time|
       !stops.keys.include?(stop_id)
     }.map { |stop_id, time|
       [stop_id, [timestamp, time].min]
     }.to_h
+  end
+
+  def time_traveled_between_stops_made
+    stops_hash = {}
+    stops_made_hash = stops_made
+
+    return {} unless stops_made_hash.present?
+
+    # add last stop made
+    if past_stops.present?
+      i = past_stops.keys.index(stops_made.keys.first)
+      # filter out stops already made
+      if i && i > 0
+        last_stop_id = past_stops.keys[i - 1]
+        stops_hash[last_stop_id] = past_stops[last_stop_id]
+      elsif i.nil?
+        last_stop_id = past_stops.keys.last
+        stops_hash[last_stop_id] = past_stops[last_stop_id]
+      end
+    end
+
+    stops_hash.merge!(stops_made_hash).each_cons(2).to_h do |(a_stop, a_timestamp), (b_stop, b_timestamp)|
+      ["#{a_stop}-#{b_stop}", b_timestamp - a_timestamp]
+    end
   end
 
   def update_delay!

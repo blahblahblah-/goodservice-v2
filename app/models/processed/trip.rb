@@ -1,6 +1,6 @@
 class Processed::Trip
   delegate :id, :stops_behind, :timestamp, :upcoming_stop, :time_until_upcoming_stop, :delayed_time,
-  :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :schedule_discrepancy, to: :trip
+  :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :schedule_discrepancy, :past_stops, to: :trip
 
   attr_reader :trip, :previous_stop_arrival_time, :previous_stop,
     :estimated_upcoming_stop_arrival_time, :estimated_time_behind_next_train, :time_behind_next_train
@@ -59,12 +59,7 @@ class Processed::Trip
   end
 
   def self.determine_previous_stop_and_arrival_time(current_trip, routing)
-    i = routing.index(current_trip.upcoming_stop)
-    return [nil, nil] unless i && i > 0
-    previous_stop = routing[i - 1]
-    previous_stop_arrival_time = RedisStore.trip_stop_time(previous_stop, current_trip.id)
-
-    return previous_stop, previous_stop_arrival_time
+    return current_trip.past_stops.keys.last, current_trip.past_stops.values.last
   end
 
   def self.extrapolate_time_until_upcoming_stop(current_trip, routing)
