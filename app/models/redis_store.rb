@@ -178,7 +178,7 @@ class RedisStore
     end
 
     def update_last_scaleup_timestamp
-      REDIS_CLIENT.set("last-timestamp-timestamp", Time.current.to_i)
+      REDIS_CLIENT.set("last-scaleup-timestamp", Time.current.to_i)
     end
 
     # Maintenance
@@ -205,12 +205,6 @@ class RedisStore
     end
 
     def clear_outdated_trip_stops_and_delays
-      all_stops = Scheduled::Stop.pluck(:internal_id)
-      all_stops.each do |stop_id|
-        trip_stops_removed = REDIS_CLIENT.zremrangebyscore("stops:#{stop_id}", '-inf', Time.current.to_i - DATA_RETENTION)
-        puts "Removed #{trip_stops_removed} outdated stops for #{stop_id}"
-      end
-
       REDIS_CLIENT.keys("travel-time:actual:*").each do |key|
         travel_times_removed = REDIS_CLIENT.zremrangebyscore(key, '-inf', Time.current.to_i - DATA_RETENTION)
         puts "Removed #{travel_times_removed} outdated travel times between #{key}"
