@@ -106,8 +106,8 @@ class RouteProcessor
 
     def determine_common_routings(routings_by_direction)
       routings_by_direction.to_h do |direction, routings|
-        common_start = routings.first.find { |s| routings.all? { |r| r.include?(s) }}
-        common_end = routings.first.reverse.find { |s| routings.all? { |r| r.include?(s) }}
+        common_start = routings.first&.find { |s| routings.all? { |r| r.include?(s) }}
+        common_end = routings.first&.reverse&.find { |s| routings.all? { |r| r.include?(s) }}
 
         next [direction, nil] unless common_start && common_end
 
