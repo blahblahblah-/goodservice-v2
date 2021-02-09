@@ -88,6 +88,10 @@ class TripModal extends React.Component {
     const { selectedTrip, train } = this.props;
     const destinationStationName = formatStation(train.stops[selectedTrip.destination_stop]);
     const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
+    const delayed = selectedTrip.delayed_time > 300;
+    const effectiveDelayedTime = Math.max(selectedTrip.schedule_discrepancy, 0) + selectedTrip.delayed_time;
+    const delayedTime = selectedTrip.is_delayed ? effectiveDelayedTime : selectedTrip.delayed_time;
+    const delayInfo = delayed ? `${selectedTrip.is_delayed ? 'Delayed' : 'Held'} for ${Math.round(delayedTime / 60)} mins` : '';
     return (
       <Modal basic size='large' className='trip-modal' open={!!selectedTrip} closeIcon dimmer='blurring' onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick>
         <Helmet>
@@ -99,12 +103,13 @@ class TripModal extends React.Component {
         </Helmet>
         <Modal.Header>
           <TrainBullet name={train.name} color={train.color}
-                        textColor={train.text_color} style={{display: "inline-block"}} size='large' /><br />
+                        textColor={train.text_color} style={{display: "inline-block", marginLeft: 0}} size='large' /><br />
           Trip: {selectedTrip.id} <br />
-          To: { destinationStationName }
+          To: { destinationStationName }<br />
+          { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead'} of schedule
           {
-            selectedTrip.delayed_time >= 300 && 
-            <Header as='h5' color='red' inverted>Delayed for {Math.round(selectedTrip.delayed_time / 60)} mins</Header>
+            delayed && 
+            <Header as='h5' color='red' inverted>{ delayInfo }</Header>
           }
         </Modal.Header>
         <Modal.Content scrolling>
