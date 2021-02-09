@@ -7,10 +7,32 @@
     color: white;
   }
 
-  .ui.menu.header-menu {
-    .item.no-service {
-      text-decoration: line-through;
-      color: #999999;
+  .header {
+    border: 0;
+
+    .ui.grid {
+      @media only screen and (max-width: 767px) {
+        margin-top: 1em;
+      }
+
+      .ui.menu.header-menu {
+        .item.no-service {
+          text-decoration: line-through;
+          color: #999999;
+        }
+
+        @media only screen and (max-width: 767px) {
+          margin-left: 1em!important;
+        }
+      }
+    }
+  }
+
+  .scrolling.content {
+    padding-top: 0!important;
+
+    .description {
+      padding-top: 0!important;
     }
   }
 }

@@ -135,7 +135,7 @@ class TrainModal extends React.Component {
                 <meta name="twitter:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
               </Helmet>
               <Modal.Header>
-                <Grid stackable>
+                <Grid>
                   <Grid.Row>
                     <Grid.Column width={4} textAlign='center'>
                       <TrainBullet name={train.name} color={train.color}
@@ -143,7 +143,7 @@ class TrainModal extends React.Component {
                       <p>{train.alternate_name}</p>
                     </Grid.Column>
                     <Grid.Column verticalAlign='middle' width={12}>
-                      <Menu widths={3} inverted className='header-menu'>
+                      <Menu widths={3} inverted className='header-menu' stackable>
                         <Menu.Item name='overall' active={activeMenuItem === 'overall'} onClick={this.handleItemClick}>
                           Overall
                         </Menu.Item>

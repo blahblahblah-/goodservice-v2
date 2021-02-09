@@ -47,4 +47,10 @@
   .table-with-heading {
     margin-top: 1em;
   }
+
+  .ui.small.statistics .statistic>.value {
+    @media only screen and (max-width: 767px) {
+      font-size: 2rem!important;
+    }
+  }
 }
