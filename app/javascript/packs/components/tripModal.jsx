@@ -106,7 +106,7 @@ class TripModal extends React.Component {
                         textColor={train.text_color} style={{display: "inline-block", marginLeft: 0}} size='large' /><br />
           Trip: {selectedTrip.id} <br />
           To: { destinationStationName }<br />
-          { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead'} of schedule
+          { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
           {
             delayed && 
             <Header as='h5' color='red' inverted>{ delayInfo }</Header>
