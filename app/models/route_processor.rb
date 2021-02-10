@@ -58,10 +58,12 @@ class RouteProcessor
 
       return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?
 
-      travel_times.map { |combined_str|
+      travel_times_array = travel_times.map { |combined_str|
         array = combined_str.split("-")
         array[1].to_i
-      }.sum / travel_times.size
+      }
+
+      trimmed_average(travel_times_array)
     end
 
     def batch_average_travel_times(stops, timestamp)
@@ -84,10 +86,10 @@ class RouteProcessor
 
         next [stops_str, RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless travel_times.present?
 
-        [stops_str, travel_times.map { |combined_str|
+        [stops_str, trimmed_average(travel_times.map { |combined_str|
             array = combined_str.split("-")
             array[1].to_i
-          }.sum / travel_times.size
+          })
         ]
       }
     end
@@ -95,6 +97,16 @@ class RouteProcessor
     def batch_scheduled_travel_time(stops)
       pairs = stops.each_cons(2).map { |a, b| [a, b] }
       RedisStore.scheduled_travel_times(pairs).to_h
+    end
+
+    private
+
+    def trimmed_average(travel_times, ignore_target: 0.1)
+      sorted_times = travel_times.sort
+      ignore_amount = (sorted_times.count * ignore_target).to_i
+      processed_values = sorted_times[ignore_amount..(sorted_times.length-(ignore_amount * 2))]
+
+      processed_values.sum / processed_values.count
     end
 
     def determine_routings(trips_by_direction)

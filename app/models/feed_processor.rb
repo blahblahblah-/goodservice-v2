@@ -172,6 +172,8 @@ class FeedProcessor
         (trip.previous_trip.previous_stop_schedule_discrepancy >= SCHEDULE_DISCREPANCY_THRESHOLD ||
             trip.schedule_discrepancy - trip.previous_trip.previous_stop_schedule_discrepancy <= (SCHEDULE_DISCREPANCY_THRESHOLD * -1)
         )
+        time_traveled_between_stops_made = trip.time_traveled_between_stops_made
+        return unless time_traveled_between_stops_made.size < 3
         trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
           RedisStore.add_travel_time(stops_str, travel_time, trip.timestamp)
         end
@@ -185,7 +187,7 @@ class FeedProcessor
         marshaled_trip = RedisStore.active_trip(feed_id, trip_id)
         if marshaled_trip
           trip = Marshal.load(marshaled_trip)
-          next unless trip.stops.size < 4
+          next unless trip.stops.size < 3
           puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
           stops_hash = {}
 
