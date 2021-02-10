@@ -89,7 +89,7 @@ class TripModal extends React.Component {
     const destinationStationName = formatStation(train.stops[selectedTrip.destination_stop]);
     const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     const delayed = selectedTrip.delayed_time > 300;
-    const effectiveDelayedTime = Math.max(selectedTrip.schedule_discrepancy, 0) + selectedTrip.delayed_time;
+    const effectiveDelayedTime = Math.min(selectedTrip.schedule_discrepancy, 0) + selectedTrip.delayed_time;
     const delayedTime = selectedTrip.is_delayed ? effectiveDelayedTime : selectedTrip.delayed_time;
     const delayInfo = delayed ? `${selectedTrip.is_delayed ? 'Delayed' : 'Held'} for ${Math.round(delayedTime / 60)} mins` : '';
     return (

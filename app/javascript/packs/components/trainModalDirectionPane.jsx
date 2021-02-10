@@ -120,7 +120,7 @@ class TrainModalDirectionPane extends React.Component {
       const key = Object.keys(train.scheduled_headways[direction])[0];
       scheduledHeadways = train.scheduled_headways[direction][key];
     }
-    const maxScheduledHeadway = scheduledHeadways ? Math.round(Math.max(...scheduledHeadways) / 60) : Infinity;
+    const maxScheduledHeadway = scheduledHeadways ? Math.round(Math.min(...scheduledHeadways) / 60) : Infinity;
     return (
       <Table.Body>
         {
