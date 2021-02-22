@@ -1,6 +1,6 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :delayed_time, :schedule, :past_stops
+  attr_accessor :id, :previous_trip, :delayed_time, :schedule, :past_stops, :latest
 
   def initialize(route_id, direction, id, timestamp, trip_update)
     @route_id = route_id
@@ -13,6 +13,8 @@ class Trip
     @stops = stop_time_hash
     @schedule = stop_time_hash
     @past_stops = {}
+    @latest = true
+    @delayed_time = 0
   end
 
   def similar(trip)
@@ -40,7 +42,7 @@ class Trip
   end
 
   def upcoming_stop
-    stops.find { |_, v| v > timestamp }&.first
+    upcoming_stops.first
   end
 
   def upcoming_stop_arrival_time
@@ -56,11 +58,7 @@ class Trip
   end
 
   def upcoming_stops
-    stops.select { |_, v| v > timestamp }.map(&:first)
-  end
-
-  def upcoming_stops_by_at_least_a_minute
-    stops.select { |_, v| v >= (timestamp + 1.minute) }.map(&:first)
+    stops.select { |_, v| v > timestamp }.map(&:first) - past_stops.keys
   end
 
   def stops_behind(trip)
@@ -109,7 +107,6 @@ class Trip
   end
 
   def update_delay!
-    self.delayed_time = 0
     return unless previous_trip
     return unless next_stop_time
     return unless (next_stop_time - timestamp) <= 1080

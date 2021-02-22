@@ -9,6 +9,7 @@ class FeedProcessor
   EXCESSIVE_DELAY_THRESHOLD = 10.minutes.to_i
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTARY_TIME_LOOKUP = 20.minutes.to_i
+  TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
 
   class << self
     def analyze_feed(feed_id, minutes, half_minute)
@@ -32,11 +33,13 @@ class FeedProcessor
 
       puts "Timestamp of #{feed_name} is #{timestamp}"
 
+      trip_timestamps = extract_vehicle_timestamps(feed.entity)
+
       trips = feed.entity.select { |entity|
         valid_trip?(timestamp, entity, feed_id)
       }.map { |entity|
-        convert_trip(timestamp, entity)
-      }
+        convert_trip(timestamp, entity, trip_timestamps)
+      }.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }
 
       translated_trips = trips.map{ |trip|
         translate_trip(feed_id, trip)
@@ -75,6 +78,12 @@ class FeedProcessor
 
     private
 
+    def extract_vehicle_timestamps(entity)
+      entity.select {|e| e.field?(:vehicle) && e.vehicle.timestamp > 0 }.to_h { |e|
+        [e.vehicle.trip.trip_id, e.vehicle.timestamp]
+      }
+    end
+
     def valid_trip?(timestamp, entity, feed_id)
       return false unless entity.field?(:trip_update) && entity.trip_update.trip.nyct_trip_descriptor
       upcoming_trip_time_allowance = feed_id == SI_FEED ? UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI : UPCOMING_TRIPS_TIME_ALLOWANCE
@@ -91,7 +100,7 @@ class FeedProcessor
       true
     end
 
-    def convert_trip(timestamp, entity)
+    def convert_trip(timestamp, entity, trip_timestamps)
       route_id = translate_route_id(entity.trip_update.trip.route_id)
       trip_id = entity.trip_update.trip.trip_id
       direction = entity.trip_update.trip.nyct_trip_descriptor.direction.to_i
@@ -103,8 +112,9 @@ class FeedProcessor
 
       remove_hidden_stops!(entity.trip_update)
       remove_bad_data!(entity.trip_update, timestamp)
+      trip_timestamp = [trip_timestamps[trip_id] || timestamp, timestamp].min
 
-      Trip.new(route_id, direction, trip_id, timestamp, entity.trip_update)
+      Trip.new(route_id, direction, trip_id, trip_timestamp, entity.trip_update)
     end
 
     def translate_trip(feed_id, trip)
@@ -138,18 +148,26 @@ class FeedProcessor
       marshaled_previous_update = RedisStore.active_trip(feed_id, trip.id)
       if marshaled_previous_update
         previous_update = Marshal.load(marshaled_previous_update)
-        trip.previous_trip = previous_update
-        trip.previous_trip.previous_trip = nil
-        if trip.previous_trip.schedule
-          trip.schedule = trip.previous_trip.schedule
+
+        if trip.timestamp != previous_update.timestamp
+          trip.previous_trip = previous_update
+          trip.previous_trip.previous_trip = nil
+        else
+          puts "#{trip.id} has not been updated since #{Time.zone.at(trip.timestamp)}"
+          trip.previous_trip = trip.previous_trip&.previous_trip
+          trip.delayed_time = previous_update.delayed_time
+          trip.latest = false
         end
-        trip.past_stops = trip.previous_trip.past_stops
+
+        trip.schedule = trip.previous_trip&.schedule
+        trip.past_stops = trip.previous_trip.past_stops if trip.previous_trip&.past_stops
       end
     end
 
     def update_trip(feed_id, timestamp, trip)
-      process_stops(trip)
+      return unless trip.latest
       trip.update_delay!
+      process_stops(trip)
       if trip.effective_delayed_time >= DELAY_THRESHOLD
         puts "Delay detected for #{trip.id} for #{trip.effective_delayed_time}"
         RedisStore.add_delay(trip.route_id, trip.direction, trip.id, trip.timestamp)
