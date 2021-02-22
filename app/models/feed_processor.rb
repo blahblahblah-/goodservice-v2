@@ -42,7 +42,7 @@ class FeedProcessor
       }.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }
 
       translated_trips = trips.map{ |trip|
-        translate_trip(feed_id, trip)
+        translate_trip(feed_id, trip, trips)
       }
 
       unmatched_trips = []
@@ -117,9 +117,11 @@ class FeedProcessor
       Trip.new(route_id, direction, trip_id, trip_timestamp, entity.trip_update)
     end
 
-    def translate_trip(feed_id, trip)
+    def translate_trip(feed_id, trip, trips)
       if (translated_trip_id = RedisStore.trip_translation(feed_id, trip.id))
-        trip.id = translated_trip_id
+        unless trips.map(&:id).include?(translated_trip_id)
+          trip.id = translated_trip_id
+        end
       end
       trip
     end
