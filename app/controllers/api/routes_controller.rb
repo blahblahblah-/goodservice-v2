@@ -1,6 +1,6 @@
 class Api::RoutesController < ApplicationController
   def index
-    data = Rails.cache.fetch("status", expires_in: 30.seconds) do
+    data = Rails.cache.fetch("status", expires_in: 15.seconds) do
       data_hash = RedisStore.route_status_summaries
       scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
       timestamps = []
@@ -35,7 +35,7 @@ class Api::RoutesController < ApplicationController
 
   def show
     route_id = params[:id]
-    data = Rails.cache.fetch("status:#{route_id}", expires_in: 30.seconds) do
+    data = Rails.cache.fetch("status:#{route_id}", expires_in: 15.seconds) do
       time_check = Time.current
       route = Scheduled::Route.find_by!(internal_id: route_id)
       scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
