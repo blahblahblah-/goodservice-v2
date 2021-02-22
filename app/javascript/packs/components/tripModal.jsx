@@ -86,6 +86,7 @@ class TripModal extends React.Component {
 
   render() {
     const { selectedTrip, train } = this.props;
+    const { trip } = this.state;
     const destinationStationName = formatStation(train.stops[selectedTrip.destination_stop]);
     const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     const delayed = selectedTrip.delayed_time > 300;
@@ -146,6 +147,9 @@ class TripModal extends React.Component {
                 this.renderTableBody()
               }
             </Table>
+            <Header inverted as='h5'>
+              Last updated {trip && (new Date(trip.timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
+            </Header>
           </Modal.Description>
         </Modal.Content>
       </Modal>
