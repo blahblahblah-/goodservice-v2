@@ -12,16 +12,16 @@ class FeedProcessor
   TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
 
   class << self
-    def analyze_feed(feed_id, minutes, half_minute)
-      feed_name = "feed:#{minutes}:#{half_minute}:#{feed_id}"
-      marshaled_feed = RedisStore.feed(feed_id, minutes, half_minute)
+    def analyze_feed(feed_id, minutes, fraction_of_minute)
+      feed_name = "feed:#{minutes}:#{fraction_of_minute}:#{feed_id}"
+      marshaled_feed = RedisStore.feed(feed_id, minutes, fraction_of_minute)
       feed = Marshal.load(marshaled_feed) if marshaled_feed
 
       if !feed
         throw "Error: Feed #{feed_name} not found"
       end
 
-      puts "Analyzing feed #{feed_name}:#{minutes}:#{half_minute}"
+      puts "Analyzing feed #{feed_name}:#{minutes}:#{fraction_of_minute}"
 
       return if feed.entity.empty?
 
@@ -161,7 +161,7 @@ class FeedProcessor
           trip.latest = false
         end
 
-        trip.schedule = trip.previous_trip&.schedule
+        trip.schedule = trip.previous_trip.schedule if trip.previous_trip&.schedule
         trip.past_stops = trip.previous_trip.past_stops if trip.previous_trip&.past_stops
       end
     end

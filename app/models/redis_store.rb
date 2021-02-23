@@ -14,12 +14,12 @@ class RedisStore
       REDIS_CLIENT.hset("feed-timestamp", feed_id, timestamp)
     end
 
-    def feed(feed_id, minutes, half_minute)
-      REDIS_CLIENT.get("feed:#{minutes}:#{half_minute}:#{feed_id}")
+    def feed(feed_id, minutes, fraction_of_minute)
+      REDIS_CLIENT.get("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}")
     end
 
-    def add_feed(feed_id, minutes, half_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{half_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 300 : 1800))
+    def add_feed(feed_id, minutes, fraction_of_minute, marshaled_data)
+      REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 300 : 1800))
     end
 
     # Route Trips

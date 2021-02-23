@@ -46,7 +46,7 @@ class Trip
   end
 
   def upcoming_stop_arrival_time
-    stops.find { |_, v| v > timestamp }&.last || timestamp
+    stops[upcoming_stops] || timestamp
   end
 
   def scheduled_upcoming_stop_arrival_time
@@ -54,7 +54,7 @@ class Trip
   end
 
   def time_until_upcoming_stop
-    (stops.find { |_, v| v > timestamp }&.last || timestamp) - timestamp
+    upcoming_stop_arrival_time - timestamp
   end
 
   def upcoming_stops

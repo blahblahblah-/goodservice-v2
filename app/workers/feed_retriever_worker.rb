@@ -8,7 +8,7 @@ class FeedRetrieverWorker
 
   BASE_URI = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
 
-  def perform(feed_id, minutes, half_minute)
+  def perform(feed_id, minutes, fraction_of_minute)
     current_minute = Time.current.min
     if (current_minute - minutes) > 1
       puts "Job expired, noop"
@@ -31,8 +31,8 @@ class FeedRetrieverWorker
       return
     end
     RedisStore.update_feed_timestamp(feed_id, decoded_data.header.timestamp)
-    RedisStore.add_feed(feed_id, minutes, half_minute, Marshal.dump(decoded_data))
-    FeedProcessorWorker.perform_async(feed_id, minutes, half_minute)
+    RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
+    FeedProcessorWorker.perform_async(feed_id, minutes, fraction_of_minute)
     puts "Feed #{feed_id} done!"
   end
 end
