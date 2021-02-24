@@ -31,7 +31,7 @@ class HerokuAutoscalerWorker
         RedisStore.update_last_unempty_workqueue_timestamp
       end
     else
-      if queue_latency > 10
+      if queue_latency > 15
         if number_of_dynos < MAXIMUM_NUMBER_OF_DYNOS && (!RedisStore.last_scaleup_timestamp || RedisStore.last_scaleup_timestamp < Time.current.to_i  - SCALEUP_DELAY)
           new_quantity = number_of_dynos + 1
           heroku.formation.update(ENV['HEROKU_APP_NAME'], 'worker', {"quantity" => new_quantity})

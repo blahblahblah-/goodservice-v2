@@ -7,7 +7,7 @@ class FeedRetrieverSpawningWorker
 
   def perform
     minutes = Time.current.min
-    fraction_of_minute = Time.current.sec / 10
+    fraction_of_minute = Time.current.sec / 15
     FEEDS.each do |id|
       FeedRetrieverWorker.perform_async(id, minutes, fraction_of_minute)
     end

@@ -9,6 +9,6 @@ end
 Sidekiq.options[:poll_interval] = 1
 
 Sidekiq::Cron::Job.create(name: 'RoutingRefreshWorker - Every 30 secs', cron: '*/30 * * * * *', class: 'RoutingRefreshWorker')
-Sidekiq::Cron::Job.create(name: 'FeedRetrieverSpawningWorker - Every 10 secs', cron: '*/10 * * * * *', class: 'FeedRetrieverSpawningWorker')
+Sidekiq::Cron::Job.create(name: 'FeedRetrieverSpawningWorker - Every 15 secs', cron: '*/15 * * * * *', class: 'FeedRetrieverSpawningWorker')
 Sidekiq::Cron::Job.create(name: 'HerokuAutoscalerWorker - Every 1 min', cron: '* * * * *', class: 'HerokuAutoscalerWorker')
 Sidekiq::Cron::Job.create(name: 'RedisCleanupWorker - Every 30 mins', cron: '*/30 * * * *', class: 'RedisCleanupWorker')
