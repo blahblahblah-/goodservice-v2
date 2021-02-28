@@ -4,8 +4,8 @@ class HerokuAutoscalerWorker
   include Sidekiq::Worker
   sidekiq_options retry: false, queue: 'critical'
 
-  MINIMUM_NUMBER_OF_DYNOS = 1
-  MAXIMUM_NUMBER_OF_DYNOS = 10
+  MINIMUM_NUMBER_OF_DYNOS = ENV['AUTOSCALER_MIN_DYNOS']&.to_i || 1
+  MAXIMUM_NUMBER_OF_DYNOS = ENV['AUTOSCALER_MAX_DYNOS']&.to_i || 5
   SCALEUP_DELAY = 2.minutes.to_i
   SCALE_DOWN_THRESHOLD = ENV['AUTOSCALER_SCALE_DOWN_THRESHOLD']&.to_i || 0
 
