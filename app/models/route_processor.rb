@@ -1,5 +1,5 @@
 class RouteProcessor
-  RUNTIME_END_LIMIT = 120.minutes.to_i
+  TRAVEL_TIME_AVERAGE_TRIP_COUNT = 20
 
   class << self
     def process_route(route_id, trips, timestamp)
@@ -54,7 +54,7 @@ class RouteProcessor
     end
 
     def average_travel_time(a_stop, b_stop, timestamp)
-      travel_times = RedisStore.travel_times_at(a_stop, b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)
+      travel_times = RedisStore.travel_times_at(a_stop, b_stop, TRAVEL_TIME_AVERAGE_TRIP_COUNT)
 
       return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?
 
@@ -72,7 +72,7 @@ class RouteProcessor
       REDIS_CLIENT.pipelined do
         futures = stops.each_cons(2).to_h { |a_stop, b_stop|
           stops_str = "#{a_stop}-#{b_stop}"
-          [stops_str, RedisStore.travel_times_at(a_stop, b_stop, timestamp + 1.minute.to_i, timestamp - RUNTIME_END_LIMIT)]
+          [stops_str, RedisStore.travel_times_at(a_stop, b_stop, TRAVEL_TIME_AVERAGE_TRIP_COUNT)]
         }
       end
 

@@ -1,6 +1,6 @@
 class RedisStore
   INACTIVE_TRIP_TIMEOUT = 30.minutes.to_i
-  DATA_RETENTION = 3.hours.to_i
+  DATA_RETENTION = 4.hours.to_i
   DELAYS_RETENTION = 1.day.to_i
   ROUTE_UPDATE_TIMEOUT = 1.minute.to_i
 
@@ -89,9 +89,9 @@ class RedisStore
       REDIS_CLIENT.zadd("travel-time:actual:#{stops_str}", timestamp, "#{timestamp}-#{travel_time}")
     end
 
-    def travel_times_at(stop_id_1, stop_id_2, max_time, min_time)
+    def travel_times_at(stop_id_1, stop_id_2, count)
       stops_str = "#{stop_id_1}-#{stop_id_2}"
-      REDIS_CLIENT.zrevrangebyscore("travel-time:actual:#{stops_str}", max_time, min_time)
+      REDIS_CLIENT.zrevrange("travel-time:actual:#{stops_str}", 0, count - 1)
     end
 
     def supplementary_scheduled_travel_time(stop_id_1, stop_id_2)
