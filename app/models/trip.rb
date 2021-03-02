@@ -46,7 +46,7 @@ class Trip
   end
 
   def upcoming_stop_arrival_time
-    stops[upcoming_stops] || timestamp
+    stops[upcoming_stop] || timestamp
   end
 
   def scheduled_upcoming_stop_arrival_time
