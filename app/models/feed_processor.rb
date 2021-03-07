@@ -72,7 +72,11 @@ class FeedProcessor
       complete_trips(feed_id, timestamp)
 
       routes.each do |route_id, trips|
-        RouteProcessor.process_route(route_id, trips, timestamp)
+        if trips.any?(&:latest)
+          RouteProcessor.process_route(route_id, trips, timestamp) 
+        else
+          puts "No updated trips for #{route_id}, skipping..."
+        end
       end
     end
 
