@@ -171,11 +171,11 @@ class TrainModalDirectionPane extends React.Component {
     if (selectedRouting === 'blended') {
       headwayDisrepancyAboveThreshold = train.max_headway_discrepancy && train.max_headway_discrepancy[direction] && train.max_headway_discrepancy[direction] >= 120;
     } else if (maxEstimatedHeadway && maxScheduledHeadway) {
-      headwayDisrepancyAboveThreshold = maxEstimatedHeadway - maxScheduledHeadway >= 120;
+      headwayDisrepancyAboveThreshold = maxEstimatedHeadway - maxScheduledHeadway >= 2;
     }
 
     if (selectedRouting === 'blended') {
-      runtimeDiffAboutThreshold = train.overall_runtime_diff && train.overall_runtime_diff[direction] && train.overall_runtime_diff[direction] >= 5;
+      runtimeDiffAboutThreshold = train.overall_runtime_diff && train.overall_runtime_diff[direction] && train.overall_runtime_diff[direction] >= 300;
     } else if (estimatedRuntime && scheduledRuntime) {
       runtimeDiffAboutThreshold = estimatedRuntime - scheduledRuntime >= 5;
     }
