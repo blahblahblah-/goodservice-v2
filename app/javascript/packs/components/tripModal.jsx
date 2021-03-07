@@ -122,10 +122,10 @@ class TripModal extends React.Component {
                     Station
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
-                    Our Estimate
+                    Projected
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
-                    Official
+                    Estimated
                   </Table.HeaderCell>
                 </Table.Row>
                 <Table.Row>

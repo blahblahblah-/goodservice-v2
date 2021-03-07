@@ -279,19 +279,19 @@ class TrainModalDirectionPane extends React.Component {
           </Table.Row>
           <Table.Row>
             <Table.HeaderCell width={2}>
-              Our Estimate
+              Projected
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
-              Official
+              Estimated
             </Table.HeaderCell>
             <Table.HeaderCell width={3}>
               Stop Name
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
-              Our Estimate
+              Projected
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
-              Official
+              Estimated
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
