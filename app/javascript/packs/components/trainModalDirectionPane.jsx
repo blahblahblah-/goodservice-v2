@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Segment, Statistic, Grid, Dropdown, Table } from "semantic-ui-react";
+import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider } from "semantic-ui-react";
 import { Link } from 'react-router-dom';
 
 import TrainMap from './trainMap';
@@ -89,6 +89,132 @@ class TrainModalDirectionPane extends React.Component {
     return out;
   }
 
+  calculateMaxHeadway(headwayObjs) {
+    const { selectedRouting } = this.state;
+    let scheduledHeadways = headwayObjs && headwayObjs[selectedRouting];
+    if (selectedRouting === 'blended' && Object.keys(headwayObjs).length > 1) {
+      const keys = Object.keys(headwayObjs);
+      const headways = keys.map((r) => {
+        return r && Math.round(Math.max(...headwayObjs[r]) / 60);
+      }).filter((h) => h);
+      const minHeadway = Math.min(...headways);
+      const maxHeadway = Math.max(...headways);
+      if (headways.length > 1 && minHeadway !== maxHeadway) {
+        return `${minHeadway} - ${maxHeadway}`;
+      } else {
+        return headways[0];
+      }
+    }
+    if (!scheduledHeadways && headwayObjs) {
+      const key = Object.keys(headwayObjs)[0];
+      scheduledHeadways = headwayObjs[key];
+    }
+    return scheduledHeadways ? Math.round(Math.max(...scheduledHeadways) / 60) : "--";
+  }
+
+  calculateRoutingRuntime(routing, travelTimes) {
+    let time = 0;
+    let prev = routing[0];
+    for(let i = 1; i < routing.length; i++) {
+      time += travelTimes[`${prev}-${routing[i]}`];
+      prev = routing[i];
+    }
+    return Math.round(time / 60);
+  }
+
+  calculateRuntime(routings, travelTimes) {
+    const { selectedRouting } = this.state;
+    if (!routings) {
+      return '--';
+    }
+    if (selectedRouting === 'blended') {
+      if (routings.length > 1) {
+        const runtimes = routings.map((r) => this.calculateRoutingRuntime(r, travelTimes));
+        const minRuntime = Math.min(...runtimes);
+        const maxRuntime = Math.max(...runtimes);
+        if (minRuntime !== maxRuntime) {
+          return `${minRuntime} - ${maxRuntime}`;
+        } else {
+          return runtimes[0];
+        }
+      } else {
+        return this.calculateRoutingRuntime(routings[0], travelTimes);
+      }
+    }
+    const routing = routings.find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+    if (routing) {
+      return this.calculateRoutingRuntime(routing, travelTimes);
+    }
+    return '--';
+  }
+
+
+  renderStats() {
+    const { train, direction } = this.props;
+    const { selectedRouting } = this.state;
+    const maxScheduledHeadway = train.scheduled_headways ? this.calculateMaxHeadway(train.scheduled_headways[direction]) : '--';
+    const trips = {}
+    if (train.trips && train.trips[direction]) {
+      Object.keys(train.trips[direction]).forEach((r) => {
+        trips[r] = train.trips[direction][r].map((t) => {
+          return t.estimated_time_behind_next_train;
+        })
+      });
+    }
+    const maxEstimatedHeadway = this.calculateMaxHeadway(trips);
+    const scheduledRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.scheduled_travel_times);
+    const supplementaryRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplementary_travel_times);
+    const estimatedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.estimated_travel_times);
+
+    let headwayDisrepancyAboveThreshold = false;
+    let runtimeDiffAboutThreshold = false;
+    if (selectedRouting === 'blended') {
+      headwayDisrepancyAboveThreshold = train.max_headway_discrepancy && train.max_headway_discrepancy[direction] && train.max_headway_discrepancy[direction] >= 120;
+    } else if (maxEstimatedHeadway && maxScheduledHeadway) {
+      headwayDisrepancyAboveThreshold = maxEstimatedHeadway - maxScheduledHeadway >= 120;
+    }
+
+    if (selectedRouting === 'blended') {
+      runtimeDiffAboutThreshold = train.overall_runtime_diff && train.overall_runtime_diff[direction] && train.overall_runtime_diff[direction] >= 5;
+    } else if (estimatedRuntime && scheduledRuntime) {
+      runtimeDiffAboutThreshold = estimatedRuntime - scheduledRuntime >= 5;
+    }
+    return (
+      <React.Fragment>
+        <Divider inverted horizontal>
+          <Header size='medium' inverted>MAX HEADWAY</Header>
+        </Divider>
+        <Statistic.Group widths={2} size="small" inverted color={headwayDisrepancyAboveThreshold ? 'yellow' : 'black'}>
+          <Statistic>
+            <Statistic.Value>{ maxScheduledHeadway } min</Statistic.Value>
+            <Statistic.Label>Scheduled</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ maxEstimatedHeadway } min</Statistic.Value>
+            <Statistic.Label>Projected</Statistic.Label>
+          </Statistic>
+        </Statistic.Group>
+        <Divider inverted horizontal>
+          <Header size='medium' inverted>TRIP RUNTIMES</Header>
+        </Divider>
+        <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboutThreshold ? 'yellow' : 'black'}>
+          <Statistic>
+            <Statistic.Value>{ scheduledRuntime } min</Statistic.Value>
+            <Statistic.Label>Scheduled</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementaryRuntime } min</Statistic.Value>
+            <Statistic.Label>Estimated</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ estimatedRuntime } min</Statistic.Value>
+            <Statistic.Label>Projected</Statistic.Label>
+          </Statistic>
+        </Statistic.Group>
+      </React.Fragment>
+    );
+  }
+
   routingOptions() {
     const { train } = this.props;
     const { routings, selectedRouting } = this.state;
@@ -120,7 +246,7 @@ class TrainModalDirectionPane extends React.Component {
       const key = Object.keys(train.scheduled_headways[direction])[0];
       scheduledHeadways = train.scheduled_headways[direction][key];
     }
-    const maxScheduledHeadway = scheduledHeadways ? Math.round(Math.min(...scheduledHeadways) / 60) : Infinity;
+    const maxScheduledHeadway = scheduledHeadways ? Math.round(Math.max(...scheduledHeadways) / 60) : Infinity;
     return (
       <Table.Body>
         {
@@ -340,6 +466,9 @@ class TrainModalDirectionPane extends React.Component {
                   onChange={this.handleRoutingChange}
                   value={selectedRouting}
                 />
+              }
+              {
+                this.renderStats()
               }
               {
                 train.trips && train.trips[direction] && selectedRouting === 'blended' && Object.keys(routings).length > 1 &&
