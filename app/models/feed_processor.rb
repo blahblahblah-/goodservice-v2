@@ -211,7 +211,7 @@ class FeedProcessor
         marshaled_trip = RedisStore.active_trip(feed_id, trip_id)
         if marshaled_trip
           trip = Marshal.load(marshaled_trip)
-          next unless trip.stops.size < 3
+          next unless trip.stops.size < 2
           puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
           stops_hash = {}
 
