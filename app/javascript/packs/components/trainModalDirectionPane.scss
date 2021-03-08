@@ -12,6 +12,19 @@
     }
   }
 
+  .minute {
+    font-size: 1rem;
+  }
+
+  .travel-time-header {
+    margin-top: 0;
+
+    .dropdown {
+      margin-left: 1em;
+      margin-right: 1em;
+    }
+  }
+
   .trip-table {
     .delayed {
       color: #ff695e;

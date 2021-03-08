@@ -51,8 +51,16 @@ class TrainModalDirectionPane extends React.Component {
     train.actual_routings[direction].forEach((r) => {
       routings[routingHash(r)] = r;
     });
+    let travelTimeFrom = null;
+    let travelTimeTo = null;
 
-    this.setState({ routings: routings, selectedRouting: 'blended' })
+    if (train.actual_routings && train.actual_routings[direction]) {
+      const commonStops = train.actual_routings[direction][0].filter((s) => train.actual_routings[direction].every((r) => r.includes(s)));
+      travelTimeFrom = commonStops[0];
+      travelTimeTo = commonStops[commonStops.length - 1];
+    }
+
+    this.setState({ routings: routings, selectedRouting: 'blended', travelTimeFrom: travelTimeFrom, travelTimeTo: travelTimeTo})
   }
 
   directionStatus() {
@@ -100,7 +108,7 @@ class TrainModalDirectionPane extends React.Component {
       const minHeadway = Math.min(...headways);
       const maxHeadway = Math.max(...headways);
       if (headways.length > 1 && minHeadway !== maxHeadway) {
-        return `${minHeadway} - ${maxHeadway}`;
+        return `${minHeadway}-${maxHeadway}`;
       } else {
         return headways[0];
       }
@@ -122,27 +130,36 @@ class TrainModalDirectionPane extends React.Component {
     return Math.round(time / 60);
   }
 
-  calculateRuntime(routings, travelTimes) {
+  calculateRuntime(routings, travelTimes, fromStop, toStop) {
     const { selectedRouting } = this.state;
     if (!routings) {
       return '--';
     }
     if (selectedRouting === 'blended') {
-      if (routings.length > 1) {
-        const runtimes = routings.map((r) => this.calculateRoutingRuntime(r, travelTimes));
-        const minRuntime = Math.min(...runtimes);
-        const maxRuntime = Math.max(...runtimes);
-        if (minRuntime !== maxRuntime) {
-          return `${minRuntime} - ${maxRuntime}`;
-        } else {
-          return runtimes[0];
-        }
+      let selectedRoutings = routings;
+      if (fromStop && toStop) {
+        selectedRoutings = routings.filter((r) => r.includes(fromStop) && r.includes(toStop)).map((r) => {
+          const indexFrom = r.indexOf(fromStop);
+          const indexTo = r.indexOf(toStop);
+          return r.slice(indexFrom, indexTo + 1);
+        });
+      }
+      const runtimes = selectedRoutings.map((r) => this.calculateRoutingRuntime(r, travelTimes));
+      const minRuntime = Math.min(...runtimes);
+      const maxRuntime = Math.max(...runtimes);
+      if (minRuntime !== maxRuntime) {
+        return `${minRuntime}-${maxRuntime}`;
       } else {
-        return this.calculateRoutingRuntime(routings[0], travelTimes);
+        return runtimes[0];
       }
     }
-    const routing = routings.find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+    let routing = routings.find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
     if (routing) {
+      if (fromStop && toStop) {
+        const indexFrom = routing.indexOf(fromStop);
+        const indexTo = routing.indexOf(toStop);
+        routing = routing.slice(indexFrom, indexTo + 1);
+      }
       return this.calculateRoutingRuntime(routing, travelTimes);
     }
     return '--';
@@ -186,11 +203,11 @@ class TrainModalDirectionPane extends React.Component {
         </Divider>
         <Statistic.Group widths={2} size="small" inverted color={headwayDisrepancyAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
-            <Statistic.Value>{ maxScheduledHeadway } min</Statistic.Value>
+            <Statistic.Value>{ maxScheduledHeadway } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
-            <Statistic.Value>{ maxEstimatedHeadway } min</Statistic.Value>
+            <Statistic.Value>{ maxEstimatedHeadway } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
           </Statistic>
         </Statistic.Group>
@@ -199,15 +216,121 @@ class TrainModalDirectionPane extends React.Component {
         </Divider>
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboutThreshold ? 'yellow' : 'black'}>
           <Statistic>
-            <Statistic.Value>{ scheduledRuntime } min</Statistic.Value>
+            <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
-            <Statistic.Value>{ supplementaryRuntime } min</Statistic.Value>
+            <Statistic.Value>{ supplementaryRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Estimated</Statistic.Label>
           </Statistic>
           <Statistic>
-            <Statistic.Value>{ estimatedRuntime } min</Statistic.Value>
+            <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Projected</Statistic.Label>
+          </Statistic>
+        </Statistic.Group>
+      </React.Fragment>
+    );
+  }
+
+  travelTimeFrom() {
+    const { train, direction } = this.props;
+    const { travelTimeTo, selectedRouting } = this.state;
+
+    if (selectedRouting === 'blended') {
+      const routings = train.actual_routings[direction].filter((r) => r.includes(travelTimeTo)).map((r) => {
+        const i = r.indexOf(travelTimeTo);
+        return r.slice(0, i);
+      });
+      return [...new Set(routings.flat())].map((stopId) => {
+        return {
+          key: stopId,
+          text: formatStation(train.stops[stopId]),
+          value: stopId,
+        };
+      });
+    }
+    const routing = train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+    const i = routing.indexOf(travelTimeTo);
+    return routing.slice(0, i).map((stopId) => {
+      return {
+        key: stopId,
+        text: formatStation(train.stops[stopId]),
+        value: stopId,
+      };
+    });
+  }
+
+  travelTimeTo() {
+    const { train, direction } = this.props;
+    const { travelTimeFrom, selectedRouting } = this.state;
+
+    if (selectedRouting === 'blended') {
+      const routings = train.actual_routings[direction].filter((r) => r.includes(travelTimeFrom)).map((r) => {
+        const i = r.indexOf(travelTimeFrom);
+        return r.slice(i + 1);
+      });
+      return [...new Set(routings.flat())].map((stopId) => {
+        return {
+          key: stopId,
+          text: formatStation(train.stops[stopId]),
+          value: stopId,
+        };
+      });
+    }
+    const routing = train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+    const i = routing.indexOf(travelTimeFrom);
+    return routing.slice(i + 1).map((stopId) => {
+      return {
+        key: stopId,
+        text: formatStation(train.stops[stopId]),
+        value: stopId,
+      };
+    });
+  }
+
+  renderTravelTime() {
+    const { train, direction } = this.props;
+    const { travelTimeFrom, travelTimeTo } = this.state;
+    const scheduledRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.scheduled_travel_times, travelTimeFrom, travelTimeTo);
+    const supplementaryRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplementary_travel_times, travelTimeFrom, travelTimeTo);
+    const estimatedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.estimated_travel_times, travelTimeFrom, travelTimeTo);
+    return (
+      <React.Fragment>
+        <Divider inverted horizontal>
+          <Header size='medium' inverted>TRAVEL TIME</Header>
+        </Divider>
+        <Header as='h3' inverted className='travel-time-header'>
+          <Dropdown
+            name='travelTimeFrom'
+            floating
+            inline
+            scrolling
+            options={this.travelTimeFrom()}
+            onChange={this.handleOptionChange}
+            value={travelTimeFrom}
+          />
+            to
+          <Dropdown
+            name='travelTimeTo'
+            floating
+            inline
+            scrolling
+            options={this.travelTimeTo()}
+            onChange={this.handleOptionChange}
+            value={travelTimeTo}
+          />
+        </Header>
+        <Statistic.Group widths={3} size="small" inverted>
+          <Statistic>
+            <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Scheduled</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementaryRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Estimated</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
           </Statistic>
         </Statistic.Group>
@@ -234,8 +357,16 @@ class TrainModalDirectionPane extends React.Component {
     return options;
   }
 
-  handleRoutingChange = (e, { name, value }) => {
-    this.setState({ [name]: value });
+  handleOptionChange = (e, { name, value }) => {
+    const { train, direction } = this.props;
+    const { selectedRouting } = this.state;
+    const newState = { [name]: value };
+    if (name === 'selectedRouting' && value !== 'blended') {
+      const routing = train.actual_routings[direction].find((r) => value === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+      newState['travelTimeFrom'] = routing[0];
+      newState['travelTimeTo'] = routing[routing.length - 1];
+    }
+    this.setState(newState);
   };
 
   renderTripsTableBody(selectedRouting, trips) {
@@ -430,7 +561,7 @@ class TrainModalDirectionPane extends React.Component {
 
   render() {
     const { trains, train, direction } = this.props;
-    const { selectedRouting, routings } = this.state;
+    const { selectedRouting, routings, travelTimeFrom, travelTimeTo } = this.state;
     const routingToMap = selectedRouting == 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
     return (
       <Segment basic className='train-modal-direction-pane'>
@@ -463,13 +594,19 @@ class TrainModalDirectionPane extends React.Component {
                   fluid
                   selection
                   options={this.routingOptions()}
-                  onChange={this.handleRoutingChange}
+                  onChange={this.handleOptionChange}
                   value={selectedRouting}
                 />
               }
               {
                 this.renderStats()
               }
+              {
+                train.actual_routings && train.actual_routings[direction] && travelTimeFrom && travelTimeTo && this.renderTravelTime()
+              }
+              <Divider inverted horizontal>
+                <Header size='medium' inverted>ACTIVE TRIPS</Header>
+              </Divider>
               {
                 train.trips && train.trips[direction] && selectedRouting === 'blended' && Object.keys(routings).length > 1 &&
                 this.renderBlendedTripsTables(train, direction)
