@@ -176,8 +176,8 @@ class TrainModalDirectionPane extends React.Component {
 
     if (selectedRouting === 'blended') {
       runtimeDiffAboutThreshold = train.overall_runtime_diff && train.overall_runtime_diff[direction] && train.overall_runtime_diff[direction] >= 300;
-    } else if (estimatedRuntime && scheduledRuntime) {
-      runtimeDiffAboutThreshold = estimatedRuntime - scheduledRuntime >= 5;
+    } else {
+      runtimeDiffAboutThreshold = train.runtime_diffs && train.runtime_diffs[direction] && train.runtime_diffs[direction][selectedRouting] && train.runtime_diffs[direction][selectedRouting] >= 300;
     }
     return (
       <React.Fragment>

@@ -3,7 +3,10 @@ class RouteAnalyzer
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
     slowness = accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
-    runtime_diff = overall_runtime_diff(actual_routings, timestamp)
+    scheduled_runtimes = calculate_scheduled_runtimes(actual_routings, timestamp)
+    estimated_runtimes = calculate_estimated_runtimes(actual_routings, timestamp)
+    runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
+    overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings)
@@ -24,7 +27,10 @@ class RouteAnalyzer
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       accumulated_extra_travel_time: convert_to_readable_directions(slowness),
-      overall_runtime_diff: convert_to_readable_directions(runtime_diff),
+      scheduled_runtimes: convert_to_readable_directions(scheduled_runtimes),
+      estimated_runtimes: convert_to_readable_directions(estimated_runtimes),
+      runtime_diffs: convert_to_readable_directions(runtime_diffs),
+      overall_runtime_diff: convert_to_readable_directions(overall_runtime_diffs),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       scheduled_headways: convert_scheduled_to_readable_directions(scheduled_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
@@ -93,7 +99,7 @@ class RouteAnalyzer
           scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
           stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
             pairs_str = "#{a_stop}-#{b_stop}"
-            scheduled_travel_time = scheduled_times[pairs_str].to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+            scheduled_travel_time = scheduled_times[pairs_str].to_i || 0
             actual_travel_time = travel_times[pairs_str].to_i || 0
             {
               from: a_stop,
@@ -183,26 +189,45 @@ class RouteAnalyzer
     end
   end
 
-  def self.overall_runtime_diff(actual_routings, timestamp)
-    actual_routings.map { |direction, routings|
-      [direction, routings.map { |r|
-        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
+  def self.calculate_scheduled_runtimes(actual_routings, timestamp)
+    actual_routings.to_h do |direction, routings|
+      [direction, routings.to_h { |r|
         scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
-        scheduled_runtime = (
-          r.each_cons(2).map { |a_stop, b_stop|
-            station_ids = "#{a_stop}-#{b_stop}"
-            scheduled_times[station_ids].to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
-          }.reduce(&:+) || 0
-        )
-        actual_runtime = (
-          r.each_cons(2).map { |a_stop, b_stop|
-            station_ids = "#{a_stop}-#{b_stop}"
-            travel_times[station_ids].to_i || 0
-          }.reduce(&:+) || 0
-        )
-        actual_runtime - scheduled_runtime
+        key = "#{r.first}-#{r.last}-#{r.size}"
+        [key, r.each_cons(2).map { |a_stop, b_stop|
+          station_ids = "#{a_stop}-#{b_stop}"
+          scheduled_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+        }.reduce(&:+) || 0]
+      }]
+    end
+  end
+
+  def self.calculate_estimated_runtimes(actual_routings, timestamp)
+    actual_routings.to_h do |direction, routings|
+      [direction, routings.to_h { |r|
+        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
+        ["#{r.first}-#{r.last}-#{r.size}", r.each_cons(2).map { |a_stop, b_stop|
+          station_ids = "#{a_stop}-#{b_stop}"
+          travel_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+        }.reduce(&:+) || 0]
+      }]
+    end
+  end
+
+  def self.calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
+    scheduled_runtimes.to_h do |direction, runtimes_by_routing|
+      [direction, runtimes_by_routing.to_h {|routing, scheduled_runtime|
+        [routing, estimated_runtimes[direction][routing] - scheduled_runtime]
+      }]
+    end
+  end
+
+  def self.overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
+    scheduled_runtimes.to_h do |direction, runtimes_by_routing|
+      [direction, runtimes_by_routing.map {|routing, scheduled_runtime|
+        estimated_runtimes[direction][routing] - scheduled_runtime
       }.max]
-    }.to_h
+    end
   end
 
   def self.accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)

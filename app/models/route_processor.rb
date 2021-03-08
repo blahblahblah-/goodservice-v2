@@ -178,10 +178,10 @@ class RouteProcessor
     end
 
     def determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
-       return [nil, nil] unless scheduled_trips.present?
+       return [nil, nil] unless scheduled_trips.present? && scheduled_trips.size > 1
 
        scheduled_trips.map do |direction, trips|
-        routing_trips = trips.map { |t| t.stop_times }.group_by { |stop_times| "#{stop_times.first.stop_internal_id}-#{stop_times.last.stop_internal_id}-#{stop_times.size}" }
+        routing_trips = trips.map { |t| t.stop_times }.group_by { |stop_times| "#{stop_times.first.stop_internal_id}-#{stop_times.last.stop_internal_id}-#{stop_times.size}" }.select { |_, s| s.size > 1 }
 
         headway_by_routing = routing_trips.map { |r, s| [r, determine_scheduled_routing_headway(s)] }.to_h
 
@@ -190,7 +190,7 @@ class RouteProcessor
         end
 
         [direction, headway_by_routing]
-       end.to_h
+       end.to_h.compact
     end
 
     def determine_scheduled_routing_headway(stop_time_arrays)
