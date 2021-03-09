@@ -8,10 +8,10 @@ class RouteAnalyzer
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
     overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
-    direction_statuses, status = route_status(max_delayed_time, slowness, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
+    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
-    summaries = service_summaries(max_delayed_time, slowness, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
     summary = {
       status: status,
@@ -45,7 +45,7 @@ class RouteAnalyzer
 
   private
 
-  def self.route_status(delays, slowness, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+  def self.route_status(delays, runtime_diff, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
     direction_statuses = [1, 3].map { |direction|
       direction_key = direction == 3 ? :south : :north
       scheduled_key = direction == 3 ? 1 : 0
@@ -60,7 +60,7 @@ class RouteAnalyzer
         status = 'Delay'
       elsif service_changes[direction_key].present? || service_changes[:both].present?
         status = 'Service Change'
-      elsif slowness[direction] && slowness[direction] >= 300
+      elsif runtime_diff[direction] && runtime_diff[direction] >= 300
         status = 'Slow'
       elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 120
         status = 'Not Good'
@@ -75,7 +75,7 @@ class RouteAnalyzer
     return direction_statuses, status
   end
 
-  def self.service_summaries(delays, slowness, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+  def self.service_summaries(delays, runtime_diff, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       strs = []
@@ -93,35 +93,8 @@ class RouteAnalyzer
         end
       end
 
-      if slowness[direction[:route_direction]] && slowness[direction[:route_direction]] >= 300
-        slow_obj = actual_routings[direction[:route_direction]].map { |r|
-          travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
-          scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
-          stop_pairs = r.each_cons(2).map { |a_stop, b_stop|
-            pairs_str = "#{a_stop}-#{b_stop}"
-            scheduled_travel_time = scheduled_times[pairs_str].to_i || 0
-            actual_travel_time = travel_times[pairs_str].to_i || 0
-            {
-              from: a_stop,
-              to: b_stop,
-              travel_time_diff: (actual_travel_time - scheduled_travel_time) / 60.0,
-            }
-          }.select { |obj|
-            obj[:travel_time_diff] >= 1
-          }
-
-          next { accumulated_travel_time_diff: 0 } unless stop_pairs.present?
-
-          accumulated_travel_time_diff = stop_pairs.reduce(0) { |sum, obj| sum + obj[:travel_time_diff]}
-
-          {
-            from: stop_pairs.first && stop_pairs.first[:from],
-            to: stop_pairs.last && stop_pairs.last[:to],
-            accumulated_travel_time_diff: accumulated_travel_time_diff,
-          }
-        }.max_by { |obj| obj[:accumulated_travel_time_diff] }
-
-        strs << "traveling slowly between #{stop_name(slow_obj[:from])} and #{stop_name(slow_obj[:to])} (taking #{slow_obj[:accumulated_travel_time_diff].round} mins longer)"
+      if runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
+        strs << "taking #{(runtime_diff[direction[:route_direction]] / 60).round} mins longer to travel per trip"
       end
 
       if headway_discrepancy[direction[:route_direction]] && headway_discrepancy[direction[:route_direction]] >= 120
