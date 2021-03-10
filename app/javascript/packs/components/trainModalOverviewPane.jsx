@@ -4,9 +4,9 @@ import { Header, Segment, Statistic, Grid } from "semantic-ui-react";
 import TrainMap from './trainMap';
 import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
 
-import './trainModalOverallPane.scss';
+import './trainModalOverviewPane.scss';
 
-class TrainModalOverallPane extends React.Component {
+class TrainModalOverviewPane extends React.Component {
   renderServiceChanges() {
     const { train, trains } = this.props;
 
@@ -36,7 +36,7 @@ class TrainModalOverallPane extends React.Component {
   render() {
     const { train, trains } = this.props;
     return (
-      <Segment basic className='train-modal-overall-pane'>
+      <Segment basic className='train-modal-overview-pane'>
         <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={4} className='map-cell'>
@@ -66,4 +66,4 @@ class TrainModalOverallPane extends React.Component {
   }
 }
 
-export default TrainModalOverallPane;
+export default TrainModalOverviewPane;

@@ -4,7 +4,7 @@ import { withRouter, Redirect } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
-import TrainModalOverallPane from './trainModalOverallPane';
+import TrainModalOverviewPane from './trainModalOverviewPane';
 import TrainModalDirectionPane from './trainModalDirectionPane';
 import TripModal from './tripModal';
 import { formatStation, routingHash } from './utils';
@@ -17,7 +17,7 @@ class TrainModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeMenuItem: 'overall',
+      activeMenuItem: 'overview',
     };
   }
 
@@ -29,7 +29,7 @@ class TrainModal extends React.Component {
     if (selected) {
       this.fetchData();
       this.timer = setInterval(() => this.fetchData(), 30000);
-      this.setState({ activeMenuItem: 'overall' });
+      this.setState({ activeMenuItem: 'overview' });
     } else {
       clearInterval(this.timer);
     }
@@ -144,8 +144,8 @@ class TrainModal extends React.Component {
                     </Grid.Column>
                     <Grid.Column verticalAlign='middle' width={12}>
                       <Menu widths={3} inverted className='header-menu' stackable>
-                        <Menu.Item name='overall' active={activeMenuItem === 'overall'} onClick={this.handleItemClick}>
-                          Overall
+                        <Menu.Item name='overview' active={activeMenuItem === 'overview'} onClick={this.handleItemClick}>
+                          Overview
                         </Menu.Item>
                         <Menu.Item name='north' active={activeMenuItem === 'north'} className={this.noService('north') ? 'no-service' : ''} onClick={this.handleItemClick}>
                           To {this.formatDestinations(train.destinations?.north)}
@@ -161,8 +161,8 @@ class TrainModal extends React.Component {
               <Modal.Content scrolling>
                 <Modal.Description>
                   {
-                    activeMenuItem === 'overall' &&
-                      <TrainModalOverallPane train={train} trains={trains} />
+                    activeMenuItem === 'overview' &&
+                      <TrainModalOverviewPane train={train} trains={trains} />
                   }
                   {
                     activeMenuItem === 'north' &&
