@@ -1,17 +1,19 @@
 class RouteAnalyzer
+  SLOW_SECTION_STATIONS_RANGE = 3..7
+
   def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
-    slowness = accumulated_extra_time_between_stops(actual_routings, processed_trips, timestamp)
+    slow_sections = identify_slow_sections(actual_routings, timestamp)
     scheduled_runtimes = calculate_scheduled_runtimes(actual_routings, timestamp)
     estimated_runtimes = calculate_estimated_runtimes(actual_routings, timestamp)
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
     overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
-    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
+    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
-    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, slow_sections, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
     summary = {
       status: status,
@@ -26,7 +28,7 @@ class RouteAnalyzer
       service_changes: service_changes,
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
-      accumulated_extra_travel_time: convert_to_readable_directions(slowness),
+      slow_sections: convert_to_readable_directions(slow_sections),
       scheduled_runtimes: convert_to_readable_directions(scheduled_runtimes),
       estimated_runtimes: convert_to_readable_directions(estimated_runtimes),
       runtime_diffs: convert_to_readable_directions(runtime_diffs),
@@ -45,7 +47,7 @@ class RouteAnalyzer
 
   private
 
-  def self.route_status(delays, runtime_diff, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+  def self.route_status(delays, runtime_diff, slow_sections, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
     direction_statuses = [1, 3].map { |direction|
       direction_key = direction == 3 ? :south : :north
       scheduled_key = direction == 3 ? 1 : 0
@@ -60,7 +62,7 @@ class RouteAnalyzer
         status = 'Delay'
       elsif service_changes[direction_key].present? || service_changes[:both].present?
         status = 'Service Change'
-      elsif runtime_diff[direction] && runtime_diff[direction] >= 300
+      elsif (runtime_diff[direction] && runtime_diff[direction] >= 300) || slow_sections[direction].present?
         status = 'Slow'
       elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 120
         status = 'Not Good'
@@ -75,7 +77,7 @@ class RouteAnalyzer
     return direction_statuses, status
   end
 
-  def self.service_summaries(delays, runtime_diff, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+  def self.service_summaries(delays, runtime_diff, slow_sections, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       strs = []
@@ -93,7 +95,13 @@ class RouteAnalyzer
         end
       end
 
-      if runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
+      if slow_sections[direction[:route_direction]].present?
+        slow_strs = slow_sections[direction[:route_direction]].map do |s|
+           "#{(s[:runtime_diff] / 60).round} mins longer to travel between #{stop_name(s[:stops].first)} and #{stop_name(s[:stops].last)}"
+        end
+        slow_strs[0] = "taking #{slow_strs[0]}"
+        strs << slow_strs.join(", ")
+      elsif runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
         strs << "taking #{(runtime_diff[direction[:route_direction]] / 60).round} mins longer to travel per trip"
       end
 
@@ -200,6 +208,31 @@ class RouteAnalyzer
       [direction, runtimes_by_routing.map {|routing, scheduled_runtime|
         estimated_runtimes[direction][routing] - scheduled_runtime
       }.max]
+    end
+  end
+
+  def self.identify_slow_sections(actual_routings, timestamp)
+    actual_routings.to_h do |direction, routings|
+      objs = routings.map { |r|
+        scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
+        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
+        SLOW_SECTION_STATIONS_RANGE.map { |n|
+          r.each_cons(n).map { |array|
+            runtime_diff = array.each_cons(2).map { |a_stop, b_stop|
+              station_ids = "#{a_stop}-#{b_stop}"
+              scheduled_travel_time = scheduled_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+              actual_travel_time = travel_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+              actual_travel_time - scheduled_travel_time
+            }.reduce(&:+) || 0
+
+            {
+              stops: array,
+              runtime_diff: runtime_diff
+            }
+          }.select { |obj| obj[:runtime_diff] >= 300}
+        }
+      }.flatten.compact.sort_by { |obj| -obj[:runtime_diff] }
+      [direction, objs.select.with_index { |obj, i| i == 0 || obj[:stops].none? { |s| objs[0...i].any? { |o| o[:stops].include?(s) }}}]
     end
   end
 

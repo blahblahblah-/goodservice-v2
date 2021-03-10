@@ -294,6 +294,7 @@ class TrainModalDirectionPane extends React.Component {
     const scheduledRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.scheduled_travel_times, travelTimeFrom, travelTimeTo);
     const supplementaryRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplementary_travel_times, travelTimeFrom, travelTimeTo);
     const estimatedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.estimated_travel_times, travelTimeFrom, travelTimeTo);
+    const runtimeDiffAboveThreshold = estimatedRuntime - scheduledRuntime >= 5;
     return (
       <React.Fragment>
         <Divider inverted horizontal>
@@ -320,7 +321,7 @@ class TrainModalDirectionPane extends React.Component {
             value={travelTimeTo}
           />
         </Header>
-        <Statistic.Group widths={3} size="small" inverted>
+        <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Scheduled</Statistic.Label>
@@ -604,9 +605,12 @@ class TrainModalDirectionPane extends React.Component {
               {
                 train.actual_routings && train.actual_routings[direction] && travelTimeFrom && travelTimeTo && this.renderTravelTime()
               }
-              <Divider inverted horizontal>
-                <Header size='medium' inverted>ACTIVE TRIPS</Header>
-              </Divider>
+              {
+                train.trips && train.trips[direction] &&
+                <Divider inverted horizontal>
+                  <Header size='medium' inverted>ACTIVE TRIPS</Header>
+                </Divider>
+              }
               {
                 train.trips && train.trips[direction] && selectedRouting === 'blended' && Object.keys(routings).length > 1 &&
                 this.renderBlendedTripsTables(train, direction)
