@@ -15,30 +15,45 @@ class TrainModalDirectionPane extends React.Component {
 
   componentDidUpdate(prevProps) {
     const { train, direction } = this.props;
-    const { routings, selectedRouting } = this.state;
+    const { routings, selectedRouting, travelTimeFrom, travelTimeTo } = this.state;
 
     if (!train.actual_routings || !train.actual_routings[direction]) {
       return;
     }
-    if (prevProps.train === train) {
-      const prevRoutingHashes = Object.keys(routings);
-      const currRoutingHashes = train.actual_routings[direction].map((r) => routingHash(r));
-      const isIdentical = prevRoutingHashes.length === currRoutingHashes.length && prevRoutingHashes.every((value, index) => value === currRoutingHashes[index])
 
-      if (!isIdentical) {
-        let newRoutings = {};
-        let newSelectedRouting = selectedRouting;
+    const prevRoutingHashes = Object.keys(routings);
+    const currRoutingHashes = train.actual_routings[direction].map((r) => routingHash(r));
+    const isIdentical = prevRoutingHashes.length === currRoutingHashes.length && prevRoutingHashes.every((value, index) => value === currRoutingHashes[index])
 
-        train.actual_routings[direction].forEach((r) => {
-          newRoutings[routingHash(r)] = r;
-        });
+    if (!isIdentical) {
+      let newRoutings = {};
+      let newSelectedRouting = selectedRouting;
+      let newState = {};
 
-        if (newSelectedRouting !== 'blended') {
-          newSelectedRouting = currRoutingHashes.includes(newSelectedRouting) ? newSelectedRouting : 'blended';
+      train.actual_routings[direction].forEach((r) => {
+        newRoutings[routingHash(r)] = r;
+      });
+
+      if (newSelectedRouting !== 'blended') {
+        newSelectedRouting = currRoutingHashes.includes(newSelectedRouting) ? newSelectedRouting : 'blended';
+      }
+
+      if (train.actual_routings && train.actual_routings[direction]) {
+        const commonStops = train.actual_routings[direction][0].filter((s) => train.actual_routings[direction].every((r) => r.includes(s)));
+
+        if (!train.actual_routings[direction].some((r) => r.includes(travelTimeFrom))) {
+          newState['travelTimeFrom'] = commonStops[0];
         }
 
-        this.setState({ routings: newRoutings, selectedRouting: newSelectedRouting })
+        if (!train.actual_routings[direction].some((r) => r.includes(travelTimeTo))) {
+          newState['travelTimeTo'] = commonStops[commonStops.length - 1];
+        }
       }
+
+      newState['routings'] = newRoutings;
+      newState['selectedRouting'] = newSelectedRouting;
+
+      this.setState(newState);
     }
   }
 
