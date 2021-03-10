@@ -139,7 +139,7 @@ class TrainModalDirectionPane extends React.Component {
     let time = 0;
     let prev = routing[0];
     for(let i = 1; i < routing.length; i++) {
-      time += travelTimes[`${prev}-${routing[i]}`];
+      time += travelTimes[`${prev}-${routing[i]}`] || 0;
       prev = routing[i];
     }
     return Math.round(time / 60);
