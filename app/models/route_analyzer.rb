@@ -177,7 +177,7 @@ class RouteAnalyzer
         key = "#{r.first}-#{r.last}-#{r.size}"
         [key, r.each_cons(2).map { |a_stop, b_stop|
           station_ids = "#{a_stop}-#{b_stop}"
-          scheduled_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+          scheduled_times[station_ids]&.to_i || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
         }.reduce(&:+) || 0]
       }]
     end
@@ -189,7 +189,7 @@ class RouteAnalyzer
         travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
         ["#{r.first}-#{r.last}-#{r.size}", r.each_cons(2).map { |a_stop, b_stop|
           station_ids = "#{a_stop}-#{b_stop}"
-          travel_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+          travel_times[station_ids]&.to_i || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
         }.reduce(&:+) || 0]
       }]
     end
@@ -220,8 +220,8 @@ class RouteAnalyzer
           r.each_cons(n).map { |array|
             runtime_diff = array.each_cons(2).map { |a_stop, b_stop|
               station_ids = "#{a_stop}-#{b_stop}"
-              scheduled_travel_time = scheduled_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
-              actual_travel_time = travel_times[station_ids]&.to_i || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+              scheduled_travel_time = scheduled_times[station_ids]&.to_i || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
+              actual_travel_time = travel_times[station_ids]&.to_i || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
               actual_travel_time - scheduled_travel_time
             }.reduce(&:+) || 0
 
@@ -243,7 +243,7 @@ class RouteAnalyzer
         trips = processed_trips[direction][key]
         (
           r.each_cons(2).map { |a_stop, b_stop|
-            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || 0
+            scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
             actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
             diff = actual_travel_time - scheduled_travel_time
             diff >= 60.0 ? diff : 0

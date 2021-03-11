@@ -8,7 +8,7 @@ class FeedProcessor
   DELAY_THRESHOLD = 5.minutes.to_i
   EXCESSIVE_DELAY_THRESHOLD = 10.minutes.to_i
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
-  SUPPLEMENTARY_TIME_LOOKUP = 20.minutes.to_i
+  SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
 
   class << self
@@ -179,9 +179,9 @@ class FeedProcessor
         RedisStore.add_delay(trip.route_id, trip.direction, trip.id, trip.timestamp)
       end
       marshaled_trip = Marshal.dump(trip)
-      trip.time_between_stops(SUPPLEMENTARY_TIME_LOOKUP).each do |station_ids, time|
+      trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
         stop_ids = station_ids.split('-')
-        RedisStore.add_supplementary_scheduled_travel_time(stop_ids.first, stop_ids.second, time) if time >= 30
+        RedisStore.add_supplemented_scheduled_travel_time(stop_ids.first, stop_ids.second, time) if time >= 30
       end
       trip.upcoming_stops.each do |stop_id|
         RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp)

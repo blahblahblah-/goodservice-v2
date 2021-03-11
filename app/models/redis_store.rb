@@ -94,20 +94,20 @@ class RedisStore
       REDIS_CLIENT.zrevrange("travel-time:actual:#{stops_str}", 0, count - 1)
     end
 
-    def supplementary_scheduled_travel_time(stop_id_1, stop_id_2)
-      REDIS_CLIENT.hget("travel-time:supplementary", "#{stop_id_1}-#{stop_id_2}")&.to_f
+    def supplemented_scheduled_travel_time(stop_id_1, stop_id_2)
+      REDIS_CLIENT.hget("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}")&.to_f
     end
 
-    def supplementary_scheduled_travel_times(stop_id_pairs)
+    def supplemented_scheduled_travel_times(stop_id_pairs)
       if stop_id_pairs.present?
-        REDIS_CLIENT.mapped_hmget("travel-time:supplementary", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+        REDIS_CLIENT.mapped_hmget("travel-time:supplemented", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
       else
         {}
       end
     end
 
-    def add_supplementary_scheduled_travel_time(stop_id_1, stop_id_2, time)
-      REDIS_CLIENT.hset("travel-time:supplementary", "#{stop_id_1}-#{stop_id_2}", time)
+    def add_supplemented_scheduled_travel_time(stop_id_1, stop_id_2, time)
+      REDIS_CLIENT.hset("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}", time)
     end
 
     def scheduled_travel_time(stop_id_1, stop_id_2)

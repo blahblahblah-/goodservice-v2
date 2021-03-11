@@ -58,9 +58,9 @@ class Api::RoutesController < ApplicationController
           route_data[:scheduled_travel_times] = scheduled_travel_times(pairs)
           time_check5 = Time.current
           puts "Loaded scheduled travel times #{(time_check5 - time_check4)* 1000}ms"
-          route_data[:supplementary_travel_times] = supplementary_travel_times(pairs)
+          route_data[:supplemented_travel_times] = supplemented_travel_times(pairs)
           time_check6 = Time.current
-          puts "Loaded supplementary travel times #{(time_check6 - time_check5)* 1000}ms"
+          puts "Loaded supplemented travel times #{(time_check6 - time_check5)* 1000}ms"
           route_data[:estimated_travel_times] = estimated_travel_times(route_data['actual_routings'], pairs, route_data['timestamp'])
           time_check7 = Time.current
         puts "Loaded estimated travel times #{(time_check7 - time_check6)* 1000}ms"
@@ -134,12 +134,12 @@ class Api::RoutesController < ApplicationController
     results = RedisStore.scheduled_travel_times(pairs)
     results.to_h do |k, v|
       stops = k.split("-")
-      [k, v ? v.to_i : RedisStore.supplementary_scheduled_travel_time(stops.first, stops.second)]
+      [k, v ? v.to_i : RedisStore.supplemented_scheduled_travel_time(stops.first, stops.second)]
     end
   end
 
-  def supplementary_travel_times(pairs)
-    results = RedisStore.supplementary_scheduled_travel_times(pairs)
+  def supplemented_travel_times(pairs)
+    results = RedisStore.supplemented_scheduled_travel_times(pairs)
     results.to_h do |k, v|
       stops = k.split("-")
       [k, v ? v.to_i : RedisStore.scheduled_travel_time(stops.first, stops.second)]

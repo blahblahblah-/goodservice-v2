@@ -195,7 +195,7 @@ class TrainModalDirectionPane extends React.Component {
     }
     const maxEstimatedHeadway = this.calculateMaxHeadway(trips);
     const scheduledRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.scheduled_travel_times);
-    const supplementaryRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplementary_travel_times);
+    const supplementedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplemented_travel_times);
     const estimatedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.estimated_travel_times);
 
     let headwayDisrepancyAboveThreshold = false;
@@ -235,12 +235,12 @@ class TrainModalDirectionPane extends React.Component {
             <Statistic.Label>Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
-            <Statistic.Value>{ supplementaryRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Estimated</Statistic.Label>
-          </Statistic>
-          <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Estimated</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>
@@ -307,7 +307,7 @@ class TrainModalDirectionPane extends React.Component {
     const { train, direction } = this.props;
     const { travelTimeFrom, travelTimeTo } = this.state;
     const scheduledRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.scheduled_travel_times, travelTimeFrom, travelTimeTo);
-    const supplementaryRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplementary_travel_times, travelTimeFrom, travelTimeTo);
+    const supplementedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.supplemented_travel_times, travelTimeFrom, travelTimeTo);
     const estimatedRuntime = this.calculateRuntime(train.actual_routings && train.actual_routings[direction], train.estimated_travel_times, travelTimeFrom, travelTimeTo);
     const runtimeDiffAboveThreshold = estimatedRuntime - scheduledRuntime >= 5;
     return (
@@ -342,12 +342,12 @@ class TrainModalDirectionPane extends React.Component {
             <Statistic.Label>Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
-            <Statistic.Value>{ supplementaryRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Estimated</Statistic.Label>
-          </Statistic>
-          <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Estimated</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>

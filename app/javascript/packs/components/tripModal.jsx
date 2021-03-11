@@ -50,7 +50,7 @@ class TripModal extends React.Component {
         {
           remainingStops.map((stopId) => {
             if (previousStopId) {
-              const estimatedTravelTime = train.estimated_travel_times[`${previousStopId}-${stopId}`] || train.supplementary_travel_times[`${previousStopId}-${stopId}`] || train.scheduled_travel_times[`${previousStopId}-${stopId}`]
+              const estimatedTravelTime = train.estimated_travel_times[`${previousStopId}-${stopId}`] || train.supplemented_travel_times[`${previousStopId}-${stopId}`] || train.scheduled_travel_times[`${previousStopId}-${stopId}`]
               currentEstimatedTime += estimatedTravelTime;
               if (trip) {
                 currentArrivalTime = trip.stop_times[stopId];

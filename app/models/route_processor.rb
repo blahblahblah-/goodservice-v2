@@ -56,7 +56,7 @@ class RouteProcessor
     def average_travel_time(a_stop, b_stop, timestamp)
       travel_times = RedisStore.travel_times_at(a_stop, b_stop, TRAVEL_TIME_AVERAGE_TRIP_COUNT)
 
-      return RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?
+      return RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?
 
       travel_times_array = travel_times.map { |combined_str|
         array = combined_str.split("-")
@@ -84,7 +84,7 @@ class RouteProcessor
         a_stop = array[0]
         b_stop = array[1]
 
-        next [stops_str, RedisStore.supplementary_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless travel_times.present?
+        next [stops_str, RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)] unless travel_times.present?
 
         [stops_str, trimmed_average(travel_times.map { |combined_str|
             array = combined_str.split("-")
