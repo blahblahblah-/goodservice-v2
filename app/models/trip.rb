@@ -41,24 +41,24 @@ class Trip
     schedule ? (schedule[previous_stop] || previous_stop_arrival_time) : previous_stop_arrival_time
   end
 
-  def upcoming_stop
-    upcoming_stops.first
+  def upcoming_stop(time_ref: timestamp)
+    upcoming_stops(time_ref: time_ref).first
   end
 
-  def upcoming_stop_arrival_time
-    stops[upcoming_stop] || timestamp
+  def upcoming_stop_arrival_time(time_ref: timestamp)
+    stops[upcoming_stop(time_ref: time_ref)] || time_ref
   end
 
   def scheduled_upcoming_stop_arrival_time
     schedule ? (schedule[upcoming_stop] || upcoming_stop_arrival_time) : upcoming_stop_arrival_time
   end
 
-  def time_until_upcoming_stop
-    upcoming_stop_arrival_time - timestamp
+  def time_until_upcoming_stop(time_ref: timestamp)
+    upcoming_stop_arrival_time(time_ref: time_ref) - time_ref
   end
 
-  def upcoming_stops
-    stops.select { |_, v| v > timestamp }.map(&:first) - past_stops.keys
+  def upcoming_stops(time_ref: timestamp)
+    stops.select { |_, v| v > time_ref }.map(&:first) - past_stops.keys
   end
 
   def stops_behind(trip)
