@@ -265,6 +265,11 @@ class TrainModalDirectionPane extends React.Component {
       });
     }
     const routing = train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+
+    if (!routing) {
+      return;
+    }
+
     const i = routing.indexOf(travelTimeTo);
     return routing.slice(0, i).map((stopId) => {
       return {
@@ -293,6 +298,12 @@ class TrainModalDirectionPane extends React.Component {
       });
     }
     const routing = train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+
+
+    if (!routing) {
+      return;
+    }
+
     const i = routing.indexOf(travelTimeFrom);
     return routing.slice(i + 1).map((stopId) => {
       return {
