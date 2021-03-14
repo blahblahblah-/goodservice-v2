@@ -73,7 +73,10 @@ class FeedProcessor
 
       routes.each do |route_id, trips|
         if trips.any?(&:latest)
-          RouteProcessor.process_route(route_id, trips, timestamp) 
+          marshaled_trips = Marshal.dump(trips)
+          RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
+          RedisStore.update_route_trips_latest_timestamp(route_id, timestamp)
+          RouteProcessorWorker.perform_async(route_id, timestamp)
         else
           puts "No updated trips for #{route_id}, skipping..."
         end

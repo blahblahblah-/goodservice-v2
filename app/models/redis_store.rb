@@ -31,6 +31,14 @@ class RedisStore
       REDIS_CLIENT.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 300)
     end
 
+    def update_route_trips_latest_timestamp(route_id, timestamp)
+      REDIS_CLIENT.set("route-trips:#{route_id}:latest-timestamp", timestamp, ex: 300)
+    end
+
+    def route_trips_latest_timestamp(route_id)
+      REDIS_CLIENT.get("route-trips:#{route_id}:latest-timestamp")
+    end
+
     # Trips
     def active_trip_list(feed_id, timestamp)
       REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
