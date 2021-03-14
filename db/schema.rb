@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_01_23_172430) do
+ActiveRecord::Schema.define(version: 2021_03_14_204824) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -72,7 +72,7 @@ ActiveRecord::Schema.define(version: 2021_01_23_172430) do
   create_table "stops", force: :cascade do |t|
     t.string "internal_id", null: false
     t.string "stop_name", null: false
-    t.string "parent_stop_id"
+    t.string "secondary_name"
     t.index ["internal_id"], name: "index_stops_on_internal_id", unique: true
   end
 
