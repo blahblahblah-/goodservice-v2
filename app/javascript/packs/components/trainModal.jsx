@@ -43,6 +43,10 @@ class TrainModal extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+
   fetchData() {
     const { trainId } = this.props;
 
@@ -83,7 +87,7 @@ class TrainModal extends React.Component {
 
   render() {
     const { train, activeMenuItem, timestamp } = this.state;
-    const { trains, trigger, selected, match } = this.props;
+    const { trains, trigger, selected, match, stations } = this.props;
     const title = `goodservice.io - ${train?.alternate_name ? `S - ${train?.alternate_name}` : train?.name} Train`;
     let tripModal = null;
     let className = 'train-modal';
@@ -104,7 +108,7 @@ class TrainModal extends React.Component {
       }
       const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
       tripModal = (
-        <TripModal train={train} selectedTrip={trip} routing={routing} />
+        <TripModal train={train} selectedTrip={trip} stations={stations} routing={routing} />
       );
 
       if (activeMenuItem !== direction) {
@@ -113,7 +117,7 @@ class TrainModal extends React.Component {
       className = 'train-modal dimmable dimmed blurring';
     }
     return (
-      <Modal basic size='fullscreen' trigger={trigger} open={selected} closeIcon dimmer='blurring'
+      <Modal basic size='fullscreen' open={selected} closeIcon dimmer='blurring'
          onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className={className}>
         {
           !train &&
@@ -126,7 +130,7 @@ class TrainModal extends React.Component {
         }
         {
           train &&
-            <>
+            <React.Fragment>
               <Helmet>
                 <title>{title}</title>
                 <meta property="og:title" content={title} />
@@ -162,22 +166,22 @@ class TrainModal extends React.Component {
                 <Modal.Description>
                   {
                     activeMenuItem === 'overview' &&
-                      <TrainModalOverviewPane train={train} trains={trains} />
+                      <TrainModalOverviewPane train={train} trains={trains} stations={stations} />
                   }
                   {
                     activeMenuItem === 'north' &&
-                      <TrainModalDirectionPane train={train} trains={trains} direction='north' />
+                      <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='north' />
                   }
                   {
                     activeMenuItem === 'south' &&
-                      <TrainModalDirectionPane train={train} trains={trains} direction='south' />
+                      <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='south' />
                   }
                   <Header inverted as='h5'>
                     Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
                   </Header>
                 </Modal.Description>
               </Modal.Content>
-            </>
+            </React.Fragment>
         }
       </Modal>
     );

@@ -156,32 +156,32 @@ class TrainMapStop extends React.Component {
       const roundedDiff = Math.round(diff / 60);
       if (roundedDiff > 0) {
         return (
-          <>
-            <>
+          <React.Fragment>
+            <React.Fragment>
               {roundedEstimatedTime} min<br/>
-            </>
+            </React.Fragment>
             <span className='warning'>
               (+{roundedDiff} min)
             </span>
-          </>
+          </React.Fragment>
         );
       }
       return (
-        <>
-          <>
+        <React.Fragment>
+          <React.Fragment>
             {roundedEstimatedTime} min<br/>
-          </>
-          <>
+          </React.Fragment>
+          <React.Fragment>
             ({roundedDiff} min)
-          </>
-        </>
+          </React.Fragment>
+        </React.Fragment>
       );
     }
     return `${roundedEstimatedTime} min`;
   }
 
   render() {
-    const { stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
+    const { stopId, stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
     return (
       <li className='train-map-stop'>
         <div className='container'>
@@ -200,9 +200,7 @@ class TrainMapStop extends React.Component {
             })
           }
           <Header as='h5' className='station-name' inverted>
-            {
-              formatStation(stop)
-            }
+            <Link to={`/stations/${stopId}`}>{ formatStation(stop) }</Link>
           </Header>
           <div className='transfers'>
             {

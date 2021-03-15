@@ -34,13 +34,13 @@ class TrainModalOverviewPane extends React.Component {
   }
 
   render() {
-    const { train, trains } = this.props;
+    const { train, trains, stations } = this.props;
     return (
       <Segment basic className='train-modal-overview-pane'>
         <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={4} className='map-cell'>
-              <TrainMap trains={trains} train={train} routings={train.actual_routings} />
+              <TrainMap trains={trains} train={train} stations={stations} routings={train.actual_routings} />
             </Grid.Column>
             <Grid.Column width={12} className='status-cell'>
               <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>
@@ -57,7 +57,7 @@ class TrainModalOverviewPane extends React.Component {
               }
             </Grid.Column>
             <Grid.Column width={4} className='mobile-map-cell'>
-              <TrainMap trains={trains} train={train} routings={train.actual_routings} />
+              <TrainMap trains={trains} train={train} stations={stations} routings={train.actual_routings} />
             </Grid.Column>
          </Grid.Row>
         </Grid>

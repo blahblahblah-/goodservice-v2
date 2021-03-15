@@ -126,6 +126,7 @@ GEM
     moneta (1.0.0)
     msgpack (1.3.3)
     multi_json (1.15.0)
+    naturally (2.2.1)
     nio4r (2.5.4)
     nokogiri (1.10.10)
       mini_portile2 (~> 2.4.0)
@@ -264,6 +265,7 @@ DEPENDENCIES
   hiredis
   jbuilder (~> 2.7)
   listen (~> 3.3)
+  naturally
   parallel
   pg
   platform-api

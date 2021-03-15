@@ -163,10 +163,8 @@ class TrainMap extends React.Component {
   }
 
   render() {
-    const { routings, trains, train, showTravelTime, trips } = this.props;
+    const { routings, trains, train, showTravelTime, trips, stations } = this.props;
     const color = train.color;
-    const stops = train.stops;
-    const transfersInfo = train.transfers;
     const segments = this.generateSegments();
     const stopPattern = this.calculateStops();
     let previousStopId;
@@ -185,8 +183,14 @@ class TrainMap extends React.Component {
                 let branchStops = [];
                 let count = 0;
                 const currentMaxBranch = currentBranches[currentBranches.length - 1];
-                let transfers = transfersInfo[stopId] || [];
-                let stop = stops[stopId];
+                let transfers = Object.assign({}, stations[stopId]?.routes);
+                if (stations[stopId]?.transfers) {
+                  stations[stopId]?.transfers.forEach((s) => {
+                    transfers = Object.assign(transfers, stations[s]?.routes);
+                  });
+                }
+                delete transfers[train.id];
+                let stop = stations[stopId]?.name;
                 overrideStopId = null;
 
                 if (stopId === "") {

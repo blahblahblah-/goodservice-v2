@@ -2,6 +2,14 @@ body {
   background: #1b1c1d !important;
 }
 
+a {
+  color: #bbbbbb;
+}
+
+a:hover, a:active{
+  color: #ffe21f;
+}
+
 .ui.inverted.segment.header-segment {
   padding: 2em 2em 1em 2em;
 }
@@ -9,6 +17,47 @@ body {
 .ui.inverted.segment.blogpost-segment {
   background-color: #333333;
   padding: 1em 2em;
+}
+
+.ui.inverted.segment.stations-segment {
+  padding-left: 2em;
+  padding-right: 2em;
+
+  .station-dropdown-grid {
+    .item {
+      clear: both;
+      min-height: 3em;
+
+      .station-name {
+        float: left;
+
+        h5 {
+          line-height: 2em;
+
+          .secondary-name {
+            color: #aaaaaa;
+            font-weight: 300!important;
+            margin-left: .4rem;
+            font-size: 0.9em;
+          }
+        }
+      }
+      .routes-served{
+        float: right;
+
+        .route {
+          margin-top: 0;
+        }
+
+        .cross {
+          height: 21px;
+          width: 21px;
+          margin: .25em;
+          margin-top: 0;
+        }
+      }
+    }
+  }
 }
 
 .ui.basic.segment.trains-segment {

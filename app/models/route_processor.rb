@@ -38,6 +38,7 @@ class RouteProcessor
 
       REDIS_CLIENT.pipelined do
         update_scheduled_runtimes(scheduled_trips)
+        persist_processed_trips(route_id, processed_trips)
       end
 
       RouteAnalyzer.analyze_route(
@@ -244,6 +245,10 @@ class RouteProcessor
         }
         [direction,  result]
       }.to_h
+    end
+
+    def persist_processed_trips(route_id, trips)
+      RedisStore.update_processed_trips(route_id, Marshal.dump(trips))
     end
   end
 end

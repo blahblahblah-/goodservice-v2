@@ -31,12 +31,13 @@ class RedisStore
       REDIS_CLIENT.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 300)
     end
 
-    def update_route_trips_latest_timestamp(route_id, timestamp)
-      REDIS_CLIENT.set("route-trips:#{route_id}:latest-timestamp", timestamp, ex: 300)
+    # Processed trips
+    def update_processed_trips(route_id, marshaled_data)
+      REDIS_CLIENT.set("processed-trips:#{route_id}", marshaled_data, ex: 300)
     end
 
-    def route_trips_latest_timestamp(route_id)
-      REDIS_CLIENT.get("route-trips:#{route_id}:latest-timestamp")
+    def processed_trips(route_id)
+      REDIS_CLIENT.get("processed-trips:#{route_id}")
     end
 
     # Trips

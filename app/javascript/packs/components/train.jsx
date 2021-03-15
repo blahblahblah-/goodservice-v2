@@ -1,5 +1,5 @@
 import React from 'react';
-import { Segment, Header, Button, Responsive, Statistic } from "semantic-ui-react";
+import { Segment, Header, Button, Responsive } from "semantic-ui-react";
 import { withRouter } from 'react-router-dom';
 
 import TrainBullet from './trainBullet';
@@ -58,14 +58,18 @@ class Train extends React.Component {
   }
 
   render() {
-    const { train, trains, selected } = this.props;
+    const { train, trains, selected, stations } = this.props;
     return(
-      <TrainModal trainId={train.id} trains={trains} selected={selected} trigger={
+      <React.Fragment>
+        {
+          selected &&
+          <TrainModal trainId={train.id} trains={trains} stations={stations} selected={true} />
+        }
         <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
           { this.renderInfo() }
           { this.renderBullet() }
         </Segment>
-      } />
+      </React.Fragment>
     )
   }
 }

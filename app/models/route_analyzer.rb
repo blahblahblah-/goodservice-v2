@@ -45,6 +45,10 @@ class RouteAnalyzer
     RedisStore.update_route_status(route_id, detailed_stats)
   end
 
+  def self.convert_to_readable_directions(hash)
+    hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
+  end
+
   private
 
   def self.route_status(delays, runtime_diff, slow_sections, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
@@ -135,10 +139,6 @@ class RouteAnalyzer
     }.to_h
   end
 
-  def self.convert_to_readable_directions(hash)
-    hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
-  end
-
   def self.convert_scheduled_to_readable_directions(hash)
     hash.map { |direction, data| [direction == 1 ? :south : :north, data] }.to_h
   end
@@ -213,7 +213,7 @@ class RouteAnalyzer
 
   def self.identify_slow_sections(actual_routings, timestamp)
     actual_routings.to_h do |direction, routings|
-      objs = routings.map { |r|
+      objs = routings.flat_map { |r|
         scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
         travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
         SLOW_SECTION_STATIONS_RANGE.map { |n|
@@ -360,7 +360,7 @@ class RouteAnalyzer
       local_to_express = service_changes.select { |c| c.is_a?(ServiceChanges::LocalToExpressServiceChange)}
 
       if local_to_express.present?
-        skipped_stops = local_to_express.map { |c| c.intermediate_stations }.flatten.map { |s| stop_name(s) }
+        skipped_stops = local_to_express.flat_map { |c| c.intermediate_stations }.map { |s| stop_name(s) }
         if skipped_stops.length > 1
           skipped_stops_text = "#{skipped_stops[0...-1].join(', ')}, and #{skipped_stops.last}"
         else

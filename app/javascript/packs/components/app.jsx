@@ -1,7 +1,7 @@
 import React from 'react';
-import { Header, Segment, Grid, Button, Dimmer, Loader } from "semantic-ui-react";
+import { Header, Segment, Grid, Button, Dimmer, Loader, Dropdown } from "semantic-ui-react";
 import {
-  BrowserRouter as Router,
+  Router,
   Switch,
   Route,
   Redirect,
@@ -13,10 +13,15 @@ import { Helmet } from "react-helmet";
 import Train from './train';
 import TrainBullet from './trainBullet';
 import AboutModal from './aboutModal';
+import StationModal from './stationModal';
+import history from './history';
+import { formatStation } from './utils';
+import Cross from 'images/cross-15.svg'
 
 import 'semantic-ui-css/semantic.min.css'
 
-const API_URL = '/api/routes';
+const ROUTES_API_URL = '/api/routes';
+const STOPS_API_URL = '/api/stops';
 
 const STATUSES = {
   'Delay': 'red',
@@ -27,7 +32,6 @@ const STATUSES = {
   'Good Service': 'green',
   'Not Scheduled': 'black'
 };
-
 
 class App extends React.Component {
   constructor(props) {
@@ -49,10 +53,18 @@ class App extends React.Component {
   }
 
   fetchData() {
-    fetch(API_URL)
+    fetch(ROUTES_API_URL)
       .then(response => response.json())
-      .then(data => this.setState({ trains: data.routes, timestamp: data.timestamp, loading: false }))
+      .then(data => this.setState({ trains: data.routes, timestamp: data.timestamp, loading: false }));
+
+    fetch(STOPS_API_URL)
+      .then(response => response.json())
+      .then(data => this.setState({ stations: data.stops }));
   }
+
+  handleOnStationDropdownChange = (e, { name, value }) => {
+    return history.push(`/stations/${value}`);
+  };
 
   renderLoading() {
     const { loading } = this.state;
@@ -65,26 +77,111 @@ class App extends React.Component {
     }
   }
 
+  renderStationsDropdown() {
+    const { loading, trains, stations } = this.state;
+    if (loading || !stations) {
+      return;
+    }
+    const options = stations.map((station) => {
+      return {
+        key: station.id,
+        text: formatStation(station.name),
+        value: station.id,
+        content: (
+          <React.Fragment>
+            <div className='station-name'>
+              <Header as='h5'>
+                { formatStation(station.name) }
+                {
+                  station.secondary_name &&
+                  <span className='secondary-name'>
+                    { station.secondary_name }
+                  </span>
+                }
+              </Header>
+            </div>
+            <div className='routes-served'>
+              {
+                Object.keys(station.routes).map((routeId) => {
+                  const directions = station.routes[routeId];
+                  const train = trains[routeId];
+                  return (
+                    <TrainBullet id={routeId} key={train.name} name={train.name} color={train.color}
+                      textColor={train.text_color} size='small' key={train.id} directions={directions} />
+                  );
+                })
+              }
+              {
+                Object.keys(station.routes).length === 0 &&
+                <img src={Cross} className='cross' />
+              }
+            </div>
+         </React.Fragment>
+        )
+      }
+    });
+
+    return (
+      <Grid columns={3} className='station-dropdown-grid' stackable>
+        <Grid.Row>
+          <Grid.Column>
+            <Dropdown
+            button
+            search
+            fluid
+            selectOnNavigation={false}
+            options={options}
+            onChange={this.handleOnStationDropdownChange}
+            text='Select Station...'
+            value={null}
+            />
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+    );
+  }
+
   renderAbout() {
     return (
-      <>
+      <React.Fragment>
         <AboutModal open={true} />
         {
           this.renderTrains(null)
         }
-      </>
+      </React.Fragment>
+    );
+  }
+
+  renderStation(stationId) {
+    const { trains, stations } = this.state;
+    const selectedStation = stations.find((s) => s.id === stationId);
+    const stationsObj = {};
+    stations.forEach((s) => {
+      stationsObj[s.id] = s;
+    })
+    return (
+      <React.Fragment>
+        <StationModal open={true} stations={stationsObj} trains={trains} selectedStation={selectedStation} />
+        {
+          this.renderTrains(null)
+        }
+      </React.Fragment>
     );
   }
 
   renderTrains(selectedTrain) {
-    const { trains, timestamp } = this.state;
+    const { trains, timestamp, stations } = this.state;
     const trainKeys = Object.keys(trains);
     let groups = groupBy(trains, 'status');
+    const stationsObj = {};
+    stations.forEach((s) => {
+      stationsObj[s.id] = s;
+    })
     return (
-      <>
+      <React.Fragment>
         <Grid columns={3} className='train-grid'>
         {
-          trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
+          stations && trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
             const nameA = `${a.name} ${a.alternate_name}`;
             const nameB = `${b.name} ${b.alternate_name}`;
             if (nameA < nameB) {
@@ -98,7 +195,7 @@ class App extends React.Component {
             const visible = train.visible || train.status !== 'Not Scheduled';
             return (
               <Grid.Column key={train.id} style={{display: (visible ? 'block' : 'none')}}>
-                <Train train={train} trains={trains} selected={selectedTrain === train.id} />
+                <Train train={train} trains={trains} stations={stationsObj} selected={selectedTrain === train.id} />
               </Grid.Column>)
           })
         }
@@ -131,15 +228,15 @@ class App extends React.Component {
             })
           }
         </Grid>
-      </>
+      </React.Fragment>
     );
   }
 
   render() {
-    const { trains, timestamp, loading } = this.state;
+    const { trains, timestamp, loading, stations } = this.state;
     const trainKeys = Object.keys(trains);
     return (
-      <Router>
+      <Router history={history}>
         <Segment inverted vertical className='header-segment'>
           <Header inverted as='h1' color='yellow'>
             goodservice.io
@@ -157,13 +254,26 @@ class App extends React.Component {
         <Segment inverted vertical className='blogpost-segment'>
 
         </Segment>
+        <Segment inverted vertical className='stations-segment'>
+          {
+            this.renderStationsDropdown()
+          }
+        </Segment>
         <Segment basic className='trains-segment'>
             { this.renderLoading() }
-            { trainKeys.length > 0 &&
+            { trainKeys.length > 0 && stations &&
               <Switch>
                 <Route path='/trains/:id/:tripId?' render={(props) => {
                   if (props.match.params.id && trainKeys.includes(props.match.params.id)) {
                     return this.renderTrains(props.match.params.id);
+                  } else {
+                    return (<Redirect to="/" />);
+                  }
+                }} />
+                <Route path='/stations/:id' render={(props) => {
+                  const stationIds = stations.map((s) => s.id);
+                  if (props.match.params.id && stationIds.includes(props.match.params.id)) {
+                    return this.renderStation(props.match.params.id);
                   } else {
                     return (<Redirect to="/" />);
                   }

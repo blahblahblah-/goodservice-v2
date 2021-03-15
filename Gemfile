@@ -38,6 +38,7 @@ gem "sidekiq-cron", "~> 1.1"
 gem 'foreman'
 gem 'platform-api'
 gem 'barnes'
+gem 'naturally'
 
 # gem 'rack-cors'
 # gem 'twitter'

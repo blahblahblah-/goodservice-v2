@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Table, Header } from "semantic-ui-react";
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
@@ -36,7 +36,7 @@ class TripModal extends React.Component {
   };
 
   renderTableBody() {
-    const { train, selectedTrip, routing } = this.props;
+    const { train, selectedTrip, routing, stations } = this.props;
     const { trip } = this.state;
     const currentTime = Date.now() / 1000;
     const i = routing.indexOf(selectedTrip.upcoming_stop);
@@ -61,7 +61,9 @@ class TripModal extends React.Component {
             const results = (
               <Table.Row key={stopId}>
                 <Table.Cell>
-                  { formatStation(train.stops[stopId]) }
+                  <Link to={`/stations/${stopId}`}>
+                    { formatStation(stations[stopId].name) }
+                  </Link>
                 </Table.Cell>
                 <Table.Cell>
                   { formatMinutes(timeUntilEstimatedTime, true) }
@@ -86,9 +88,9 @@ class TripModal extends React.Component {
   }
 
   render() {
-    const { selectedTrip, train } = this.props;
+    const { selectedTrip, train, stations } = this.props;
     const { trip } = this.state;
-    const destinationStationName = formatStation(train.stops[selectedTrip.destination_stop]);
+    const destinationStationName = formatStation(stations[selectedTrip.destination_stop].name);
     const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     const delayed = selectedTrip.delayed_time > 300;
     const effectiveDelayedTime = Math.min(selectedTrip.schedule_discrepancy, 0) + selectedTrip.delayed_time;

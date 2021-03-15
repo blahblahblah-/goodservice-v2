@@ -184,7 +184,7 @@ class TrainModalDirectionPane extends React.Component {
   renderStats() {
     const { train, direction } = this.props;
     const { selectedRouting } = this.state;
-    const maxScheduledHeadway = train.scheduled_headways ? this.calculateMaxHeadway(train.scheduled_headways[direction]) : '--';
+    const maxScheduledHeadway = train.scheduled_headways && train.scheduled_headways[direction] ? this.calculateMaxHeadway(train.scheduled_headways[direction]) : '--';
     const trips = {}
     if (train.trips && train.trips[direction]) {
       Object.keys(train.trips[direction]).forEach((r) => {
@@ -219,7 +219,7 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={2} size="small" inverted color={headwayDisrepancyAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ maxScheduledHeadway } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ maxEstimatedHeadway } <span className='minute'>min</span></Statistic.Value>
@@ -232,15 +232,15 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboutThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Scheduled</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Curr. Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
-          </Statistic>
-          <Statistic>
-            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Estimated</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>
@@ -248,7 +248,7 @@ class TrainModalDirectionPane extends React.Component {
   }
 
   travelTimeFrom() {
-    const { train, direction } = this.props;
+    const { train, direction, stations } = this.props;
     const { travelTimeTo, selectedRouting } = this.state;
 
     if (selectedRouting === 'blended') {
@@ -259,7 +259,7 @@ class TrainModalDirectionPane extends React.Component {
       return [...new Set(routings.flat())].map((stopId) => {
         return {
           key: stopId,
-          text: formatStation(train.stops[stopId]),
+          text: formatStation(stations[stopId].name),
           value: stopId,
         };
       });
@@ -274,14 +274,14 @@ class TrainModalDirectionPane extends React.Component {
     return routing.slice(0, i).map((stopId) => {
       return {
         key: stopId,
-        text: formatStation(train.stops[stopId]),
+        text: formatStation(stations[stopId].name),
         value: stopId,
       };
     });
   }
 
   travelTimeTo() {
-    const { train, direction } = this.props;
+    const { train, direction, stations } = this.props;
     const { travelTimeFrom, selectedRouting } = this.state;
 
     if (selectedRouting === 'blended') {
@@ -292,7 +292,7 @@ class TrainModalDirectionPane extends React.Component {
       return [...new Set(routings.flat())].map((stopId) => {
         return {
           key: stopId,
-          text: formatStation(train.stops[stopId]),
+          text: formatStation(stations[stopId].name),
           value: stopId,
         };
       });
@@ -308,7 +308,7 @@ class TrainModalDirectionPane extends React.Component {
     return routing.slice(i + 1).map((stopId) => {
       return {
         key: stopId,
-        text: formatStation(train.stops[stopId]),
+        text: formatStation(stations[stopId].name),
         value: stopId,
       };
     });
@@ -350,15 +350,15 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Scheduled</Statistic.Label>
+          </Statistic>
+          <Statistic>
+            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
+            <Statistic.Label>Curr. Scheduled</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
             <Statistic.Label>Projected</Statistic.Label>
-          </Statistic>
-          <Statistic>
-            <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Estimated</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>
@@ -366,13 +366,13 @@ class TrainModalDirectionPane extends React.Component {
   }
 
   routingOptions() {
-    const { train } = this.props;
+    const { train, stations } = this.props;
     const { routings, selectedRouting } = this.state;
     const options = Object.keys(routings).map((hash) => {
       const routing = routings[hash];
       return {
         key: hash,
-        text: `${formatStation(train.stops[routing[0]])} ➜ ${formatStation(train.stops[routing[routing.length - 1]])} (${routing.length} stops)`,
+        text: `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops)`,
         value: hash,
       };
     });
@@ -397,7 +397,7 @@ class TrainModalDirectionPane extends React.Component {
   };
 
   renderTripsTableBody(selectedRouting, trips) {
-    const { train, direction, match } = this.props;
+    const { train, direction, match, stations } = this.props;
     const currentTime = Date.now() / 1000;
     let scheduledHeadways = train.scheduled_headways[direction] && train.scheduled_headways[direction][selectedRouting];
     if (!scheduledHeadways && train.scheduled_headways[direction]) {
@@ -422,7 +422,7 @@ class TrainModalDirectionPane extends React.Component {
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
                   <Link to={`/trains/${train.id}/${trip.id}`}>
-                    {trip.id} to {formatStation(train.stops[trip.destination_stop])} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
+                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
@@ -432,7 +432,9 @@ class TrainModalDirectionPane extends React.Component {
                   { formatMinutes(upcomingStopArrivalTime, true)}
                 </Table.Cell>
                 <Table.Cell>
-                  { formatStation(train.stops[trip.upcoming_stop]) }
+                  <Link to={`/stations/${trip.upcoming_stop}`}>
+                    { formatStation(stations[trip.upcoming_stop].name) }
+                  </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
                   { estimatedTimeBehindNextTrain !== null && formatMinutes(estimatedTimeBehindNextTrain, false) }
@@ -513,9 +515,9 @@ class TrainModalDirectionPane extends React.Component {
   }
 
   renderHeadingWithTable(selectedRouting, trips, start, end) {
-    const { train, direction } = this.props;
-    const startName = formatStation(train.stops[start]);
-    const endName = formatStation(train.stops[end]);
+    const { train, direction, stations } = this.props;
+    const startName = formatStation(stations[start].name);
+    const endName = formatStation(stations[end].name);
 
     return (
       <div key={`${start}-${end}`} className='table-with-heading'>
@@ -558,7 +560,7 @@ class TrainModalDirectionPane extends React.Component {
               Time Behind Next Train
             </Table.HeaderCell>
             <Table.HeaderCell rowSpan='2'>
-              Schedule Discrepancy
+              Schedule Adherence
             </Table.HeaderCell>
           </Table.Row>
           <Table.Row>
@@ -569,7 +571,7 @@ class TrainModalDirectionPane extends React.Component {
               Estimated
             </Table.HeaderCell>
             <Table.HeaderCell width={3}>
-              Stop Name
+              Station
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Projected
@@ -587,7 +589,7 @@ class TrainModalDirectionPane extends React.Component {
   }
 
   render() {
-    const { trains, train, direction } = this.props;
+    const { trains, train, direction, stations } = this.props;
     const { selectedRouting, routings, travelTimeFrom, travelTimeTo } = this.state;
     const routingToMap = selectedRouting == 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
     return (
@@ -598,7 +600,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>
@@ -648,7 +650,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
          </Grid.Row>
