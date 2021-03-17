@@ -20,8 +20,13 @@ a:hover, a:active{
 }
 
 .ui.inverted.segment.stations-segment {
-  padding-left: 2em;
-  padding-right: 2em;
+  padding-left: 1em;
+  padding-right: 1em;
+
+  @media only screen and (min-width: 768px) {
+    padding-left: 2em;
+    padding-right: 2em;
+  }
 
   .station-dropdown-grid {
     .item {
