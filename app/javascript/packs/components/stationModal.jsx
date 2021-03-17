@@ -172,15 +172,25 @@ class StationModal extends React.Component {
               <meta name="twitter:url" content={`https://preview.goodservice.io/stations/${selectedStation.id}`} />
             </Helmet>
             <Modal.Header>
-              { heading }
-              {
-                Object.keys(selectedStation.routes).map((trainId) => {
-                  const train = trains[trainId];
-                  return (
-                    <TrainBullet link={true} id={train.id} key={train.id} name={train.name} color={train.color} textColor={train.text_color} size='small' directions={selectedStation.routes[trainId]} />
-                  );
-                })
-              }
+              <Header inverted>
+                <Header.Content>
+                  { stationName }
+                  {
+                    Object.keys(selectedStation.routes).map((trainId) => {
+                      const train = trains[trainId];
+                      return (
+                        <TrainBullet link={true} id={train.id} key={train.id} name={train.name} color={train.color} textColor={train.text_color} size='small' directions={selectedStation.routes[trainId]} />
+                      );
+                    })
+                  }
+                </Header.Content>
+                {
+                  selectedStation.secondary_name &&
+                  <Header.Subheader>
+                    { selectedStation.secondary_name }
+                  </Header.Subheader>
+                }
+              </Header>
             </Modal.Header>
             <Modal.Content scrolling>
               {
