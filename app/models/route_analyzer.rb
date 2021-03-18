@@ -395,13 +395,14 @@ class RouteAnalyzer
     processed_trips.to_h { |direction, trips_by_routes|
       [direction, trips_by_routes.to_h { |routing, processed_trips|
         [routing, processed_trips.map { |trip|
+          estimated_upcoming_stop_arrival_time = (trip.timestamp > trip.estimated_upcoming_stop_arrival_time) ? trip.upcoming_stop_arrival_time : trip.estimated_upcoming_stop_arrival_time
           {
             id: trip.id,
             previous_stop: trip.previous_stop,
             previous_stop_arrival_time: trip.previous_stop_arrival_time,
             upcoming_stop: trip.upcoming_stop,
             upcoming_stop_arrival_time: trip.upcoming_stop_arrival_time,
-            estimated_upcoming_stop_arrival_time: trip.estimated_upcoming_stop_arrival_time,
+            estimated_upcoming_stop_arrival_time: estimated_upcoming_stop_arrival_time,
             time_behind_next_train: trip.time_behind_next_train,
             estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
             destination_stop: trip.destination,
