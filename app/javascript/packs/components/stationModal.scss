@@ -7,11 +7,15 @@
     color: white;
   }
 
-  .header .content .train-list {
-    display: inline-block;
+  .header .content {
+    line-height: 37px;
 
-    .route:first-child {
-      margin-left: 0
+    .train-list {
+      display: inline-block;
+
+      .route:first-child {
+        margin-left: 0
+      }
     }
   }
 }
