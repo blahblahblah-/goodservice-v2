@@ -72,13 +72,20 @@ class FeedProcessor
       complete_trips(feed_id, timestamp)
 
       routes.each do |route_id, trips|
-        if trips.any?(&:latest)
-          marshaled_trips = Marshal.dump(trips)
-          RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
-          RouteProcessorWorker.perform_async(route_id, timestamp)
-        else
-          puts "No updated trips for #{route_id}, skipping..."
+        if trips.none?(&:latest)
+          route_data_encoded = RedisStore.route_status(route_id)
+          if route_data_encoded
+            route_data = JSON.parse(route_data_encoded)
+            if route_data['timestamp'] >= (Time.current - 4.minutes).to_i
+              puts "No updated trips for #{route_id}, skipping..."
+              next
+            end
+          end
         end
+
+        marshaled_trips = Marshal.dump(trips)
+        RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
+        RouteProcessorWorker.perform_async(route_id, timestamp)
       end
     end
 
