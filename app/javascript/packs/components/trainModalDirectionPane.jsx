@@ -387,6 +387,12 @@ class TrainModalDirectionPane extends React.Component {
   handleOptionChange = (e, { name, value }) => {
     const { train, direction } = this.props;
     const { selectedRouting } = this.state;
+    const prevValue = this.state[name];
+
+    if (prevValue === value) {
+      return;
+    }
+
     const newState = { [name]: value };
     if (name === 'selectedRouting' && value !== 'blended') {
       const routing = train.actual_routings[direction].find((r) => value === `${r[0]}-${r[r.length - 1]}-${r.length}`);
