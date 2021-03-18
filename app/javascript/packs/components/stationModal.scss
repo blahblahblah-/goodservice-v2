@@ -6,4 +6,12 @@
   .close.icon {
     color: white;
   }
+
+  .header .content .train-list {
+    display: inline-block;
+
+    .route:first-child {
+      margin-left: 0
+    }
+  }
 }

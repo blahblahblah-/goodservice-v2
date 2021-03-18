@@ -52,7 +52,7 @@ class StationModal extends React.Component {
     const destinations = [...new Set(trips.map((t) => t.destination_stop))].map((s) => formatStation(stations[s].name)).sort().join(', ');
     return (
       <React.Fragment>
-        <Header as='h3' inverted>To { destinations }</Header>
+        <Header as='h4' inverted>To { destinations }</Header>
         <Table fixed inverted unstackable size='small' compact className='trip-table'>
           <Table.Header>
             <Table.Row>
@@ -172,9 +172,10 @@ class StationModal extends React.Component {
               <meta name="twitter:url" content={`https://preview.goodservice.io/stations/${selectedStation.id}`} />
             </Helmet>
             <Modal.Header>
-              <Header inverted>
+              <Header as='h3' inverted>
                 <Header.Content>
-                  { stationName }
+                  { stationName }&nbsp;
+                  <div className="train-list">
                   {
                     Object.keys(selectedStation.routes).map((trainId) => {
                       const train = trains[trainId];
@@ -183,6 +184,7 @@ class StationModal extends React.Component {
                       );
                     })
                   }
+                  </div>
                 </Header.Content>
                 {
                   selectedStation.secondary_name &&
