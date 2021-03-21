@@ -62,8 +62,8 @@ class StationModal extends React.Component {
               <Table.HeaderCell colSpan='2'>
                 Time Until Departure
               </Table.HeaderCell>
-              <Table.HeaderCell colSpan='3'>
-                Time Until Next Stop
+              <Table.HeaderCell rowSpan='2'>
+                Current Location
               </Table.HeaderCell>
               <Table.HeaderCell rowSpan='2'>
                 Schedule Adherence
@@ -75,15 +75,6 @@ class StationModal extends React.Component {
               </Table.HeaderCell>
               <Table.HeaderCell width={2}>
                 Estimated
-              </Table.HeaderCell>
-              <Table.HeaderCell width={2}>
-                Projected
-              </Table.HeaderCell>
-              <Table.HeaderCell width={2}>
-                Estimated
-              </Table.HeaderCell>
-              <Table.HeaderCell width={3}>
-                Station
               </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -126,12 +117,7 @@ class StationModal extends React.Component {
                   { formatMinutes(timeUntilThisStop, true)}
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) }
-                </Table.Cell>
-                <Table.Cell title={new Date(trip.upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(upcomingStopArrivalTime, true)}
-                </Table.Cell>
-                <Table.Cell>
+                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`}>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
