@@ -219,7 +219,7 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={2} size="small" inverted color={headwayDisrepancyAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ maxScheduledHeadway } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Reg. Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Sched.</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ maxEstimatedHeadway } <span className='minute'>min</span></Statistic.Value>
@@ -232,11 +232,11 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboutThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Reg. Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Sched.</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Curr. Scheduled</Statistic.Label>
+            <Statistic.Label>Curr. Sched.</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
@@ -350,11 +350,11 @@ class TrainModalDirectionPane extends React.Component {
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
             <Statistic.Value>{ scheduledRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Reg. Scheduled</Statistic.Label>
+            <Statistic.Label>Reg. Sched</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ supplementedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Curr. Scheduled</Statistic.Label>
+            <Statistic.Label>Curr. Sched</Statistic.Label>
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
