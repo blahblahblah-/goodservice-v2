@@ -132,7 +132,7 @@ class TrainModalDirectionPane extends React.Component {
       const key = Object.keys(headwayObjs)[0];
       scheduledHeadways = headwayObjs[key];
     }
-    return scheduledHeadways ? Math.round(Math.max(...scheduledHeadways) / 60) : "--";
+    return scheduledHeadways && scheduledHeadways.length > 1 ? Math.round(Math.max(...scheduledHeadways) / 60) : "--";
   }
 
   calculateRoutingRuntime(routing, travelTimes) {
