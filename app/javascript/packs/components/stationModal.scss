@@ -18,4 +18,16 @@
       }
     }
   }
+
+  .transfers .station-list-item {
+    .secondary-name {
+      line-height: 1.3em;
+    }
+  }
+
+  .trip-table {
+    .delayed-text {
+      margin-top: 0;
+    }
+  }
 }

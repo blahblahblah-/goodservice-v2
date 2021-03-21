@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -24,6 +24,14 @@ class StationModal extends React.Component {
     clearInterval(this.timer);
   }
 
+  componentDidUpdate(prevProps) {
+    const { selectedStation } = this.props;
+    if (prevProps.selectedStation === selectedStation) {
+      return;
+    }
+    this.fetchData();
+  }
+
   fetchData() {
     const { selectedStation } = this.props;
 
@@ -40,6 +48,50 @@ class StationModal extends React.Component {
     const { history } = this.props;
     return history.push('/');
   };
+
+  renderTransfers(selectedStation, trains, stations) {
+    if (!selectedStation.transfers) {
+      return;
+    }
+    return (
+      <React.Fragment>
+        <Header as='h4' inverted>Transfers</Header>
+        <List divided relaxed selection inverted className='transfers'>
+          {
+            selectedStation.transfers.map((stationId) => {
+              const station = stations[stationId];
+              return(
+                <List.Item as={Link} key={stationId} className='station-list-item' to={`/stations/${stationId}`}>
+                  <List.Content floated='left'>
+                    <Header as='h5'>
+                      { formatStation(station.name) }
+                    </Header>
+                  </List.Content>
+                  { station.secondary_name &&
+                    <List.Content floated='left' className="secondary-name">
+                      { station.secondary_name }
+                    </List.Content>
+                  }
+                  <List.Content floated='right'>
+                    {
+                      Object.keys(station.routes).map((trainId) => {
+                        const train = trains[trainId];
+                        const directions = station.routes[trainId];
+                        return (
+                          <TrainBullet id={trainId} key={train.name} name={train.name} color={train.color}
+                            textColor={train.text_color} size='small' key={train.id} directions={directions} />
+                        )
+                      })
+                    }
+                  </List.Content>
+                </List.Item>
+              )
+            })
+          }
+        </List>
+      </React.Fragment>
+    );
+  }
 
   renderDepartureTable(direction, station, trains, stations) {
     const trips = station.upcoming_trips[direction];
@@ -107,7 +159,7 @@ class StationModal extends React.Component {
                 <Table.Cell>
                   <Link to={`/trains/${trip.route_id}/${directionKey}/${trip.id}`}>
                     <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
-                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
+                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
@@ -182,6 +234,9 @@ class StationModal extends React.Component {
               </Header>
             </Modal.Header>
             <Modal.Content scrolling>
+              {
+                this.renderTransfers(selectedStation, trains, stations)
+              }
               {
                 this.renderDepartureTable('north', station, trains, stations)
               }
