@@ -429,7 +429,7 @@ class TrainModalDirectionPane extends React.Component {
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
                   <Link to={`/trains/${train.id}/${directionKey}/${trip.id}`}>
-                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' clssName='delayed-text' inverted color='red'>{delayInfo}</Header> }
+                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
