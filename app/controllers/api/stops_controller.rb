@@ -1,4 +1,6 @@
 class Api::StopsController < ApplicationController
+  M_TRAIN_SHUFFLE_STOPS = ["M21", "M20", "M19", "M18", "M16", "M14", "M13", "M12", "M11"];
+
   def index
     data = Rails.cache.fetch("stops", expires_in: 10.seconds) do
       stops = Scheduled::Stop.all
@@ -91,7 +93,9 @@ class Api::StopsController < ApplicationController
 
       trips = [1, 3].to_h { |direction|
         [direction, trips_by_routes_array.flat_map { |route_hash|
-            route_hash[direction]&.values&.flatten&.uniq { |t| t.id }
+            route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
+            actual_direction = determine_direction(direction, stop_id, route_id)
+            route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
           }.select { |trip|
             trip&.upcoming_stops(time_ref: timestamp)&.include?(stop_id)
           }.sort_by { |trip| trip.stops[stop_id]}.map { |trip| transform_trip(stop_id, trip, travel_times, timestamp) }
@@ -111,6 +115,11 @@ class Api::StopsController < ApplicationController
   end
 
   private
+
+  def determine_direction(direction, stop_id, route_id)
+    return direction unless M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+    direction == 3 ? 1 : 3
+  end
 
   def transform_to_route_directions_hash(direction_futures_hash)
     routes_by_direction = direction_futures_hash.to_h do |direction, future|
