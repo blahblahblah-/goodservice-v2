@@ -404,6 +404,7 @@ class TrainModalDirectionPane extends React.Component {
 
   renderTripsTableBody(selectedRouting, trips) {
     const { train, direction, match, stations } = this.props;
+    const directionKey = direction[0].toUpperCase();
     const currentTime = Date.now() / 1000;
     let scheduledHeadways = train.scheduled_headways[direction] && train.scheduled_headways[direction][selectedRouting];
     if (!scheduledHeadways && train.scheduled_headways[direction]) {
@@ -427,7 +428,7 @@ class TrainModalDirectionPane extends React.Component {
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
-                  <Link to={`/trains/${train.id}/${trip.id}`}>
+                  <Link to={`/trains/${train.id}/${directionKey}/${trip.id}`}>
                     {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
@@ -606,7 +607,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>
@@ -656,7 +657,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
          </Grid.Row>

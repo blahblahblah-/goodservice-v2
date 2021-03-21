@@ -10,8 +10,9 @@ import './trainMapStop.scss'
 class TrainMapStop extends React.Component {
 
   renderStop() {
-    const { southStop, northStop, train, trips } = this.props;
+    const { southStop, northStop, train, direction, trips } = this.props;
 
+    const directionKey = direction && direction[0].toUpperCase();
     const time = Date.now() / 1000;
     const stopsBefore = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) > 60);
     const stopsAt = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) <= 60);
@@ -19,7 +20,7 @@ class TrainMapStop extends React.Component {
 
     if (stopsBefore && stopsBefore.length > 0) {
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${stopsBefore[0].id}`} key={stopsBefore[0].id}>
+        <Link to={`/trains/${train.id}/${directionKey}/${stopsBefore[0].id}`} key={stopsBefore[0].id}>
           <div className='trip-before' key='trip-before'></div>
         </Link>
       );
@@ -27,7 +28,7 @@ class TrainMapStop extends React.Component {
 
     if (stopsAt && stopsAt.length > 0) {
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${stopsAt[0].id}`} key={stopsAt[0].id}>
+        <Link to={`/trains/${train.id}/${directionKey}/${stopsAt[0].id}`} key={stopsAt[0].id}>
           <div className='trip-at' key='trip-at'></div>
         </Link>
       );

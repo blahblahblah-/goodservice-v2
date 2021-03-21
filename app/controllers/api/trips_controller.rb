@@ -35,6 +35,11 @@ class Api::TripsController < ApplicationController
     trip_id = params[:id].gsub("-", "..")
     marshaled_trip = RedisStore.active_trip(ROUTE_FEED_MAPPING[params[:route_id]], trip_id)
 
+    if !marshaled_trip && trip_id.include?("..")
+      trip_id = trip_id.gsub("..", ".")
+      marshaled_trip = RedisStore.active_trip(ROUTE_FEED_MAPPING[params[:route_id]], trip_id)
+    end
+
     raise ActionController::RoutingError.new('Not Found') unless marshaled_trip
     trip = Marshal.load(marshaled_trip)
 

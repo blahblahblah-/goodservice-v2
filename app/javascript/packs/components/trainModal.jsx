@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Dimmer, Loader, Grid, Menu, Header } from "semantic-ui-react";
-import { withRouter, Redirect } from 'react-router-dom';
+import { withRouter, Redirect, HashRouter, Switch, Route, NavLink } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
@@ -17,7 +17,6 @@ class TrainModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      activeMenuItem: 'overview',
     };
   }
 
@@ -29,7 +28,6 @@ class TrainModal extends React.Component {
     if (selected) {
       this.fetchData();
       this.timer = setInterval(() => this.fetchData(), 30000);
-      this.setState({ activeMenuItem: 'overview' });
     } else {
       clearInterval(this.timer);
     }
@@ -83,37 +81,33 @@ class TrainModal extends React.Component {
     return history.push('/');
   };
 
-  handleItemClick = (_, { name }) => this.setState({ activeMenuItem: name })
-
   render() {
-    const { train, activeMenuItem, timestamp } = this.state;
-    const { trains, trigger, selected, match, stations } = this.props;
+    const { train, timestamp } = this.state;
+    const { trains, trigger, selected, match, stations, location } = this.props;
     const title = `goodservice.io - ${train?.alternate_name ? `S - ${train?.alternate_name}` : train?.name} Train`;
+
+    if (match.params.direction && !['N', 'S'].includes(match.params.direction)) {
+      return (<Redirect to={`/trains/${match.params.id}`} />);
+    }
+
     let tripModal = null;
+    let trip = null;
     let className = 'train-modal';
-    if (train && match.params.id === train.id && match.params.tripId) {
-      let routingKey = null;
-      let trip = null;
-      const direction = ['north', 'south'].find((direction) => {
-        routingKey = train.trips[direction] && Object.keys(train.trips[direction]).find((routingKey) => {
-          trip = train.trips[direction][routingKey].find((trip) => {
-            return trip.id === match.params.tripId;
-          });
-          return trip;
+    if (train && match.params.id === train.id && match.params.direction && match.params.tripId) {
+      const direction = match.params.direction === 'N' ? 'north' : 'south'
+      const routingKey = Object.keys(train.trips[direction]).find((routingKey) => {
+        trip = train.trips[direction][routingKey].find((trip) => {
+          return trip.id === match.params.tripId;
         });
-        return routingKey;
-      })
+        return trip;
+      });
       if (!trip) {
         return (<Redirect to={`/trains/${train.id}`} />);
       }
       const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
       tripModal = (
-        <TripModal train={train} selectedTrip={trip} stations={stations} routing={routing} />
+        <TripModal train={train} selectedTrip={trip} stations={stations} direction={direction} routing={routing} />
       );
-
-      if (activeMenuItem !== direction) {
-        this.setState({ activeMenuItem: direction });
-      }
       className = 'train-modal dimmable dimmed blurring';
     }
     return (
@@ -148,13 +142,13 @@ class TrainModal extends React.Component {
                     </Grid.Column>
                     <Grid.Column verticalAlign='middle' width={12}>
                       <Menu widths={3} inverted className='header-menu' stackable>
-                        <Menu.Item name='overview' active={activeMenuItem === 'overview'} onClick={this.handleItemClick}>
+                        <Menu.Item name='overview' as={NavLink} exact to={`/trains/${train.id}`} >
                           Overview
                         </Menu.Item>
-                        <Menu.Item name='north' active={activeMenuItem === 'north'} className={this.noService('north') ? 'no-service' : ''} onClick={this.handleItemClick}>
+                        <Menu.Item name='N' className={this.noService('north') ? 'no-service' : ''} as={NavLink} exact to={`/trains/${train.id}/N`}>
                           To {this.formatDestinations(train.destinations?.north)}
                         </Menu.Item>
-                        <Menu.Item name='south' active={activeMenuItem === 'south'} className={this.noService('south') ? 'no-service' : ''} onClick={this.handleItemClick}>
+                        <Menu.Item name='S'  className={this.noService('south') ? 'no-service' : ''} as={NavLink} exact to={`/trains/${train.id}/S`}>
                           To {this.formatDestinations(train.destinations?.south)}
                         </Menu.Item>
                       </Menu>
@@ -164,18 +158,18 @@ class TrainModal extends React.Component {
               </Modal.Header>
               <Modal.Content scrolling>
                 <Modal.Description>
-                  {
-                    activeMenuItem === 'overview' &&
-                      <TrainModalOverviewPane train={train} trains={trains} stations={stations} />
-                  }
-                  {
-                    activeMenuItem === 'north' &&
-                      <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='north' />
-                  }
-                  {
-                    activeMenuItem === 'south' &&
-                      <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='south' />
-                  }
+                {
+                  match.params.direction === 'N' &&
+                  <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='north' />
+                }
+                {
+                  match.params.direction === 'S' &&
+                  <TrainModalDirectionPane train={train} trains={trains} stations={stations} direction='south' />
+                }
+                {
+                  !match.params.direction &&
+                  <TrainModalOverviewPane train={train} trains={trains} stations={stations} />
+                }
                   <Header inverted as='h5'>
                     Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
                   </Header>

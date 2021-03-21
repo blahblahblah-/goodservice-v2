@@ -88,19 +88,20 @@ class StationModal extends React.Component {
             </Table.Row>
           </Table.Header>
           {
-            this.renderDepartureTableBody(trips, trains, stations, currentTime)
+            this.renderDepartureTableBody(direction, trips, trains, stations, currentTime)
           }
         </Table>
       </React.Fragment>
     );
   }
 
-  renderDepartureTableBody(trips, trains, stations, currentTime) {
+  renderDepartureTableBody(direction, trips, trains, stations, currentTime) {
     return (
       <Table.Body>
         {
           trips.map((trip) => {
             const train = trains[trip.route_id];
+            const directionKey = direction[0].toUpperCase();
             const delayed = trip.delayed_time > 300;
             const effectiveDelayedTime = Math.max(trip.schedule_discrepancy, 0) + trip.delayed_time;
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
@@ -113,15 +114,15 @@ class StationModal extends React.Component {
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
-                  <Link to={`/trains/${trip.route_id}/${trip.id}`}>
+                  <Link to={`/trains/${trip.route_id}/${directionKey}/${trip.id}`}>
                     <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
                     {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell title={new Date(trip.estimated_current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { formatMinutes(estimatedTimeUntilThisStop, true)}
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell title={new Date(trip.current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { formatMinutes(timeUntilThisStop, true)}
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>

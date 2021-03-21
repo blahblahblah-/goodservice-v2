@@ -24,15 +24,16 @@ class TripModal extends React.Component {
   fetchData() {
     const { train, selectedTrip } = this.props;
 
-    fetch(`${API_URL_PREFIX}${train.id}/trips/${selectedTrip.id.replace('..', '-')}`)
+    fetch(`${API_URL_PREFIX}${train.id}/trips/${selectedTrip.id.replace('..', '-').replace('.', '-')}`)
       .then(response => response.json())
       .then(data => this.setState({ trip: data, timestamp: data.timestamp}))
   }
 
   handleOnClose = () => {
-    const { history, train } = this.props;
+    const { history, train, direction } = this.props;
+    const directionKey = direction[0].toUpperCase();
     clearInterval(this.timer);
-    return history.push(`/trains/${train.id}`);
+    return history.push(`/trains/${train.id}/${directionKey}`);
   };
 
   renderTableBody() {
