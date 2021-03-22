@@ -22,6 +22,31 @@ class RedisStore
       REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 150 : 1800))
     end
 
+    # Accessibility
+    def update_accessible_stops_list(list)
+      REDIS_CLIENT.set("accessibile-stops", list, ex: 1800)
+    end
+
+    def accessible_stops_list
+      REDIS_CLIENT.get("accessibile-stops")
+    end
+
+    def update_elevator_map(obj)
+      REDIS_CLIENT.set("accessibile-elevator-map", obj, ex: 1800)
+    end
+
+    def elevator_map
+      REDIS_CLIENT.get("accessibile-elevator-map")
+    end
+
+    def update_elevator_outages(obj)
+      REDIS_CLIENT.set("accessibile-elevator-outages", obj, ex: 1800)
+    end
+
+    def elevator_outages
+      REDIS_CLIENT.get("accessibile-elevator-outages")
+    end
+
     # Route Trips
     def route_trips(route_id, timestamp)
       REDIS_CLIENT.get("route-trips:#{route_id}:#{timestamp}")

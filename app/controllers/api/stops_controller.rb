@@ -1,26 +1,56 @@
 class Api::StopsController < ApplicationController
   M_TRAIN_SHUFFLE_STOPS = ["M21", "M20", "M19", "M18", "M16", "M14", "M13", "M12", "M11"];
+  ADA_OVERRIDES = ENV['ADA_OVERRIDES']&.split(',') || []
+  ADA_ADDITIONAL_STATIONS = ENV['ADA_ADDITIONAL_STATIONS']&.split(',') || []
 
   def index
     data = Rails.cache.fetch("stops", expires_in: 10.seconds) do
       stops = Scheduled::Stop.all
       futures = {}
+      accessible_stops_future = nil
+      elevator_outages_future = nil
       REDIS_CLIENT.pipelined do
         futures = stops.to_h { |stop|
           [stop.internal_id, [1, 3].to_h { |direction|
             [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
           }]
         }
+        accessible_stops_future = RedisStore.accessible_stops_list
+        elevator_outages_future = RedisStore.elevator_outages
       end
+      accessible_stops = accessible_stops_future.value && JSON.parse(accessible_stops_future.value)
+      elevator_outages = elevator_outages_future.value && JSON.parse(elevator_outages_future.value)
       {
         stops: Naturally.sort_by(stops){ |s| "#{s.stop_name}#{s.secondary_name}" }.map { |s|
           route_directions = transform_to_route_directions_hash(futures[s.internal_id])
+          accessible_directions = accessible_stops.include?(s.internal_id) ? ['north', 'south'] : []
+
+          if ADA_OVERRIDES.include?("#{s.internal_id}N")
+            accessible_directions.delete('north')
+          end
+
+          if ADA_OVERRIDES.include?("#{s.internal_id}S")
+            accessible_directions.delete('south')
+          end
+
+          if ADA_ADDITIONAL_STATIONS.include?("#{s.internal_id}N")
+            accessible_directions << "north"
+          end
+
+          if ADA_ADDITIONAL_STATIONS.include?("#{s.internal_id}S")
+            accessible_directions << "south"
+          end
+
           {
             id: s.internal_id,
             name: s.stop_name,
             secondary_name: s.secondary_name,
             routes: route_directions,
-            transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id }
+            transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id },
+            accessibility: {
+              directions: accessible_directions,
+              outages: elevator_outages[s.internal_id] || [],
+            }
           }
         },
         timestamp: Time.current.to_i,

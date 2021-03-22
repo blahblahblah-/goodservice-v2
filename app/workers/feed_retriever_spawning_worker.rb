@@ -2,7 +2,6 @@ class FeedRetrieverSpawningWorker
   include Sidekiq::Worker
   sidekiq_options retry: false, queue: 'critical'
 
-  BASE_URI = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
   FEEDS = ["", "-ace", "-bdfm", "-g", "-jz", "-nqrw", "-l", "-7", "-si"]
 
   def perform
