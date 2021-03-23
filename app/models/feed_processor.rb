@@ -10,6 +10,7 @@ class FeedProcessor
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
+  CLOSED_STOPS = ENV['CLOSED_STOPS']&.split(',') || []
 
   class << self
     def analyze_feed(feed_id, minutes, fraction_of_minute)
@@ -124,6 +125,7 @@ class FeedProcessor
       end
 
       remove_hidden_stops!(entity.trip_update)
+      remove_closed_stops!(entity.trip_update)
       remove_bad_data!(entity.trip_update, timestamp)
       trip_timestamp = [trip_timestamps[trip_id] || timestamp, timestamp].min
 
@@ -273,6 +275,10 @@ class FeedProcessor
 
     def remove_hidden_stops!(trip_update)
       trip_update.stop_time_update.filter! { |update| valid_stops.include?(update.stop_id[0..2]) }
+    end
+
+    def remove_closed_stops!(trip_update)
+      trip_update.stop_time_update.filter! { |update| !CLOSED_STOPS.include?(update.stop_id) }
     end
 
     def remove_bad_data!(trip_update, timestamp)
