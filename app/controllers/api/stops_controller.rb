@@ -1,7 +1,7 @@
 class Api::StopsController < ApplicationController
   M_TRAIN_SHUFFLE_STOPS = ["M21", "M20", "M19", "M18", "M16", "M14", "M13", "M12", "M11"];
   ADA_OVERRIDES = ENV['ADA_OVERRIDES']&.split(',') || []
-  ADA_ADDITIONAL_STATIONS = ENV['ADA_ADDITIONAL_STATIONS']&.split(',') || []
+  ADA_ADDITIONAL_STOPS = ENV['ADA_ADDITIONAL_STOPS']&.split(',') || []
 
   def index
     data = Rails.cache.fetch("stops", expires_in: 10.seconds) do
@@ -33,11 +33,11 @@ class Api::StopsController < ApplicationController
             accessible_directions.delete('south')
           end
 
-          if ADA_ADDITIONAL_STATIONS.include?("#{s.internal_id}N")
+          if ADA_ADDITIONAL_STOPS.include?("#{s.internal_id}N")
             accessible_directions << "north"
           end
 
-          if ADA_ADDITIONAL_STATIONS.include?("#{s.internal_id}S")
+          if ADA_ADDITIONAL_STOPS.include?("#{s.internal_id}S")
             accessible_directions << "south"
           end
 
