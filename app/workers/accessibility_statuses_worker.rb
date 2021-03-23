@@ -6,7 +6,7 @@ class AccessibilityStatusesWorker
 
   def perform
     feed_data = retrieve_feed
-    update_elevator_outages(feed_data)
+    update_elevator_advisories(feed_data)
   end
 
   private
@@ -22,18 +22,18 @@ class AccessibilityStatusesWorker
     end
   end
 
-  def update_elevator_outages(data)
+  def update_elevator_advisories(data)
     elevator_map_json = RedisStore.elevator_map
     return unless elevator_map_json
     elevator_map = JSON.parse(elevator_map_json)
 
-    outages = Hash.new { |h, k| h[k] = [] }
+    advisories = Hash.new { |h, k| h[k] = [] }
     data.each do |status|
       elevator_map[status['equipment']]&.flatten&.each do |station|
-        outages[station] << HTMLEntities.new.decode(status['serving'])
+        advisories[station] << HTMLEntities.new.decode(status['serving'])
       end
     end
 
-    RedisStore.update_elevator_outages(outages.to_json)
+    RedisStore.update_elevator_advisories(advisories.to_json)
   end
 end

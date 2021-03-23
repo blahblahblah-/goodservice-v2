@@ -8,7 +8,7 @@ class Api::StopsController < ApplicationController
       stops = Scheduled::Stop.all
       futures = {}
       accessible_stops_future = nil
-      elevator_outages_future = nil
+      elevator_advisories_future = nil
       REDIS_CLIENT.pipelined do
         futures = stops.to_h { |stop|
           [stop.internal_id, [1, 3].to_h { |direction|
@@ -16,10 +16,10 @@ class Api::StopsController < ApplicationController
           }]
         }
         accessible_stops_future = RedisStore.accessible_stops_list
-        elevator_outages_future = RedisStore.elevator_outages
+        elevator_advisories_future = RedisStore.elevator_advisories
       end
       accessible_stops = accessible_stops_future.value && JSON.parse(accessible_stops_future.value)
-      elevator_outages = elevator_outages_future.value && JSON.parse(elevator_outages_future.value)
+      elevator_advisories = elevator_advisories_future.value && JSON.parse(elevator_advisories_future.value)
       {
         stops: Naturally.sort_by(stops){ |s| "#{s.stop_name}#{s.secondary_name}" }.map { |s|
           route_directions = transform_to_route_directions_hash(futures[s.internal_id])
@@ -41,16 +41,18 @@ class Api::StopsController < ApplicationController
             accessible_directions << "south"
           end
 
+          accessibility = {
+            directions: accessible_directions,
+            advisories: elevator_advisories[s.internal_id] || [],
+          }
+
           {
             id: s.internal_id,
             name: s.stop_name,
             secondary_name: s.secondary_name,
             routes: route_directions,
             transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id },
-            accessibility: {
-              directions: accessible_directions,
-              outages: elevator_outages[s.internal_id] || [],
-            }
+            accessibility: accessibility if accessible_directions.present?
           }
         },
         timestamp: Time.current.to_i,

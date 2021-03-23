@@ -39,12 +39,12 @@ class RedisStore
       REDIS_CLIENT.get("accessibile-elevator-map")
     end
 
-    def update_elevator_outages(obj)
-      REDIS_CLIENT.set("accessibile-elevator-outages", obj, ex: 1800)
+    def update_elevator_advisories(obj)
+      REDIS_CLIENT.set("accessibile-elevator-advisories", obj, ex: 1800)
     end
 
-    def elevator_outages
-      REDIS_CLIENT.get("accessibile-elevator-outages")
+    def elevator_advisories
+      REDIS_CLIENT.get("accessibile-elevator-advisories")
     end
 
     # Route Trips
