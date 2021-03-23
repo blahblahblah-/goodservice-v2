@@ -16,6 +16,7 @@ import AboutModal from './aboutModal';
 import StationModal from './stationModal';
 import history from './history';
 import { formatStation } from './utils';
+import { accessibilityIcon } from './accessibility.jsx';
 import Cross from 'images/cross-15.svg'
 
 import 'semantic-ui-css/semantic.min.css'
@@ -97,6 +98,9 @@ class App extends React.Component {
                   <span className='secondary-name'>
                     { station.secondary_name }
                   </span>
+                }
+                {
+                  accessibilityIcon(station.accessibility)
                 }
               </Header>
             </div>

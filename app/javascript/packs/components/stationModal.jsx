@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
 import { statusColor, formatStation, formatMinutes } from './utils';
+import { accessibilityIcon } from './accessibility.jsx';
 import './stationModal.scss';
 
 const API_URL_PREFIX = '/api/stops/';
@@ -49,6 +50,25 @@ class StationModal extends React.Component {
     return history.push('/');
   };
 
+  renderAccessibilityAdvisories(selectedStation) {
+    if (!selectedStation.accessibility || selectedStation.accessibility.advisories.length === 0) {
+      return;
+    }
+
+    return (
+      <div className='accessibility-advisories'>
+        {
+          selectedStation.accessibility.advisories.map((a, i) => {
+            return (
+              <Header as='h5' key={i} inverted>Elevator for { a } is out of service.</Header>
+            );
+          })
+        }
+        <Header as='h5' inverted>For more info, see <a href='https://new.mta.info/elevator-escalator-status' target='_blank'>mta.info</a>.</Header>
+      </div>
+    )
+  }
+
   renderTransfers(selectedStation, trains, stations) {
     if (!selectedStation.transfers) {
       return;
@@ -67,9 +87,16 @@ class StationModal extends React.Component {
                       { formatStation(station.name) }
                     </Header>
                   </List.Content>
-                  { station.secondary_name &&
+                  {
+                    station.secondary_name &&
                     <List.Content floated='left' className="secondary-name">
                       { station.secondary_name }
+                    </List.Content>
+                  }
+                  {
+                    station.accessibility &&
+                    <List.Content floated='left'>
+                      { accessibilityIcon(station.accessibility) }
                     </List.Content>
                   }
                   <List.Content floated='right'>
@@ -214,6 +241,9 @@ class StationModal extends React.Component {
               <Header as='h3' inverted>
                 <Header.Content>
                   { stationName }&nbsp;
+                  {
+                    accessibilityIcon(selectedStation.accessibility)
+                  }
                   <div className="train-list">
                   {
                     Object.keys(selectedStation.routes).map((trainId) => {
@@ -234,6 +264,9 @@ class StationModal extends React.Component {
               </Header>
             </Modal.Header>
             <Modal.Content scrolling>
+              {
+                this.renderAccessibilityAdvisories(selectedStation)
+              }
               {
                 this.renderTransfers(selectedStation, trains, stations)
               }

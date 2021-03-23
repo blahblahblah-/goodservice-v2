@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import TrainBullet from './trainBullet.jsx';
 import { formatStation } from './utils';
+import { accessibilityIcon } from './accessibility.jsx';
 
 import './trainMapStop.scss'
 
@@ -182,7 +183,7 @@ class TrainMapStop extends React.Component {
   }
 
   render() {
-    const { stopId, stop, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
+    const { stopId, station, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
     return (
       <li className='train-map-stop'>
         <div className='container'>
@@ -200,21 +201,28 @@ class TrainMapStop extends React.Component {
               return this.renderLine(obj, index, branchStart, branchEnd, trips);
             })
           }
-          <Header as='h5' className='station-name' inverted>
-            <Link to={`/stations/${stopId}`}>{ formatStation(stop) }</Link>
-          </Header>
-          <div className='transfers'>
-            {
-              transfers && Object.keys(transfers).map((routeId) => {
-                const directions = transfers[routeId];
-                const train = trains[routeId];
-                return (
-                  <TrainBullet link={true} id={routeId} key={train.name} name={train.name} color={train.color}
-                    textColor={train.text_color} size='small' directions={directions} />
-                )
-              })
-            }
-          </div>
+          { station &&
+            <Header as='h5' className='station-name' inverted>
+              <Link to={`/stations/${stopId}`}>
+                { formatStation(station.name) }
+                { accessibilityIcon(station.accessibility) }
+              </Link>
+            </Header>
+          }
+          { station &&
+            <div className='transfers'>
+              {
+                transfers && Object.keys(transfers).map((routeId) => {
+                  const directions = transfers[routeId];
+                  const train = trains[routeId];
+                  return (
+                    <TrainBullet link={true} id={routeId} key={train.name} name={train.name} color={train.color}
+                      textColor={train.text_color} size='small' directions={directions} />
+                  )
+                })
+              }
+            </div>
+          }
         </div>
       </li>
     )

@@ -52,7 +52,7 @@ class Api::StopsController < ApplicationController
             secondary_name: s.secondary_name,
             routes: route_directions,
             transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id },
-            accessibility: accessibility if accessible_directions.present?
+            accessibility: accessible_directions.present? ? accessibility : nil,
           }
         },
         timestamp: Time.current.to_i,

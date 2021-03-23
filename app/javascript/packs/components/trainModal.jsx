@@ -106,7 +106,7 @@ class TrainModal extends React.Component {
       }
       const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
       tripModal = (
-        <TripModal train={train} selectedTrip={trip} stations={stations} direction={direction} routing={routing} />
+        <TripModal train={train} trains={trains} selectedTrip={trip} stations={stations} direction={direction} routing={routing} />
       );
       className = 'train-modal dimmable dimmed blurring';
     }

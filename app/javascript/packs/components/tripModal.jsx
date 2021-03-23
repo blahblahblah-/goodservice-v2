@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 
 import TrainBullet from './trainBullet';
 import { formatStation, formatMinutes } from './utils';
+import { accessibilityIcon } from './accessibility.jsx';
 
 import './tripModal.scss';
 
@@ -37,7 +38,7 @@ class TripModal extends React.Component {
   };
 
   renderTableBody() {
-    const { train, selectedTrip, routing, stations } = this.props;
+    const { train, trains, selectedTrip, routing, stations } = this.props;
     const { trip } = this.state;
     const currentTime = Date.now() / 1000;
     const i = routing.indexOf(selectedTrip.upcoming_stop);
@@ -57,6 +58,13 @@ class TripModal extends React.Component {
                 currentArrivalTime = trip.stop_times[stopId];
               }
             }
+            let transfers = Object.assign({}, stations[stopId].routes);
+            if (stations[stopId]?.transfers) {
+              stations[stopId]?.transfers.forEach((s) => {
+                transfers = Object.assign(transfers, stations[s].routes);
+              });
+            }
+            delete transfers[train.id];
             const timeUntilEstimatedTime = Math.round((currentEstimatedTime - currentTime) / 60);
             const timeUntilArrivalTime = Math.round((currentArrivalTime - currentTime) / 60);
             const results = (
@@ -64,6 +72,17 @@ class TripModal extends React.Component {
                 <Table.Cell>
                   <Link to={`/stations/${stopId}`}>
                     { formatStation(stations[stopId].name) }
+                    { accessibilityIcon(stations[stopId].accessibility) }
+                    {
+                      Object.keys(transfers).map((routeId) => {
+                        const directions = transfers[routeId];
+                        const train = trains[routeId];
+                        return (
+                          <TrainBullet id={routeId} key={train.name} name={train.name} color={train.color}
+                            textColor={train.text_color} size='small' directions={directions} />
+                        )
+                      })
+                    }
                   </Link>
                 </Table.Cell>
                 <Table.Cell>

@@ -190,7 +190,7 @@ class TrainMap extends React.Component {
                   });
                 }
                 delete transfers[train.id];
-                let stop = stations[stopId]?.name;
+                let station = stations[stopId];
                 overrideStopId = null;
 
                 if (stopId === "") {
@@ -267,7 +267,7 @@ class TrainMap extends React.Component {
                   return isStopping || segments.branches[index].length > 0;
                 });
                 const results = (
-                  <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} overrideStopId={overrideStopId} stop={stop} southStop={stopPattern.southStops[stopId]}
+                  <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} overrideStopId={overrideStopId} station={station} southStop={stopPattern.southStops[stopId]}
                     northStop={stopPattern.northStops[stopId]} transfers={transfers} branchStops={branchStops} branchStart={branchStart}
                     branchEnd={branchEnd} activeBranches={activeBranches} showTravelTime={showTravelTime}
                     trips={trips && trips.filter((t) => t.upcoming_stop === stopId )} direction={direction}/>
