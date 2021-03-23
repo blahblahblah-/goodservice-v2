@@ -1,3 +1,9 @@
-.accessible-icon .blue.accessible.icon {
-  margin-right: .25em !important;
+.accessible-icon i.icons {
+  .corner.icon.blue.accessible.icon {
+    margin-right: .25em !important;
+  }
+
+  .corner.icon {
+    text-shadow: none;
+  }
 }

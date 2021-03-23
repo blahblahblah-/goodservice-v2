@@ -13,8 +13,12 @@
     .train-list {
       display: inline-block;
 
-      .route:first-child {
-        margin-left: 0
+      .route {
+        margin-left: 0;
+
+        &.diamond {
+          margin-left: .25em;
+        }
       }
     }
   }
