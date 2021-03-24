@@ -64,7 +64,7 @@ class RouteAnalyzer
         end
       elsif delays[direction] && delays[direction] >= FeedProcessor::DELAY_THRESHOLD
         status = 'Delay'
-      elsif service_changes[direction_key].present? || service_changes[:both].present?
+      elsif service_changes[direction_key]&.select(&:not_long_term?).present? || service_changes[:both]&.select(&:not_long_term?).present?
         status = 'Service Change'
       elsif (runtime_diff[direction] && runtime_diff[direction] >= 300) || slow_sections[direction].present?
         status = 'Slow'

@@ -53,4 +53,8 @@ class ServiceChanges::ServiceChange
       related_routes: related_routes,
     }
   end
+
+  def not_long_term?
+    true
+  end
 end
