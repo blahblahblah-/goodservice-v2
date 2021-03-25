@@ -417,7 +417,7 @@ class TrainModalDirectionPane extends React.Component {
         {
           trips.map((trip) => {
             const delayed = trip.delayed_time > 300;
-            const effectiveDelayedTime = Math.max(trip.schedule_discrepancy, 0) + trip.delayed_time;
+            const effectiveDelayedTime = Math.max(Math.min(trip.schedule_discrepancy, trip.delayed_time), 0);
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
             const delayInfo = delayed ? `(${trip.is_delayed ? 'delayed' : 'held'} for ${Math.round(delayedTime / 60)} mins)` : '';
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);

@@ -176,7 +176,7 @@ class FeedProcessor
           trip.latest = false
         end
 
-        trip.schedule = trip.previous_trip.schedule if trip.previous_trip&.schedule
+        trip.schedule = previous_update.schedule if previous_update
         trip.past_stops = trip.previous_trip.past_stops if trip.previous_trip&.past_stops
       end
     end

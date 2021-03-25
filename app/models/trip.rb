@@ -116,7 +116,7 @@ class Trip
   end
 
   def effective_delayed_time
-    [schedule_discrepancy, 0].min + delayed_time
+    [[schedule_discrepancy, delayed_time].min, 0].max
   end
 
   def time_between_stops(time_limit)
