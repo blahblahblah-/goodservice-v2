@@ -74,7 +74,7 @@ class TripModal extends React.Component {
                     { formatStation(stations[stopId].name) }
                     { accessibilityIcon(stations[stopId].accessibility) }
                     {
-                      Object.keys(transfers).map((routeId) => {
+                      Object.keys(transfers).sort().map((routeId) => {
                         const directions = transfers[routeId];
                         const train = trains[routeId];
                         return (

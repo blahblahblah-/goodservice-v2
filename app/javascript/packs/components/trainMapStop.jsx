@@ -212,7 +212,7 @@ class TrainMapStop extends React.Component {
           { station &&
             <div className='transfers'>
               {
-                transfers && Object.keys(transfers).map((routeId) => {
+                transfers && Object.keys(transfers).sort().map((routeId) => {
                   const directions = transfers[routeId];
                   const train = trains[routeId];
                   return (
