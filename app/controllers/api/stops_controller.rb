@@ -19,7 +19,7 @@ class Api::StopsController < ApplicationController
         elevator_advisories_future = RedisStore.elevator_advisories
       end
       accessible_stops = accessible_stops_future.value ? JSON.parse(accessible_stops_future.value) : []
-      elevator_advisories = elevator_advisories_future.value ? JSON.parse(elevator_advisories_future.value) : []
+      elevator_advisories = elevator_advisories_future.value ? JSON.parse(elevator_advisories_future.value) : {}
       {
         stops: Naturally.sort_by(stops){ |s| "#{s.stop_name}#{s.secondary_name}" }.map { |s|
           route_directions = transform_to_route_directions_hash(futures[s.internal_id])

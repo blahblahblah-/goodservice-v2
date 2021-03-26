@@ -197,7 +197,7 @@ class StationModal extends React.Component {
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
-                  <Link to={`/stations/${trip.upcoming_stop}`}>
+                  <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
                 </Table.Cell>

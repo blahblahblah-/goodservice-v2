@@ -39,5 +39,13 @@
     .delayed-text {
       margin-top: 0;
     }
+    .station-name {
+      @media only screen and (max-width: 767px) {
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+    }
   }
 }
