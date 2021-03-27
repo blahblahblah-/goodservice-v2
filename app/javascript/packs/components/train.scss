@@ -1,6 +1,9 @@
-button.ui.segment.train {
-  background-color: rgba(0,0,0, 0.1);
+button.ui.inverted.secondary.button {
   color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
 
   .ui.header {
     color: white;

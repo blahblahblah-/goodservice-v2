@@ -33,27 +33,19 @@ class Train extends React.Component {
 
   renderBullet() {
     const { train } = this.props;
-    if (train.alternate_name) {
-      return (
-        <div className='train-bullet'>
-          <TrainBullet name={train.name} color={train.color} size={'normal'}
-              textColor={train.text_color} />
-          <div className='alternate-name'>{this.alternateName()}</div>
-        </div>
-      )
-    }
     return (
-      <TrainBullet name={train.name} color={train.color} size='normal'
-              textColor={train.text_color} className='train-bullet' />
-    )
+      <React.Fragment>
+        <TrainBullet name={train.name} color={train.color} size={'normal'}
+            textColor={train.text_color} className='train-bullet' />
+        <div className='alternate-name'>{this.alternateName()}</div>
+      </React.Fragment>
+    );
   }
 
   renderInfo() {
     const { status } = this.props.train;
     return (
-      <div>
-        <Header as='h3' floated='right' className='status' inverted color={statusColor(status)}>{ status }</Header>
-      </div>
+      <Header as='h3' floated='right' className='status' inverted color={statusColor(status)}>{ status }</Header>
     )
   }
 
@@ -65,10 +57,10 @@ class Train extends React.Component {
           selected &&
           <TrainModal trainId={train.id} trains={trains} stations={stations} selected={true} />
         }
-        <Segment as={Button} fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
-          { this.renderInfo() }
+        <Button secondary inverted fluid id={"train-" + train.name} onClick={this.handleClick} className='train'>
           { this.renderBullet() }
-        </Segment>
+          { this.renderInfo() }
+        </Button>
       </React.Fragment>
     )
   }

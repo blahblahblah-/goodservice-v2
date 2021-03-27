@@ -183,7 +183,7 @@ class App extends React.Component {
     })
     return (
       <React.Fragment>
-        <Grid columns={3} className='train-grid'>
+        <Grid columns={6} doubling className='train-grid'>
         {
           stations && trainKeys.map(trainId => trains[trainId]).sort((a, b) => {
             const nameA = `${a.name} ${a.alternate_name}`;
