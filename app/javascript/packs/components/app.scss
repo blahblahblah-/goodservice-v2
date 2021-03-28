@@ -14,6 +14,10 @@ a:hover, a:active{
   filter: none;
 }
 
+.blurring.dimmed.dimmable .app {
+  pointer-events: none;
+}
+
 .ui.inverted.segment.header-segment {
   padding: 2em 2em 1em 2em;
 }

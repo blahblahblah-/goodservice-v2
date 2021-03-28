@@ -36,6 +36,10 @@
   }
 
   .trip-table {
+    sup {
+      display: inline-block;
+    }
+
     .delayed {
       color: #ff695e;
     }
