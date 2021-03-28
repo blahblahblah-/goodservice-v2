@@ -1,32 +1,74 @@
 class Api::RoutesController < ApplicationController
   def index
-    data = Rails.cache.fetch("status", expires_in: 10.seconds) do
-      data_hash = RedisStore.route_status_summaries
-      scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
-      timestamps = []
-      {
-        routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
-          route_data_encoded = data_hash[route.internal_id]
-          route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
-          if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
-            route_data = {}
-          else
-            timestamps << route_data['timestamp']
+    if params[:detailed] == '1'
+      data = Rails.cache.fetch("status-detailed", expires_in: 10.seconds) do
+        routes = Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }
+        route_futures = {}
+
+        REDIS_CLIENT.pipelined do
+          route_futures = routes.to_h do |r|
+            [r.internal_id, RedisStore.route_status(r.internal_id)]
           end
-          scheduled = scheduled_routes.include?(route.internal_id)
-          [route.internal_id, {
-            id: route.internal_id,
-            name: route.name,
-            color: route.color && "##{route.color}",
-            text_color: route.text_color && "##{route.text_color}",
-            alternate_name: route.alternate_name,
-            status: scheduled ? 'No Service' : 'Not Scheduled',
-            visible: route.visible?,
-            scheduled: scheduled,
-          }.merge(route_data).except('timestamp')]
-        }.to_h,
-        timestamp: timestamps.max
-      }
+        end
+
+        scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
+        timestamps = []
+        {
+          routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
+            route_data_encoded = route_futures[route.internal_id]&.value
+            route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+            if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
+              route_data = {}
+            else
+              route_data = route_data.slice(
+                'direction_statuses', 'service_summaries', 'service_change_summaries', 'actual_routings', 'slow_sections', 'long_headway_sections', 'delayed_sections'
+              )
+              timestamps << route_data['timestamp']
+            end
+            scheduled = scheduled_routes.include?(route.internal_id)
+            [route.internal_id, {
+              id: route.internal_id,
+              name: route.name,
+              color: route.color && "##{route.color}",
+              text_color: route.text_color && "##{route.text_color}",
+              alternate_name: route.alternate_name,
+              status: scheduled ? 'No Service' : 'Not Scheduled',
+              visible: route.visible?,
+              scheduled: scheduled,
+            }.merge(route_data).except('timestamp')]
+          }.to_h,
+          timestamp: timestamps.max
+        }
+      end
+    else
+      data = Rails.cache.fetch("status", expires_in: 10.seconds) do
+        data_hash = RedisStore.route_status_summaries
+        scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
+        timestamps = []
+        {
+          routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
+            route_data_encoded = data_hash[route.internal_id]
+            route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+            if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
+              route_data = {}
+            else
+              timestamps << route_data['timestamp']
+            end
+            scheduled = scheduled_routes.include?(route.internal_id)
+            [route.internal_id, {
+              id: route.internal_id,
+              name: route.name,
+              color: route.color && "##{route.color}",
+              text_color: route.text_color && "##{route.text_color}",
+              alternate_name: route.alternate_name,
+              status: scheduled ? 'No Service' : 'Not Scheduled',
+              visible: route.visible?,
+              scheduled: scheduled,
+            }.merge(route_data).except('timestamp')]
+          }.to_h,
+          timestamp: timestamps.max
+        }
+      end
     end
 
     expires_now

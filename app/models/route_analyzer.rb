@@ -5,6 +5,8 @@ class RouteAnalyzer
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
     slow_sections = identify_slow_sections(actual_routings, timestamp)
+    long_headway_sections = identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, processed_trips)
+    delayed_sections = identify_delayed_sections(actual_routings, common_routings, processed_trips)
     scheduled_runtimes = calculate_scheduled_runtimes(actual_routings, timestamp)
     estimated_runtimes = calculate_estimated_runtimes(actual_routings, timestamp)
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
@@ -13,7 +15,7 @@ class RouteAnalyzer
     direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
-    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, slow_sections, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, delayed_sections, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
     summary = {
       status: status,
@@ -29,6 +31,8 @@ class RouteAnalyzer
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       slow_sections: convert_to_readable_directions(slow_sections),
+      long_headway_sections: convert_to_readable_directions(long_headway_sections),
+      delayed_sections: convert_to_readable_directions(delayed_sections),
       scheduled_runtimes: convert_to_readable_directions(scheduled_runtimes),
       estimated_runtimes: convert_to_readable_directions(estimated_runtimes),
       runtime_diffs: convert_to_readable_directions(runtime_diffs),
@@ -81,27 +85,22 @@ class RouteAnalyzer
     return direction_statuses, status
   end
 
-  def self.service_summaries(delays, runtime_diff, slow_sections, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+  def self.service_summaries(delays, runtime_diff, slow_sections, long_headway_sections, delayed_sections, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       strs = []
       intro = "#{destination_stations[direction[:route_direction]].join('/')}-bound trains are "
 
-      if delays[direction[:route_direction]] && delays[direction[:route_direction]] >= FeedProcessor::DELAY_THRESHOLD
-        delayed_trips = actual_trips[direction[:route_direction]].map { |_, trips|
-          trips.select { |t| t.effective_delayed_time >= FeedProcessor::DELAY_THRESHOLD }
-        }.max_by { |trips| trips.map { |t| t.effective_delayed_time }.max || 0 }
-        max_delay_mins = delayed_trips.max_by { |t| t.effective_delayed_time }.effective_delayed_time / 60.0
-        if delayed_trips.size == 1
-          strs << "delayed at #{stop_name(delayed_trips.first.upcoming_stop)} (for #{max_delay_mins.round} mins)"
-        else
-          strs << "delayed between #{stop_name(delayed_trips.first.upcoming_stop)} and #{stop_name(delayed_trips.last.upcoming_stop)} (for #{max_delay_mins.round} mins)"
-        end
+      if delayed_sections[direction[:route_direction]].present?
+        first_stop = delayed_sections[direction[:route_direction]].first[:begin]
+        last_stop = delayed_sections[direction[:route_direction]].last[:end]
+        max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60).round
+        strs << "delayed between #{stop_name(first_stop)} and #{stop_name(last_stop)} (for #{max_delay_mins} mins)"
       end
 
       if slow_sections[direction[:route_direction]].present?
         slow_strs = slow_sections[direction[:route_direction]].map do |s|
-           "#{(s[:runtime_diff] / 60).round} mins longer to travel between #{stop_name(s[:stops].first)} and #{stop_name(s[:stops].last)}"
+           "#{(s[:runtime_diff] / 60).round} mins longer to travel between #{stop_name(s[:begin])} and #{stop_name(s[:end])}"
         end
         slow_strs[0] = "taking #{slow_strs[0]}"
         strs << slow_strs.join(", ")
@@ -109,24 +108,12 @@ class RouteAnalyzer
         strs << "taking #{(runtime_diff[direction[:route_direction]] / 60).round} mins longer to travel per trip"
       end
 
-      if headway_discrepancy[direction[:route_direction]] && headway_discrepancy[direction[:route_direction]] >= 120
-        max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
-        processed_trips = actual_trips[direction[:route_direction]].first.last
-
-        if actual_trips[direction[:route_direction]].size > 1
-          routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
-          processed_trips = routing_with_most_trips.last
-
-          if actual_trips[direction[:route_direction]]['blended']
-            processed_trips = actual_trips[direction[:route_direction]]['blended']
-          end
-        end
-
-        trips_with_long_headways = processed_trips.select{ |trip| trip.estimated_time_behind_next_train && trip.estimated_time_behind_next_train >= 120 }
-        max_scheduled_headway_mins = max_scheduled_headway / 60
-        max_actual_headway_mins = trips_with_long_headways.max_by { |trip| trip.estimated_time_behind_next_train }.estimated_time_behind_next_train / 60
-
-        strs << "have longer wait times between #{stop_name(trips_with_long_headways.first.upcoming_stop)} and #{stop_name(trips_with_long_headways.last.upcoming_stop)} (up to #{max_actual_headway_mins.round} mins, normally every #{max_scheduled_headway_mins.round} mins)"
+      if long_headway_sections[direction[:route_direction]].present?
+        first_stop = long_headway_sections[direction[:route_direction]].first[:begin]
+        last_stop = long_headway_sections[direction[:route_direction]].last[:end]
+        max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60).round
+        max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60).round
+        strs << "have longer wait times between #{stop_name(first_stop)} and #{stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
       end
 
       next [direction[:route_direction], nil] unless strs.present?
@@ -232,7 +219,71 @@ class RouteAnalyzer
           }.select { |obj| obj[:runtime_diff] >= 300}
         }
       }.flatten.compact.sort_by { |obj| -obj[:runtime_diff] }
-      [direction, objs.select.with_index { |obj, i| i == 0 || obj[:stops].none? { |s| objs[0...i].any? { |o| o[:stops].include?(s) }}}]
+      [direction, objs.select.with_index { |obj, i| i == 0 || obj[:stops].none? { |s| objs[0...i].any? { |o| o[:stops].include?(s) }}}.map { |o|
+        {
+          begin: o[:stops].first,
+          end: o[:stops].last,
+          runtime_diff: o[:runtime_diff],
+        }
+      }]
+    end
+  end
+
+  def self.identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, actual_trips)
+    direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].to_h do |direction|
+      max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
+      processed_trips = actual_trips[direction[:route_direction]].first.last
+      routing = actual_routings[direction[:route_direction]].first
+
+      if actual_trips[direction[:route_direction]].size > 1
+        routing_with_most_trips = actual_trips[direction[:route_direction]].max_by { |_, trips| trips.size }
+        processed_trips = routing_with_most_trips.last
+        routing = actual_routings[direction[:route_direction]].find { |r| "#{r.first}-#{r.last}-#{r.size}" == routing_with_most_trips.first }
+
+        if actual_trips[direction[:route_direction]]['blended']
+          processed_trips = actual_trips[direction[:route_direction]]['blended']
+          routing = common_routings[direction[:route_direction]]
+        end
+      end
+
+      trips_with_long_headways = processed_trips.select{ |trip| trip.estimated_time_behind_next_train && (trip.estimated_time_behind_next_train - max_scheduled_headway) >= 120 }
+      objs = trips_with_long_headways.map do |trip|
+        i = processed_trips.index(trip)
+        next_trip = processed_trips[i + 1]
+        j = routing.index(next_trip.upcoming_stop)
+        next_trip_prev_stop = i > 0 ? routing[j - 1] : routing[0]
+        {
+          begin: trip.upcoming_stop,
+          end: next_trip_prev_stop,
+          max_actual_headway: trip.estimated_time_behind_next_train,
+          max_scheduled_headway: max_scheduled_headway,
+        }
+      end
+
+      [direction[:route_direction], objs]
+    end
+  end
+
+  def self.identify_delayed_sections(actual_routings, common_routings, actual_trips)
+    [1, 3].to_h do |direction|
+      delayed_trips = actual_trips[direction].flat_map { |r_key, trips|
+        routing = r_key == 'blended' ? common_routings[direction] : actual_routings[direction].find { |r| "#{r.first}-#{r.last}-#{r.size}" == r_key }
+        trips.each_with_index.map { |t, i|
+          next_trip = trips[i + 1]
+          # There may not be any trips ahead of this trip
+          next_trip_prev_stop = routing.last
+          if next_trip
+            j = routing.index(next_trip.upcoming_stop)
+            next_trip_prev_stop = i > 0 ? routing[j - 1] : routing[0]
+          end
+          {
+            begin: t.upcoming_stop,
+            end: next_trip_prev_stop,
+            delayed_time: t.effective_delayed_time
+          }
+        }.select { |t| t[:delayed_time] >= FeedProcessor::DELAY_THRESHOLD }
+      }.uniq { |t| t[:end] }
+      [direction, delayed_trips]
     end
   end
 
