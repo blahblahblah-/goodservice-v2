@@ -71,3 +71,15 @@
     }
   }
 }
+
+.popup.active-trips-popup {
+  .grid {
+    @media only screen and (min-width: 768px) {
+      max-width: 50em;
+    }
+    @media only screen and (max-width: 767px) {
+      max-width: 22em;
+      font-size: 0.7em;
+    }
+  }
+}

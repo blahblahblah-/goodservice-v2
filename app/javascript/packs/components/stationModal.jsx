@@ -75,7 +75,11 @@ class StationModal extends React.Component {
     }
     return (
       <React.Fragment>
-        <Header as='h4' inverted>Transfers</Header>
+        <Divider inverted horizontal>
+          <Header size='medium' inverted>
+            TRANSFERS
+          </Header>
+        </Divider>
         <List divided relaxed selection inverted className='transfers'>
           {
             selectedStation.transfers.map((stationId) => {
@@ -146,24 +150,14 @@ class StationModal extends React.Component {
               </Table.HeaderCell>
               <Table.HeaderCell rowSpan='2'>
                 Schedule Adherence
-                <Popup trigger={<sup>[?]</sup>}>
-                  Comparison of train's schedule with its current status.
-                  Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
-                </Popup>
               </Table.HeaderCell>
             </Table.Row>
             <Table.Row>
               <Table.HeaderCell width={2}>
                 Projected
-                <Popup trigger={<sup>[?]</sup>}>
-                  Time projected until train departs given station, calculated from train's estimated position and recent trips.
-                </Popup>
               </Table.HeaderCell>
               <Table.HeaderCell width={2}>
                 Estimated
-                <Popup trigger={<sup>[?]</sup>}>
-                  Reported time until train departs given station from the real-time feeds.
-                </Popup>
               </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -280,6 +274,31 @@ class StationModal extends React.Component {
               {
                 this.renderTransfers(selectedStation, trains, stations)
               }
+              <Divider inverted horizontal>
+                <Header size='medium' inverted>
+                  UPCOMING DEPARTURE TIMES
+                  <Popup trigger={<sup>[?]</sup>}>
+                    <Popup.Header>Upcoming Departure Times</Popup.Header>
+                    <Popup.Content>
+                      <List relaxed='very' divided>
+                        <List.Item>
+                          <List.Header>Projected Time Until Departure</List.Header>
+                          Time projected until train departs given station, calculated from train's estimated position and recent trips.
+                        </List.Item>
+                        <List.Item>
+                          <List.Header>Estimated Time Until Departure</List.Header>
+                          Reported time until train departs given station from the real-time feeds.
+                        </List.Item>
+                        <List.Item>
+                          <List.Header>Schedule Adherence</List.Header>
+                          Comparison of train's schedule with its current status.
+                          Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
+                        </List.Item>
+                      </List>
+                    </Popup.Content>
+                  </Popup>
+                </Header>
+              </Divider>
               {
                 this.renderDepartureTable('north', station, trains, stations)
               }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Header, Popup } from "semantic-ui-react";
+import { Modal, Table, Header, Popup, List, Divider } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -129,7 +129,7 @@ class TripModal extends React.Component {
           <meta property="og:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
           <meta name="twitter:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
         </Helmet>
-        <Modal.Header>
+        <Modal.Header className='modal-header'>
           <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block", marginLeft: 0}} size='large' /><br />
           Trip: {selectedTrip.id} <br />
@@ -142,6 +142,26 @@ class TripModal extends React.Component {
         </Modal.Header>
         <Modal.Content scrolling>
           <Modal.Description>
+            <Divider inverted horizontal>
+              <Header size='medium' inverted>
+                UPCOMING ARRIVAL TIMES
+                <Popup trigger={<sup>[?]</sup>}>
+                  <Popup.Header>Upcoming Arrival Times</Popup.Header>
+                  <Popup.Content>
+                    <List relaxed='very' divided>
+                      <List.Item>
+                        <List.Header>Projected</List.Header>
+                        Time projected until train arrives at the given stop, calculated from train's estimated position and recent trips.
+                      </List.Item>
+                      <List.Item>
+                        <List.Header>Estimated</List.Header>
+                        Reported time until train arrives at the given stop from the real-time feeds.
+                      </List.Item>
+                    </List>
+                  </Popup.Content>
+                </Popup>
+              </Header>
+            </Divider>
             <Table fixed inverted unstackable className='trip-table'>
               <Table.Header>
                 <Table.Row>
@@ -150,15 +170,9 @@ class TripModal extends React.Component {
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
                     Projected
-                    <Popup trigger={<sup>[?]</sup>}>
-                      Time projected until train arrives at the given stop, calculated from train's estimated position and recent trips.
-                    </Popup>
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
                     Estimated
-                    <Popup trigger={<sup>[?]</sup>}>
-                      Reported time until train arrives at the given stop from the real-time feeds.
-                    </Popup>
                   </Table.HeaderCell>
                 </Table.Row>
                 <Table.Row>

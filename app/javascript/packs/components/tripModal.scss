@@ -3,7 +3,22 @@
     width: 100% !important;
   }
 
-  .trip-table sup {
-    display: inline-block;
+  .modal-header {
+    @media only screen and (max-width: 767px) {
+      font-size: 1.2em;
+    }
+  }
+
+  .description {
+    margin-top: 0;
+    padding-top: 0!important;
+
+    .divider {
+      margin-top: 0;
+    }
+
+    .trip-table sup {
+      display: inline-block;
+    }
   }
 }

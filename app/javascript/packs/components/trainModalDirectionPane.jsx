@@ -627,39 +627,23 @@ class TrainModalDirectionPane extends React.Component {
             </Table.HeaderCell>
             <Table.HeaderCell rowSpan='2'>
               Schedule Adherence
-              <Popup trigger={<sup>[?]</sup>}>
-                Comparison of train's schedule with its current status.
-                Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
-              </Popup>
             </Table.HeaderCell>
           </Table.Row>
           <Table.Row>
             <Table.HeaderCell width={2}>
               Projected
-              <Popup trigger={<sup>[?]</sup>}>
-                Time projected until train arrives at its next stop, calculated from train's estimated position and recent trips.
-              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Estimated
-              <Popup trigger={<sup>[?]</sup>}>
-                Reported time until train arrives at its next stop from the real-time feeds.
-              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={3}>
               Station
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Projected
-              <Popup trigger={<sup>[?]</sup>}>
-                Projected time behind next train ahead, calculated from trains' estimated positions and travel times of recent trips.
-              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Estimated
-              <Popup trigger={<sup>[?]</sup>}>
-                Reported time behind next train ahead from the real-time feeds.
-              </Popup>
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -718,7 +702,49 @@ class TrainModalDirectionPane extends React.Component {
               {
                 train.trips && train.trips[direction] &&
                 <Divider inverted horizontal>
-                  <Header size='medium' inverted>ACTIVE TRIPS</Header>
+                  <Header size='medium' inverted>
+                    ACTIVE TRIPS
+                    <Popup trigger={<sup>[?]</sup>} flowing position='bottom center' className='active-trips-popup'>
+                      <Popup.Header>Active Trips</Popup.Header>
+                      <Popup.Content>
+                        <Grid divided columns={3}>
+                          <Grid.Column>
+                            <List relaxed='very' divided>
+                              <List.Item>
+                                <List.Header>Projected Time Until Next Stop</List.Header>
+                                Time projected until train arrives at its next stop, calculated from train's estimated position and recent trips.
+                              </List.Item>
+                              <List.Item>
+                                <List.Header>Estimated Time Until Next Stop</List.Header>
+                                Reported time until train arrives at its next stop from the real-time feeds.
+                              </List.Item>
+                             </List>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <List relaxed='very' divided>
+                              <List.Item>
+                                <List.Header>Projected Time Until Next Train</List.Header>
+                                Projected time behind next train ahead, calculated from trains' estimated positions and travel times of recent trips.
+                              </List.Item>
+                              <List.Item>
+                                <List.Header>Estimated Time Until Next Train</List.Header>
+                                Reported time behind next train ahead from the real-time feeds.
+                              </List.Item>
+                            </List>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <List relaxed='very' divided>
+                              <List.Item>
+                              <List.Header>Schedule Adherence</List.Header>
+                              Comparison of train's schedule with its current status.
+                              Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
+                            </List.Item>
+                            </List>
+                          </Grid.Column>
+                        </Grid>
+                      </Popup.Content>
+                    </Popup>
+                  </Header>
                 </Divider>
               }
               {
