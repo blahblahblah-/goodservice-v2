@@ -2,7 +2,7 @@ class RedisStore
   INACTIVE_TRIP_TIMEOUT = 30.minutes.to_i
   DATA_RETENTION = 4.hours.to_i
   DELAYS_RETENTION = 1.day.to_i
-  ROUTE_UPDATE_TIMEOUT = 1.minute.to_i
+  ROUTE_UPDATE_TIMEOUT = 5.minutes.to_i
 
   class << self
     # Feeds
