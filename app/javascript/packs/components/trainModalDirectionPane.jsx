@@ -256,7 +256,7 @@ class TrainModalDirectionPane extends React.Component {
                   </List.Item>
                   <List.Item>
                     <List.Header>Currently Scheduled</List.Header>
-                    Time scheduled for a train to travel its route, based on current supplemented schedule, taking into account of service changes and diversions.
+                    Time scheduled for a train to travel its route from the current supplemented schedule, taking into account of service changes and diversions.
                   </List.Item>
                   <List.Item>
                     <List.Header>Projected</List.Header>
@@ -374,7 +374,7 @@ class TrainModalDirectionPane extends React.Component {
                   </List.Item>
                   <List.Item>
                     <List.Header>Currently Scheduled</List.Header>
-                    Time scheduled for a train to travel between the 2 selected stations, based on current supplemented schedule, taking into account of service changes and diversions.
+                    Time scheduled for a train to travel between the 2 selected stations according to the current supplemented schedule, taking into account of service changes and diversions.
                   </List.Item>
                   <List.Item>
                     <List.Header>Projected</List.Header>
@@ -629,7 +629,7 @@ class TrainModalDirectionPane extends React.Component {
               Schedule Adherence
               <Popup trigger={<sup>[?]</sup>}>
                 Comparison of train's schedule with its current status.
-                Negative value indicates ahead of schedule, positive value indicated train is behind schedule.
+                Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
               </Popup>
             </Table.HeaderCell>
           </Table.Row>
@@ -637,7 +637,7 @@ class TrainModalDirectionPane extends React.Component {
             <Table.HeaderCell width={2}>
               Projected
               <Popup trigger={<sup>[?]</sup>}>
-                Time projected until train arrives at its next stop, calculated based on recent trips.
+                Time projected until train arrives at its next stop, calculated from train's estimated position and recent trips.
               </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
@@ -652,7 +652,7 @@ class TrainModalDirectionPane extends React.Component {
             <Table.HeaderCell width={2}>
               Projected
               <Popup trigger={<sup>[?]</sup>}>
-                Projected time behind next train ahead, calculated based on recent trips.
+                Projected time behind next train ahead, calculated from trains' estimated positions and travel times of recent trips.
               </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>

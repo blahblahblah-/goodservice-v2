@@ -151,7 +151,7 @@ class TripModal extends React.Component {
                   <Table.HeaderCell colSpan={2}>
                     Projected
                     <Popup trigger={<sup>[?]</sup>}>
-                      Time projected until train arrives at the given stop, calculated based on recent trips.
+                      Time projected until train arrives at the given stop, calculated from train's estimated position and recent trips.
                     </Popup>
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>

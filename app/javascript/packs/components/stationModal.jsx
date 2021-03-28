@@ -148,7 +148,7 @@ class StationModal extends React.Component {
                 Schedule Adherence
                 <Popup trigger={<sup>[?]</sup>}>
                   Comparison of train's schedule with its current status.
-                  Negative value indicates ahead of schedule, positive value indicated train is behind schedule.
+                  Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
                 </Popup>
               </Table.HeaderCell>
             </Table.Row>
@@ -156,7 +156,7 @@ class StationModal extends React.Component {
               <Table.HeaderCell width={2}>
                 Projected
                 <Popup trigger={<sup>[?]</sup>}>
-                  Time projected until train departs given station, calculated based on recent trips.
+                  Time projected until train departs given station, calculated from train's estimated position and recent trips.
                 </Popup>
               </Table.HeaderCell>
               <Table.HeaderCell width={2}>
