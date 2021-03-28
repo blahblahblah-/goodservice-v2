@@ -36,9 +36,14 @@
   }
 
   .trip-table {
+    .delayed {
+      color: #ff695e;
+    }
+
     .delayed-text {
       margin-top: 0;
     }
+
     .station-name {
       @media only screen and (max-width: 767px) {
         display: inline-block;

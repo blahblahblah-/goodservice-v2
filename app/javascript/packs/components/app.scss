@@ -10,6 +10,10 @@ a:hover, a:active{
   color: #ffe21f;
 }
 
+.blurring.dimmed.dimmable > :not(.app):not(.modals) {
+  filter: none;
+}
+
 .ui.inverted.segment.header-segment {
   padding: 2em 2em 1em 2em;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -146,14 +146,24 @@ class StationModal extends React.Component {
               </Table.HeaderCell>
               <Table.HeaderCell rowSpan='2'>
                 Schedule Adherence
+                <Popup trigger={<sup>[?]</sup>}>
+                  Comparison of train's schedule with its current status.
+                  Negative value indicates ahead of schedule, positive value indicated train is behind schedule.
+                </Popup>
               </Table.HeaderCell>
             </Table.Row>
             <Table.Row>
               <Table.HeaderCell width={2}>
                 Projected
+                <Popup trigger={<sup>[?]</sup>}>
+                  Time projected until train departs given station, calculated based on recent trips.
+                </Popup>
               </Table.HeaderCell>
               <Table.HeaderCell width={2}>
                 Estimated
+                <Popup trigger={<sup>[?]</sup>}>
+                  Reported time until train departs given station from the real-time feeds.
+                </Popup>
               </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -173,7 +183,7 @@ class StationModal extends React.Component {
             const train = trains[trip.route_id];
             const directionKey = direction[0].toUpperCase();
             const delayed = trip.delayed_time > 300;
-            const effectiveDelayedTime = Math.max(trip.schedule_discrepancy, 0) + trip.delayed_time;
+            const effectiveDelayedTime = Math.max(Math.min(trip.schedule_discrepancy, trip.delayed_time), 0);
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
             const delayInfo = delayed ? `(${trip.is_delayed ? 'delayed' : 'held'} for ${Math.round(delayedTime / 60)} mins)` : '';
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);

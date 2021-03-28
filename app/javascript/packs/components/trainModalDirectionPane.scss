@@ -33,6 +33,10 @@
     .long-headway {
       color: #ffe21f;
     }
+
+    sup {
+      display: inline-block;
+    }
   }
 
   .ui.stackable.grid>.row>.column.trip-table-cell {

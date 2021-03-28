@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Header } from "semantic-ui-react";
+import { Modal, Table, Header, Popup } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -20,6 +20,10 @@ class TripModal extends React.Component {
   componentDidMount() {
     this.fetchData();
     this.timer = setInterval(() => this.fetchData(), 30000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer);
   }
 
   fetchData() {
@@ -146,9 +150,15 @@ class TripModal extends React.Component {
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
                     Projected
+                    <Popup trigger={<sup>[?]</sup>}>
+                      Time projected until train arrives at the given stop, calculated based on recent trips.
+                    </Popup>
                   </Table.HeaderCell>
                   <Table.HeaderCell colSpan={2}>
                     Estimated
+                    <Popup trigger={<sup>[?]</sup>}>
+                      Reported time until train arrives at the given stop from the real-time feeds.
+                    </Popup>
                   </Table.HeaderCell>
                 </Table.Row>
                 <Table.Row>

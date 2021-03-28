@@ -35,4 +35,8 @@
       padding-top: 0!important;
     }
   }
+
+  &.blurring {
+    filter: blur(5px) grayscale(.7);
+  }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider } from "semantic-ui-react";
+import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider, Popup, List } from "semantic-ui-react";
 import { Link } from 'react-router-dom';
 
 import TrainMap from './trainMap';
@@ -214,7 +214,24 @@ class TrainModalDirectionPane extends React.Component {
     return (
       <React.Fragment>
         <Divider inverted horizontal>
-          <Header size='medium' inverted>MAX HEADWAY</Header>
+          <Header size='medium' inverted>
+            MAX HEADWAY
+            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+              <Popup.Header>Maximum Headway</Popup.Header>
+              <Popup.Content>
+                <List relaxed='very' divided>
+                  <List.Item>
+                    <List.Header>Regularly Scheduled</List.Header>
+                    Maximum time between scheduled trains if trains ran on a typical schedule for the current time period.
+                  </List.Item>
+                  <List.Item>
+                    <List.Header>Projected</List.Header>
+                    Estimated maximum time between trains that are currently running.
+                  </List.Item>
+                </List>
+              </Popup.Content>
+            </Popup>
+          </Header>
         </Divider>
         <Statistic.Group widths={2} size="small" inverted color={headwayDisrepancyAboveThreshold ? 'yellow' : 'black'}>
           <Statistic>
@@ -227,7 +244,28 @@ class TrainModalDirectionPane extends React.Component {
           </Statistic>
         </Statistic.Group>
         <Divider inverted horizontal>
-          <Header size='medium' inverted>TRIP RUNTIMES</Header>
+          <Header size='medium' inverted>
+            TRIP RUNTIMES
+            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+              <Popup.Header>Trip Runtimes</Popup.Header>
+              <Popup.Content>
+                <List relaxed='very' divided>
+                  <List.Item>
+                    <List.Header>Regularly Scheduled</List.Header>
+                    Time it would take a train to travel its current route, if trains ran on a typical schedule for the current time period.
+                  </List.Item>
+                  <List.Item>
+                    <List.Header>Currently Scheduled</List.Header>
+                    Time scheduled for a train to travel its route, based on current supplemented schedule, taking into account of service changes and diversions.
+                  </List.Item>
+                  <List.Item>
+                    <List.Header>Projected</List.Header>
+                    Estimated time for a train to travel its current route, projected from recent trains that have traveled the route.
+                  </List.Item>
+                </List>
+              </Popup.Content>
+            </Popup>
+          </Header>
         </Divider>
         <Statistic.Group widths={3} size="small" inverted color={runtimeDiffAboutThreshold ? 'yellow' : 'black'}>
           <Statistic>
@@ -324,7 +362,28 @@ class TrainModalDirectionPane extends React.Component {
     return (
       <React.Fragment>
         <Divider inverted horizontal>
-          <Header size='medium' inverted>TRAVEL TIME</Header>
+          <Header size='medium' inverted>
+            TRAVEL TIME
+            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+              <Popup.Header>Trip Runtimes</Popup.Header>
+              <Popup.Content>
+                <List relaxed='very' divided>
+                  <List.Item>
+                    <List.Header>Regularly Scheduled</List.Header>
+                    Time it would take a train to travel between the 2 selected stations via its current route, if trains ran on a typical schedule for the current time period.
+                  </List.Item>
+                  <List.Item>
+                    <List.Header>Currently Scheduled</List.Header>
+                    Time scheduled for a train to travel between the 2 selected stations, based on current supplemented schedule, taking into account of service changes and diversions.
+                  </List.Item>
+                  <List.Item>
+                    <List.Header>Projected</List.Header>
+                    Estimated time for a train to travel between the 2 selected stations via its current route, projected from recent trains that have traveled the route.
+                  </List.Item>
+                </List>
+              </Popup.Content>
+            </Popup>
+          </Header>
         </Divider>
         <Header as='h3' inverted className='travel-time-header'>
           <Dropdown
@@ -568,23 +627,39 @@ class TrainModalDirectionPane extends React.Component {
             </Table.HeaderCell>
             <Table.HeaderCell rowSpan='2'>
               Schedule Adherence
+              <Popup trigger={<sup>[?]</sup>}>
+                Comparison of train's schedule with its current status.
+                Negative value indicates ahead of schedule, positive value indicated train is behind schedule.
+              </Popup>
             </Table.HeaderCell>
           </Table.Row>
           <Table.Row>
             <Table.HeaderCell width={2}>
               Projected
+              <Popup trigger={<sup>[?]</sup>}>
+                Time projected until train arrives at its next stop, calculated based on recent trips.
+              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Estimated
+              <Popup trigger={<sup>[?]</sup>}>
+                Reported time until train arrives at its next stop from the real-time feeds.
+              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={3}>
               Station
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Projected
+              <Popup trigger={<sup>[?]</sup>}>
+                Projected time behind next train ahead, calculated based on recent trips.
+              </Popup>
             </Table.HeaderCell>
             <Table.HeaderCell width={2}>
               Estimated
+              <Popup trigger={<sup>[?]</sup>}>
+                Reported time behind next train ahead from the real-time feeds.
+              </Popup>
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>

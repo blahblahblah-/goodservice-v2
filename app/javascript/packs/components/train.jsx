@@ -37,7 +37,7 @@ class Train extends React.Component {
       <React.Fragment>
         <TrainBullet name={train.name} color={train.color} size={'normal'}
             textColor={train.text_color} className='train-bullet' />
-        <div className='alternate-name'>{this.alternateName()}</div>
+        <div className='alternate-name'>{this.alternateName() || '\xa0'}</div>
       </React.Fragment>
     );
   }
