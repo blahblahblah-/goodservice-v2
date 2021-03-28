@@ -181,6 +181,15 @@ class RedisStore
       REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 300)
     end
 
+    # Delayed routes
+    def update_delayed_routes(data)
+      REDIS_CLIENT.set("delayed-routes", data, ex: 1800)
+    end
+
+    def delayed_routes
+      REDIS_CLIENT.get("delayed-routes")
+    end
+
     # Routings
     def current_routings
       REDIS_CLIENT.get("current-routings")

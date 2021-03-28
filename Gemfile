@@ -39,6 +39,7 @@ gem 'foreman'
 gem 'platform-api'
 gem 'barnes'
 gem 'naturally'
+gem 'twitter'
 
 # gem 'rack-cors'
 # gem 'twitter'
