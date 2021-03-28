@@ -480,9 +480,7 @@ class TrainModalDirectionPane extends React.Component {
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
             const delayInfo = delayed ? `(${trip.is_delayed ? 'delayed' : 'held'} for ${Math.round(delayedTime / 60)} mins)` : '';
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);
-            const upcomingStopArrivalTime = Math.round((trip.upcoming_stop_arrival_time - currentTime) / 60);
             const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null ? Math.round(trip.estimated_time_behind_next_train / 60) : null;
-            const timeBehindNextTrain = trip.time_behind_next_train !== null ? Math.round(trip.time_behind_next_train / 60): null;
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
@@ -492,21 +490,13 @@ class TrainModalDirectionPane extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) }
-                </Table.Cell>
-                <Table.Cell title={new Date(trip.upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(upcomingStopArrivalTime, true)}
-                </Table.Cell>
-                <Table.Cell>
-                  <Link to={`/stations/${trip.upcoming_stop}`}>
+                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
+                  <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
                   { estimatedTimeBehindNextTrain !== null && formatMinutes(estimatedTimeBehindNextTrain, false) }
-                </Table.Cell>
-                <Table.Cell className={timeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { timeBehindNextTrain !== null && formatMinutes(timeBehindNextTrain, false) }
                 </Table.Cell>
                 <Table.Cell>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
@@ -613,37 +603,20 @@ class TrainModalDirectionPane extends React.Component {
 
   renderTable(selectedRouting, trips) {
     return (
-      <Table fixed inverted unstackable size='small' compact className='trip-table'>
+      <Table fixed inverted unstackable size='small' compact className='trip-table' columns={4}>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell rowSpan='2' width={3}>
+            <Table.HeaderCell>
               Train ID / Destination
             </Table.HeaderCell>
-            <Table.HeaderCell colSpan='3'>
-              Time Until Next Stop
+            <Table.HeaderCell>
+              Current Location
             </Table.HeaderCell>
-            <Table.HeaderCell colSpan='2'>
+            <Table.HeaderCell>
               Time Behind Next Train
             </Table.HeaderCell>
-            <Table.HeaderCell rowSpan='2'>
+            <Table.HeaderCell>
               Schedule Adherence
-            </Table.HeaderCell>
-          </Table.Row>
-          <Table.Row>
-            <Table.HeaderCell width={2}>
-              Projected
-            </Table.HeaderCell>
-            <Table.HeaderCell width={2}>
-              Estimated
-            </Table.HeaderCell>
-            <Table.HeaderCell width={3}>
-              Station
-            </Table.HeaderCell>
-            <Table.HeaderCell width={2}>
-              Projected
-            </Table.HeaderCell>
-            <Table.HeaderCell width={2}>
-              Estimated
             </Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -704,44 +677,24 @@ class TrainModalDirectionPane extends React.Component {
                 <Divider inverted horizontal>
                   <Header size='medium' inverted>
                     ACTIVE TRIPS
-                    <Popup trigger={<sup>[?]</sup>} flowing position='bottom center' className='active-trips-popup'>
+                    <Popup trigger={<sup>[?]</sup>} position='bottom center'>
                       <Popup.Header>Active Trips</Popup.Header>
                       <Popup.Content>
-                        <Grid divided columns={3}>
-                          <Grid.Column>
-                            <List relaxed='very' divided>
-                              <List.Item>
-                                <List.Header>Projected Time Until Next Stop</List.Header>
-                                Time projected until train arrives at its next stop, calculated from train's estimated position and recent trips.
-                              </List.Item>
-                              <List.Item>
-                                <List.Header>Estimated Time Until Next Stop</List.Header>
-                                Reported time until train arrives at its next stop from the real-time feeds.
-                              </List.Item>
-                             </List>
-                          </Grid.Column>
-                          <Grid.Column>
-                            <List relaxed='very' divided>
-                              <List.Item>
-                                <List.Header>Projected Time Until Next Train</List.Header>
-                                Projected time behind next train ahead, calculated from trains' estimated positions and travel times of recent trips.
-                              </List.Item>
-                              <List.Item>
-                                <List.Header>Estimated Time Until Next Train</List.Header>
-                                Reported time behind next train ahead from the real-time feeds.
-                              </List.Item>
-                            </List>
-                          </Grid.Column>
-                          <Grid.Column>
-                            <List relaxed='very' divided>
-                              <List.Item>
-                              <List.Header>Schedule Adherence</List.Header>
-                              Comparison of train's schedule with its current status.
-                              Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
-                            </List.Item>
-                            </List>
-                          </Grid.Column>
-                        </Grid>
+                        <List relaxed='very' divided>
+                          <List.Item>
+                            <List.Header>Current Location</List.Header>
+                            Projected time until train arrives at its next stop, calculated from train's estimated position and recent trips.
+                          </List.Item>
+                          <List.Item>
+                            <List.Header>Time Behind Next Train</List.Header>
+                            Projected time behind next train ahead, calculated from trains' estimated positions and travel times of recent trips.
+                          </List.Item>
+                          <List.Item>
+                            <List.Header>Schedule Adherence</List.Header>
+                            Comparison of train's schedule with its current status.
+                            Negative value indicates train is ahead of schedule, positive value indicates train is behind schedule.
+                          </List.Item>
+                         </List>
                       </Popup.Content>
                     </Popup>
                   </Header>
