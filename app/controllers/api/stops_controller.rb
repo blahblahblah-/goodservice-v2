@@ -130,7 +130,7 @@ class Api::StopsController < ApplicationController
             route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
           }.select { |trip|
             trip&.upcoming_stops(time_ref: timestamp)&.include?(stop_id)
-          }.sort_by { |trip| trip.stops[stop_id]}.map { |trip| transform_trip(stop_id, trip, travel_times, timestamp) }
+          }.map { |trip| transform_trip(stop_id, trip, travel_times, timestamp) }.sort_by { |trip| trip[:estimated_current_stop_arrival_time] }
         ]
       }
       {
