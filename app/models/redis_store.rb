@@ -19,7 +19,7 @@ class RedisStore
     end
 
     def add_feed(feed_id, minutes, fraction_of_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 150 : 1800))
+      REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 120 : 1800))
     end
 
     # Accessibility
