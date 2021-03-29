@@ -10,7 +10,10 @@
 
     .past-stops-toggle {
       float: right;
-      margin-right: 1em;
+
+      @media only screen and (min-width: 768px) {
+        margin-right: 1em;
+      }
 
       .toggle-label {
         color: #ccc !important;
