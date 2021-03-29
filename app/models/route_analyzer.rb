@@ -134,7 +134,7 @@ class RouteAnalyzer
 
   def self.max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
     [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
-      return [direction, nil] unless processed_trips[direction[:route_direction]]
+      next [direction, nil] unless processed_trips[direction[:route_direction]]
       actual_headways_by_routes = processed_trips[direction[:route_direction]].map { |r, trips|
         [r, trips.map(&:estimated_time_behind_next_train).compact]
       }.to_h
@@ -233,6 +233,7 @@ class RouteAnalyzer
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].to_h do |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
+      next [direction[:route_direction], nil] unless max_scheduled_headway
       processed_trips = actual_trips[direction[:route_direction]].first.last
       routing = actual_routings[direction[:route_direction]].first
 
