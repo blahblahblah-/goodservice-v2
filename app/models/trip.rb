@@ -76,7 +76,7 @@ class Trip
     return {} unless previous_trip
 
     previous_trip.stops.select { |stop_id, time|
-      !stops.keys.include?(stop_id)
+      !upcoming_stops.include?(stop_id)
     }.map { |stop_id, time|
       [stop_id, [timestamp, time].min]
     }.to_h

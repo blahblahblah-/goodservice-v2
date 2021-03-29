@@ -2,13 +2,15 @@ class RouteAnalyzer
   SLOW_SECTION_STATIONS_RANGE = 3..7
 
   def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
+    travel_times_data = RedisStore.travel_times
+    travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
-    slow_sections = identify_slow_sections(actual_routings, timestamp)
+    slow_sections = identify_slow_sections(actual_routings, travel_times, timestamp)
     long_headway_sections = identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, processed_trips)
     delayed_sections = identify_delayed_sections(actual_routings, common_routings, processed_trips)
     scheduled_runtimes = calculate_scheduled_runtimes(actual_routings, timestamp)
-    estimated_runtimes = calculate_estimated_runtimes(actual_routings, timestamp)
+    estimated_runtimes = calculate_estimated_runtimes(actual_routings, travel_times, timestamp)
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
     overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
@@ -170,10 +172,9 @@ class RouteAnalyzer
     end
   end
 
-  def self.calculate_estimated_runtimes(actual_routings, timestamp)
+  def self.calculate_estimated_runtimes(actual_routings, travel_times, timestamp)
     actual_routings.to_h do |direction, routings|
       [direction, routings.to_h { |r|
-        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
         ["#{r.first}-#{r.last}-#{r.size}", r.each_cons(2).map { |a_stop, b_stop|
           station_ids = "#{a_stop}-#{b_stop}"
           travel_times[station_ids]&.to_i || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
@@ -198,11 +199,10 @@ class RouteAnalyzer
     end
   end
 
-  def self.identify_slow_sections(actual_routings, timestamp)
+  def self.identify_slow_sections(actual_routings, travel_times, timestamp)
     actual_routings.to_h do |direction, routings|
       objs = routings.flat_map { |r|
         scheduled_times = RouteProcessor.batch_scheduled_travel_time(r)
-        travel_times = RouteProcessor.batch_average_travel_times(r, timestamp)
         SLOW_SECTION_STATIONS_RANGE.map { |n|
           r.each_cons(n).map { |array|
             runtime_diff = array.each_cons(2).map { |a_stop, b_stop|
@@ -231,6 +231,7 @@ class RouteAnalyzer
 
   def self.identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, actual_trips)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].to_h do |direction|
+      next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
       processed_trips = actual_trips[direction[:route_direction]].first.last
       routing = actual_routings[direction[:route_direction]].first
@@ -266,7 +267,7 @@ class RouteAnalyzer
 
   def self.identify_delayed_sections(actual_routings, common_routings, actual_trips)
     [1, 3].to_h do |direction|
-      delayed_trips = actual_trips[direction].flat_map { |r_key, trips|
+      delayed_trips = actual_trips[direction]&.flat_map { |r_key, trips|
         routing = r_key == 'blended' ? common_routings[direction] : actual_routings[direction].find { |r| "#{r.first}-#{r.last}-#{r.size}" == r_key }
         trips.each_with_index.map { |t, i|
           next_trip = trips[i + 1]
@@ -282,7 +283,7 @@ class RouteAnalyzer
             delayed_time: t.effective_delayed_time
           }
         }.select { |t| t[:delayed_time] >= FeedProcessor::DELAY_THRESHOLD }
-      }.uniq { |t| t[:end] }
+      }&.uniq { |t| t[:end] }
       [direction, delayed_trips]
     end
   end

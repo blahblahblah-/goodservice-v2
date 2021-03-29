@@ -160,11 +160,15 @@ class RedisStore
       REDIS_CLIENT.hset("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}", time)
     end
 
-    # Route statuses
-    def route_status(route_id)
-      REDIS_CLIENT.hget("route-status", route_id)
+    def update_travel_times(data)
+      REDIS_CLIENT.set("travel-times", data, ex: 1800)
     end
 
+    def travel_times
+      REDIS_CLIENT.get("travel-times")
+    end
+
+    # Route statuses
     def route_status_summaries
       REDIS_CLIENT.hgetall("route-status")
     end

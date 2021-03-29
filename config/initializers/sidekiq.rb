@@ -14,4 +14,5 @@ Sidekiq::Cron::Job.create(name: 'AccessibilityListWorker - Every 5 mins', cron: 
 Sidekiq::Cron::Job.create(name: 'AccessibilityStatusesWorker - Every 5 mins', cron: '*/5 * * * *', class: 'AccessibilityStatusesWorker')
 Sidekiq::Cron::Job.create(name: 'TwitterWorker - Every 10 mins', cron: '*/10 * * * *', class: 'TwitterWorker')
 Sidekiq::Cron::Job.create(name: 'HerokuAutoscalerWorker - Every 1 min', cron: '* * * * *', class: 'HerokuAutoscalerWorker')
+Sidekiq::Cron::Job.create(name: 'TravelTimesRefreshWorker - Every 2 min', cron: '*/2 * * * *', class: 'TravelTimesRefreshWorker')
 Sidekiq::Cron::Job.create(name: 'RedisCleanupWorker - Every 30 mins', cron: '*/30 * * * *', class: 'RedisCleanupWorker')

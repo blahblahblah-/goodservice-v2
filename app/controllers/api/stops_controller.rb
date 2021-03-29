@@ -119,9 +119,8 @@ class Api::StopsController < ApplicationController
           end
         end
       end
-      travel_times = routings.map { |r|
-        RouteProcessor.batch_average_travel_times(r, timestamp)
-      }.reduce({}, :merge)
+      travel_times_data = RedisStore.travel_times
+      travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
 
       trips = [1, 3].to_h { |direction|
         [direction, trips_by_routes_array.flat_map { |route_hash|

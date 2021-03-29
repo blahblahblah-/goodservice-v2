@@ -67,13 +67,13 @@ class RouteProcessor
       trimmed_average(travel_times_array)
     end
 
-    def batch_average_travel_times(stops, timestamp)
+    def batch_average_travel_time_pairs(stop_pairs_array)
       futures = {}
 
       REDIS_CLIENT.pipelined do
-        futures = stops.each_cons(2).to_h { |a_stop, b_stop|
-          stops_str = "#{a_stop}-#{b_stop}"
-          [stops_str, RedisStore.travel_times_at(a_stop, b_stop, TRAVEL_TIME_AVERAGE_TRIP_COUNT)]
+        futures = stop_pairs_array.to_h { |stop_pair|
+          stops_str = "#{stop_pair.first}-#{stop_pair.last}"
+          [stops_str, RedisStore.travel_times_at(stop_pair.first, stop_pair.last, TRAVEL_TIME_AVERAGE_TRIP_COUNT)]
         }
       end
 

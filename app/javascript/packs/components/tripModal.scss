@@ -7,6 +7,23 @@
     @media only screen and (max-width: 767px) {
       font-size: 1.2em;
     }
+
+    .past-stops-toggle {
+      float: right;
+      margin-right: 1em;
+
+      .toggle-label {
+        color: #ccc !important;
+      }
+
+      .ui.toggle.checkbox input:checked~label.toggle-label, .ui.toggle.checkbox input:focus:checked~label.toggle-label {
+        color: #ccc !important;
+      }
+
+      .ui.toggle.checkbox .box:before, .ui.toggle.checkbox label.toggle-label:before, .ui.toggle.checkbox input:focus~.box:before, .ui.toggle.checkbox input:focus~label.toggle-label:before, .ui.toggle.checkbox .box:hover::before, .ui.toggle.checkbox label.toggle-label:hover::before {
+        background: rgba(255,255,255,.05)
+      }
+    }
   }
 
   .description {
@@ -17,8 +34,8 @@
       margin-top: 0;
     }
 
-    .trip-table sup {
-      display: inline-block;
+    .trip-table .past {
+      color: #aaaaaa;
     }
   }
 }
