@@ -162,20 +162,19 @@ class StationModal extends React.Component {
             </Table.Row>
           </Table.Header>
           {
-            this.renderDepartureTableBody(direction, trips, trains, stations, currentTime)
+            this.renderDepartureTableBody(trips, trains, stations, currentTime)
           }
         </Table>
       </React.Fragment>
     );
   }
 
-  renderDepartureTableBody(direction, trips, trains, stations, currentTime) {
+  renderDepartureTableBody(trips, trains, stations, currentTime) {
     return (
       <Table.Body>
         {
           trips.map((trip) => {
             const train = trains[trip.route_id];
-            const directionKey = direction[0].toUpperCase();
             const delayed = trip.delayed_time > 300;
             const effectiveDelayedTime = Math.max(Math.min(trip.schedule_discrepancy, trip.delayed_time), 0);
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
@@ -192,7 +191,7 @@ class StationModal extends React.Component {
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
-                  <Link to={`/trains/${trip.route_id}/${directionKey}/${trip.id}`}>
+                  <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`}>
                     <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
                     {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                   </Link>
