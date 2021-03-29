@@ -139,13 +139,13 @@ class StationModal extends React.Component {
         <Table fixed inverted unstackable size='small' compact className='trip-table'>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell rowSpan='2' width={3}>
+              <Table.HeaderCell rowSpan='2' width={5}>
                 Train ID / Destination
               </Table.HeaderCell>
               <Table.HeaderCell colSpan='2'>
                 Time Until Departure
               </Table.HeaderCell>
-              <Table.HeaderCell rowSpan='2'>
+              <Table.HeaderCell rowSpan='2' width={4}>
                 Current Location
               </Table.HeaderCell>
               <Table.HeaderCell rowSpan='2'>
@@ -153,10 +153,10 @@ class StationModal extends React.Component {
               </Table.HeaderCell>
             </Table.Row>
             <Table.Row>
-              <Table.HeaderCell width={2}>
+              <Table.HeaderCell>
                 Projected
               </Table.HeaderCell>
-              <Table.HeaderCell width={2}>
+              <Table.HeaderCell>
                 Estimated
               </Table.HeaderCell>
             </Table.Row>
@@ -185,6 +185,10 @@ class StationModal extends React.Component {
             const estimatedTimeUntilThisStop = Math.round((trip.estimated_current_stop_arrival_time - currentTime) / 60);
             const timeUntilThisStop = Math.round((trip.current_stop_arrival_time - currentTime) / 60);
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
+            let scheduleDiscrepancyClass = 'early';
+            if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
+              scheduleDiscrepancyClass = 'late';
+            }
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
@@ -205,7 +209,7 @@ class StationModal extends React.Component {
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
                 </Table.Cell>
               </Table.Row>
@@ -223,7 +227,7 @@ class StationModal extends React.Component {
     const heading = selectedStation.secondary_name ? `${stationName} (${selectedStation.secondary_name})` : stationName;
     const title = `goodservice.io - ${heading} Station`;
     return (
-      <Modal basic size='fullscreen' open={open} closeIcon dimmer='blurring'
+      <Modal basic size='large' open={open} closeIcon dimmer='blurring'
         onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='station-modal'>
         {
           !station &&

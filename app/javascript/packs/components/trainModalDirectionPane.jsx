@@ -482,6 +482,10 @@ class TrainModalDirectionPane extends React.Component {
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);
             const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null ? Math.round(trip.estimated_time_behind_next_train / 60) : null;
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
+            let scheduleDiscrepancyClass = 'early';
+            if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
+              scheduleDiscrepancyClass = 'late';
+            }
             return (
               <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
@@ -498,7 +502,7 @@ class TrainModalDirectionPane extends React.Component {
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
                   { estimatedTimeBehindNextTrain !== null && formatMinutes(estimatedTimeBehindNextTrain, false) }
                 </Table.Cell>
-                <Table.Cell>
+                <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
                 </Table.Cell>
               </Table.Row>
