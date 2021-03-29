@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_14_204824) do
+ActiveRecord::Schema.define(version: 2021_03_29_005640) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -65,6 +65,7 @@ ActiveRecord::Schema.define(version: 2021_03_14_204824) do
     t.integer "departure_time", null: false
     t.string "stop_internal_id", null: false
     t.integer "stop_sequence", null: false
+    t.index ["departure_time"], name: "index_stop_times_on_departure_time"
     t.index ["stop_internal_id", "departure_time"], name: "index_stop_times_on_stop_internal_id_and_departure_time"
     t.index ["trip_internal_id", "departure_time"], name: "index_stop_times_on_trip_internal_id_and_departure_time"
   end
@@ -91,6 +92,8 @@ ActiveRecord::Schema.define(version: 2021_03_14_204824) do
     t.string "destination", null: false
     t.integer "direction", null: false
     t.index ["internal_id"], name: "index_trips_on_internal_id", unique: true
+    t.index ["route_internal_id"], name: "index_trips_on_route_internal_id"
+    t.index ["schedule_service_id"], name: "index_trips_on_schedule_service_id"
   end
 
   add_foreign_key "calendar_exceptions", "schedules", column: "schedule_service_id", primary_key: "service_id"
