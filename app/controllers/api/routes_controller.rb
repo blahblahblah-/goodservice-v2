@@ -2,9 +2,12 @@ class Api::RoutesController < ApplicationController
   def index
     if params[:detailed] == '1'
       data = Rails.cache.fetch("status-detailed", expires_in: 10.seconds) do
+        time0 = Time.current
         routes = Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }
         route_futures = {}
         route_trip_futures = {}
+        time1 = Time.current
+        puts "Loaded routes from db in #{(time1 - time0).to_f * 1000}ms"
 
         REDIS_CLIENT.pipelined do
           route_futures = routes.to_h do |r|
@@ -15,13 +18,21 @@ class Api::RoutesController < ApplicationController
           end
         end
 
+        time2 = Time.current
+        puts "Loaded trips and statuses from Redis in #{(time2 - time1).to_f * 1000}ms"
+
         travel_times_data = RedisStore.travel_times
         travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
 
+        time3 = Time.current
+        puts "Loaded travel times from Redis in #{(time3 - time2).to_f * 1000}ms"
+
         scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
+        time4 = Time.current
+        puts "Loaded scheduled routes from db in #{(time4 - time3).to_f * 1000}ms"
 
         timestamps = []
-        {
+        results = {
           routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
             route_data_encoded = route_futures[route.internal_id]&.value
             route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
@@ -48,6 +59,9 @@ class Api::RoutesController < ApplicationController
           }.to_h,
           timestamp: timestamps.max
         }
+        time5 = Time.current
+        puts "Transformed data in #{(time5 - time4).to_f * 1000}ms"
+        results
       end
     else
       data = Rails.cache.fetch("status", expires_in: 10.seconds) do
