@@ -267,7 +267,7 @@ class RouteAnalyzer
         i = processed_trips.index(trip)
         next_trip = processed_trips[i + 1]
         j = routing.index(next_trip.upcoming_stop)
-        next_trip_prev_stop = i > 0 ? routing[j - 1] : routing[0]
+        next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
         {
           begin: trip.upcoming_stop,
           end: next_trip_prev_stop,
@@ -290,7 +290,7 @@ class RouteAnalyzer
           next_trip_prev_stop = routing.last
           if next_trip
             j = routing.index(next_trip.upcoming_stop)
-            next_trip_prev_stop = i > 0 ? routing[j - 1] : routing[0]
+            next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
           end
           {
             begin: t.upcoming_stop,
