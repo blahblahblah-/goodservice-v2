@@ -24,6 +24,19 @@ class RouteAnalyzer
       timestamp: timestamp,
     }.to_json
 
+    detailed_summary = {
+      status: status,
+      direction_statuses: convert_to_readable_directions(direction_statuses),
+      service_summaries: convert_to_readable_directions(summaries),
+      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
+      actual_routings: convert_to_readable_directions(actual_routings),
+      slow_sections: convert_to_readable_directions(slow_sections),
+      long_headway_sections: convert_to_readable_directions(long_headway_sections),
+      delayed_sections: convert_to_readable_directions(delayed_sections),
+      trips: convert_to_readable_directions(format_trips_with_upcoming_stop_times(processed_trips, travel_times)),
+      timestamp: timestamp,
+    }.to_json
+
     detailed_stats = {
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
@@ -48,6 +61,7 @@ class RouteAnalyzer
     }.to_json
 
     RedisStore.add_route_status_summary(route_id, summary)
+    RedisStore.add_route_status_detailed_summary(route_id, detailed_summary)
     RedisStore.update_route_status(route_id, detailed_stats)
   end
 
@@ -465,6 +479,31 @@ class RouteAnalyzer
             timestamp: trip.timestamp,
           }
         }]
+      }]
+    }
+  end
+
+  def self.format_trips_with_upcoming_stop_times(processed_trips, travel_times)
+    processed_trips.to_h { |direction, trips_by_routes|
+      [direction, trips_by_routes.flat_map { |_, trips|
+        trips
+      }.uniq(&:id).map { |trip|
+        stops = {}
+        last_past_stop = trip.past_stops.keys.last
+        stops[last_past_stop] = trip.past_stops[last_past_stop] if last_past_stop
+        stops[trip.upcoming_stop] = trip.estimated_upcoming_stop_arrival_time
+        trip.upcoming_stops.each_cons(2).reduce(trip.estimated_upcoming_stop_arrival_time) { |sum, (a_stop, b_stop)|
+          pair_str = "#{a_stop}-#{b_stop}"
+          next_interval = travel_times[pair_str] || trip.stops[b_stop] - trip.stops[a_stop]
+          stops[b_stop] = sum + next_interval
+        }
+        {
+          id: trip.id,
+          stops: stops,
+          delayed_time: trip.delayed_time,
+          schedule_discrepancy: trip.schedule_discrepancy,
+          is_delayed: trip.delayed?
+        }
       }]
     }
   end
