@@ -516,23 +516,58 @@ class TrainModalDirectionPane extends React.Component {
   renderBlendedTripsTables(train, direction) {
     const commonRouting = train.common_routings[direction];
     const commonRoutingTrips = train.trips[direction].blended || [];
+    const tripsAccountedFor = commonRoutingTrips.map((trip) => trip.id);
 
     const routesBefore = Object.keys(train.trips[direction]).filter((key) => {
       if (key === 'blended') {
         return false;
       }
+      return true;
+    }).sort((a, b) => {
+      const aTrips = train.trips[direction][a];
+      const bTrips = train.trips[direction][b];
+      return bTrips.length - aTrips.length;
+    }).filter((key) => {
+      if (!commonRouting) {
+        return true;
+      }
       const a = key.split('-');
-      const trips = train.trips[direction][key];
-      return !commonRouting || !commonRouting.includes(a[0]);
+      if (commonRouting.includes(a[0])) {
+        return false;
+      }
+      const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+      const i = routing.indexOf(commonRouting[0]);
+      const subrouting = routing.slice(0, i);
+      const tripIds = train.trips[direction][key].filter((trip) => subrouting.includes(trip.upcoming_stop)).map((trip) => trip.id);
+      const tripsNotAccountedFor = tripIds.filter((t) => !tripsAccountedFor.includes(t));
+      tripsNotAccountedFor.forEach((t) => tripsAccountedFor.push(t));
+      return tripsNotAccountedFor.length > 0;
     });
 
     const routesAfter = Object.keys(train.trips[direction]).filter((key) => {
       if (key === 'blended') {
         return false;
       }
+      return true;
+    }).sort((a, b) => {
+      const aTrips = train.trips[direction][a];
+      const bTrips = train.trips[direction][b];
+      return bTrips.length - aTrips.length;
+    }).filter((key) => {
+      if (!commonRouting) {
+        return true;
+      }
       const a = key.split('-');
-      const trips = train.trips[direction][key];
-      return commonRouting && !commonRouting.includes(a[1]);
+      if (commonRouting.includes(a[1])) {
+        return false;
+      }
+      const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+      const i = routing.indexOf(commonRouting[commonRouting.length - 1]);
+      const subrouting = routing.slice(i + 1);
+      const tripIds = train.trips[direction][key].filter((trip) => subrouting.includes(trip.upcoming_stop)).map((trip) => trip.id);
+      const tripsNotAccountedFor = tripIds.filter((t) => !tripsAccountedFor.includes(t));
+      tripsNotAccountedFor.forEach((t) => tripsAccountedFor.push(t));
+      return tripsNotAccountedFor.length > 0;
     });
 
     const componentArray = [];
