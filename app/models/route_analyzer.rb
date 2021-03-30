@@ -7,7 +7,7 @@ class RouteAnalyzer
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
     slow_sections = identify_slow_sections(actual_routings, travel_times, timestamp)
-    long_headway_sections = identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, processed_trips)
+    long_headway_sections = identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, processed_trips, travel_times)
     delayed_sections = identify_delayed_sections(actual_routings, common_routings, processed_trips)
     scheduled_runtimes = calculate_scheduled_runtimes(actual_routings, timestamp)
     estimated_runtimes = calculate_estimated_runtimes(actual_routings, travel_times, timestamp)
@@ -129,7 +129,11 @@ class RouteAnalyzer
         last_stop = long_headway_sections[direction[:route_direction]].last[:end]
         max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60).round
         max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60).round
-        strs << "have longer wait times between #{stop_name(first_stop)} and #{stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+        if first_stop == last_stop
+          strs << "have longer wait times between at #{stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+        else
+          strs << "have longer wait times between #{stop_name(first_stop)} and #{stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+        end
       end
 
       next [direction[:route_direction], nil] unless strs.present?
@@ -243,7 +247,7 @@ class RouteAnalyzer
     end
   end
 
-  def self.identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, actual_trips)
+  def self.identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, actual_trips, travel_times)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].to_h do |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
@@ -264,12 +268,25 @@ class RouteAnalyzer
 
       trips_with_long_headways = processed_trips.select{ |trip| trip.estimated_time_behind_next_train && (trip.estimated_time_behind_next_train - max_scheduled_headway) >= 120 }
       objs = trips_with_long_headways.map do |trip|
+        stop_count = 0
+        begin_stop = trip.upcoming_stop
+        time_until_begin_stop = trip.estimated_upcoming_stop_arrival_time - trip.timestamp
+        while time_until_begin_stop <= max_scheduled_headway
+          stop_count += 1
+          begin_stop = trip.upcoming_stops[stop_count]
+          if !begin_stop
+            begin_stop = trip.upcoming_stops[stop_count - 1]
+            break
+          end
+          key = "#{trip.upcoming_stops[stop_count - 1]}-#{trip.upcoming_stops[stop_count]}"
+          time_until_begin_stop += travel_times[key] || (trip.stops[trip.upcoming_stops[stop_count]] - trip.stops[trip.upcoming_stops[stop_count - 1]])
+        end
         i = processed_trips.index(trip)
         next_trip = processed_trips[i + 1]
         j = routing.index(next_trip.upcoming_stop)
         next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
         {
-          begin: trip.upcoming_stop,
+          begin: begin_stop,
           end: next_trip_prev_stop,
           max_actual_headway: trip.estimated_time_behind_next_train,
           max_scheduled_headway: max_scheduled_headway,
