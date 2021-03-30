@@ -21,7 +21,7 @@ class Processed::Trip
   private
 
   def determine_previous_stop_info!(routing)
-    @previous_stop, @previous_stop_arrival_time = self.class.determine_previous_stop_and_arrival_time(trip, routing)
+    @previous_stop, @previous_stop_arrival_time = self.class.determine_previous_stop_and_arrival_time(trip)
   end
 
   def calculate_time_until_next_trip!(next_trip, routing)
@@ -34,10 +34,10 @@ class Processed::Trip
     return unless next_trip
 
     estimated_time_until_upcoming_stop = estimated_upcoming_stop_arrival_time - timestamp
-    next_trip_previous_stop, next_trip_previous_stop_time = self.class.determine_previous_stop_and_arrival_time(next_trip, routing)
+    next_trip_previous_stop, next_trip_previous_stop_time = self.class.determine_previous_stop_and_arrival_time(next_trip)
     if next_trip_previous_stop_time
       next_trip_upcoming_stop = next_trip.upcoming_stop
-      estimated_time_for_next_trip_until_its_upcoming_stop = (next_trip_previous_stop_time + RouteProcessor.average_travel_time(next_trip_previous_stop, next_trip_upcoming_stop, timestamp)) - timestamp || next_trip.time_until_upcoming_stop(time_ref: timestamp)
+      estimated_time_for_next_trip_until_its_upcoming_stop = [(next_trip_previous_stop_time + RouteProcessor.average_travel_time(next_trip_previous_stop, next_trip_upcoming_stop, timestamp)) - timestamp, 0].max || next_trip.time_until_upcoming_stop(time_ref: timestamp)
     else
       estimated_time_for_next_trip_until_its_upcoming_stop = self.class.extrapolate_time_until_upcoming_stop(next_trip, routing, timestamp)
     end
@@ -59,7 +59,7 @@ class Processed::Trip
     end
   end
 
-  def self.determine_previous_stop_and_arrival_time(current_trip, routing)
+  def self.determine_previous_stop_and_arrival_time(current_trip)
     return current_trip.past_stops&.keys&.last, current_trip.past_stops&.values&.last
   end
 
