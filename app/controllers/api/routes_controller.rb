@@ -29,7 +29,7 @@ class Api::RoutesController < ApplicationController
               route_data = {}
             else
               route_data = route_data.slice(
-                'direction_statuses', 'service_summaries', 'service_change_summaries', 'actual_routings', 'slow_sections', 'long_headway_sections', 'delayed_sections'
+                'status', 'direction_statuses', 'service_summaries', 'service_change_summaries', 'actual_routings', 'slow_sections', 'long_headway_sections', 'delayed_sections', 'timestamp'
               )
               route_data['trips'] = transform_trips(route_trip_futures[route.internal_id], travel_times)
               timestamps << route_data['timestamp']
