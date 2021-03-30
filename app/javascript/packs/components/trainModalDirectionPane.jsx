@@ -516,9 +516,10 @@ class TrainModalDirectionPane extends React.Component {
   renderBlendedTripsTables(train, direction) {
     const commonRouting = train.common_routings[direction];
     const commonRoutingTrips = train.trips[direction].blended || [];
-    const tripsAccountedFor = commonRoutingTrips.map((trip) => trip.id);
+    let remainingTrips = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').flatMap((key) => train.trips[direction][key]).filter((trip) => !commonRoutingTrips.map((trip) => trip.id).includes(trip.id));
+    const componentArray = [];
 
-    const routesBefore = Object.keys(train.trips[direction]).filter((key) => {
+    Object.keys(train.trips[direction]).filter((key) => {
       if (key === 'blended') {
         return false;
       }
@@ -527,22 +528,31 @@ class TrainModalDirectionPane extends React.Component {
       const aTrips = train.trips[direction][a];
       const bTrips = train.trips[direction][b];
       return bTrips.length - aTrips.length;
-    }).filter((key) => {
-      if (!commonRouting) {
-        return true;
-      }
+    }).forEach((key) => {
       const a = key.split('-');
+      if (!commonRouting) {
+        const start  = a[0];
+        const end = a[1];
+        const selectedTrips = train.trips[direction][key];
+        componentArray.push(this.renderHeadingWithTable(key, selectedTrips, start, end));
+        return;
+      }
       if (commonRouting.includes(a[0])) {
-        return false;
+        return;
       }
       const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
       const i = routing.indexOf(commonRouting[0]);
       const subrouting = routing.slice(0, i);
-      const tripIds = train.trips[direction][key].filter((trip) => subrouting.includes(trip.upcoming_stop)).map((trip) => trip.id);
-      const tripsNotAccountedFor = tripIds.filter((t) => !tripsAccountedFor.includes(t));
-      tripsNotAccountedFor.forEach((t) => tripsAccountedFor.push(t));
-      return tripsNotAccountedFor.length > 0;
+      const trips = remainingTrips.filter((trip) => subrouting.includes(trip.upcoming_stop));
+      remainingTrips = remainingTrips.filter((trip => !trips.map((t) => t.id).includes(trip.id)));
+      if (trips.length > 0) {
+        componentArray.push(this.renderHeadingWithTable(key, trips, subrouting[0], commonRouting[0]));
+      }
     });
+
+    if (commonRoutingTrips.length > 0) {
+      componentArray.push(this.renderHeadingWithTable('blended', commonRoutingTrips, commonRouting[0], commonRouting[commonRouting.length - 1]));
+    }
 
     const routesAfter = Object.keys(train.trips[direction]).filter((key) => {
       if (key === 'blended') {
@@ -553,51 +563,22 @@ class TrainModalDirectionPane extends React.Component {
       const aTrips = train.trips[direction][a];
       const bTrips = train.trips[direction][b];
       return bTrips.length - aTrips.length;
-    }).filter((key) => {
-      if (!commonRouting) {
-        return false;
-      }
+    }).forEach((key) => {
       const a = key.split('-');
-      if (commonRouting.includes(a[1])) {
-        return false;
-      }
-      const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
-      const i = routing.indexOf(commonRouting[commonRouting.length - 1]);
-      const subrouting = routing.slice(i + 1);
-      const tripIds = train.trips[direction][key].filter((trip) => subrouting.includes(trip.upcoming_stop)).map((trip) => trip.id);
-      const tripsNotAccountedFor = tripIds.filter((t) => !tripsAccountedFor.includes(t));
-      tripsNotAccountedFor.forEach((t) => tripsAccountedFor.push(t));
-      return tripsNotAccountedFor.length > 0;
-    });
-
-    const componentArray = [];
-
-    routesBefore.forEach((key) => {
       if (!commonRouting) {
-        const a = key.split('-');
-        const start  = a[0];
-        const end = a[1];
-        const selectedTrips = train.trips[direction][key];
-        componentArray.push(this.renderHeadingWithTable(key, selectedTrips, start, end));
-      } else {
-        const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
-        const i = routing.indexOf(commonRouting[0]);
-        const subrouting = routing.slice(0, i);
-        const selectedTrips = train.trips[direction][key].filter((t) => subrouting.includes(t.upcoming_stop));
-        componentArray.push(this.renderHeadingWithTable(key, selectedTrips, subrouting[0], commonRouting[0]));
+        return;
       }
-    });
-
-    if (commonRoutingTrips.length > 0) {
-      componentArray.push(this.renderHeadingWithTable('blended', commonRoutingTrips, commonRouting[0], commonRouting[commonRouting.length - 1]));
-    }
-
-    routesAfter.forEach((key) => {
+      if (commonRouting.includes(a[1])) {
+        return;
+      }
       const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
       const i = routing.indexOf(commonRouting[commonRouting.length - 1]);
       const subrouting = routing.slice(i + 1);
-      const selectedTrips = train.trips[direction][key].filter((t) => subrouting.includes(t.upcoming_stop));
-      componentArray.push(this.renderHeadingWithTable(key, selectedTrips, commonRouting[commonRouting.length - 1], subrouting[subrouting.length - 1]));
+      const trips = remainingTrips.filter((trip) => subrouting.includes(trip.upcoming_stop));
+      remainingTrips = remainingTrips.filter((trip => !trips.map((t) => t.id).includes(trip.id)));
+      if (trips.length > 0) {
+        componentArray.push(this.renderHeadingWithTable(key, trips, commonRouting[commonRouting.length - 1], subrouting[subrouting.length - 1]));
+      }
     });
 
     return (
