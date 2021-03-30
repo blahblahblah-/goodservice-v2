@@ -520,12 +520,7 @@ class TrainModalDirectionPane extends React.Component {
     remainingTrips = remainingTrips.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
     const componentArray = [];
 
-    Object.keys(train.trips[direction]).filter((key) => {
-      if (key === 'blended') {
-        return false;
-      }
-      return true;
-    }).sort((a, b) => {
+    Object.keys(train.trips[direction]).filter((key) => key !== 'blended').sort((a, b) => {
       const aTrips = train.trips[direction][a];
       const bTrips = train.trips[direction][b];
       return bTrips.length - aTrips.length;
@@ -555,12 +550,7 @@ class TrainModalDirectionPane extends React.Component {
       componentArray.push(this.renderHeadingWithTable('blended', commonRoutingTrips, commonRouting[0], commonRouting[commonRouting.length - 1]));
     }
 
-    const routesAfter = Object.keys(train.trips[direction]).filter((key) => {
-      if (key === 'blended') {
-        return false;
-      }
-      return true;
-    }).sort((a, b) => {
+    const routesAfter = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').sort((a, b) => {
       const aTrips = train.trips[direction][a];
       const bTrips = train.trips[direction][b];
       return bTrips.length - aTrips.length;
