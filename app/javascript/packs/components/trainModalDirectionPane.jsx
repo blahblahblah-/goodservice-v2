@@ -651,7 +651,12 @@ class TrainModalDirectionPane extends React.Component {
   render() {
     const { trains, train, direction, stations } = this.props;
     const { selectedRouting, routings, travelTimeFrom, travelTimeTo } = this.state;
-    const routingToMap = selectedRouting == 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
+    const routingToMap = selectedRouting === 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
+    let tripsForMap = train.trips && train.trips[direction] && train.trips[direction][selectedRouting] || [];
+    if (selectedRouting === 'blended') {
+      tripsForMap = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').flatMap((key) => train.trips[direction][key])
+      tripsForMap = tripsForMap.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
+    }
     return (
       <Segment basic className='train-modal-direction-pane'>
 
@@ -660,7 +665,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).filter((key) => key !== 'blended').map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={tripsForMap} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>
