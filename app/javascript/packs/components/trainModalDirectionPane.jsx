@@ -517,6 +517,7 @@ class TrainModalDirectionPane extends React.Component {
     const commonRouting = train.common_routings[direction];
     const commonRoutingTrips = train.trips[direction].blended || [];
     let remainingTrips = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').flatMap((key) => train.trips[direction][key]).filter((trip) => !commonRoutingTrips.map((trip) => trip.id).includes(trip.id));
+    remainingTrips = remainingTrips.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
     const componentArray = [];
 
     Object.keys(train.trips[direction]).filter((key) => {
