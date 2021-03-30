@@ -555,7 +555,7 @@ class TrainModalDirectionPane extends React.Component {
       return bTrips.length - aTrips.length;
     }).filter((key) => {
       if (!commonRouting) {
-        return true;
+        return false;
       }
       const a = key.split('-');
       if (commonRouting.includes(a[1])) {
