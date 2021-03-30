@@ -165,7 +165,7 @@ class Api::RoutesController < ApplicationController
           stops[trip.upcoming_stop] = trip.estimated_upcoming_stop_arrival_time
           trip.upcoming_stops.each_cons(2).reduce(trip.estimated_upcoming_stop_arrival_time) { |sum, (a_stop, b_stop)|
             pair_str = "#{a_stop}-#{b_stop}"
-            next_interval = travel_times[pair_str] || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop)
+            next_interval = travel_times[pair_str] || trip.stops[b_stop] - trip.stops[a_stop]
             stops[b_stop] = sum + next_interval
           }
           {
