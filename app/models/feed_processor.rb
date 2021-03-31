@@ -210,7 +210,7 @@ class FeedProcessor
         time_traveled_between_stops_made = trip.time_traveled_between_stops_made
         return unless time_traveled_between_stops_made.size < 3
         trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
-          RedisStore.add_travel_time(stops_str, travel_time, trip.timestamp)
+          RedisStore.add_travel_time(stops_str, travel_time, trip.id, trip.timestamp)
         end
       end
       trip.update_stops_made!
@@ -240,7 +240,7 @@ class FeedProcessor
 
             break if a_stop_time == b_stop_time
             travel_time = b_stop_time - a_stop_time
-            RedisStore.add_travel_time(stops_str, travel_time, timestamp)
+            RedisStore.add_travel_time(stops_str, travel_time, trip.id, timestamp)
           end
         end
         RedisStore.remove_from_active_trip_list(feed_id, trip_id)

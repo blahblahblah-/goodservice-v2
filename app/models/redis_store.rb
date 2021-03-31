@@ -22,6 +22,17 @@ class RedisStore
       REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 60 : 1800))
     end
 
+    # FeedProcessor lock
+    def acquire_feed_processor_lock(feed_id, minutes, fraction_of_minute)
+      REDIS_CLIENT.set("feed-processor-lock:#{feed_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)
+    end
+
+    def release_feed_processor_lock(feed_id, minutes, fraction_of_minute)
+      if REDIS_CLIENT.get("feed-processor-lock:#{feed_id}") == "#{minutes}:#{fraction_of_minute}"
+        REDIS_CLIENT.del("feed-processor-lock:#{feed_id}")
+      end
+    end
+
     # Accessibility
     def update_accessible_stops_list(list)
       REDIS_CLIENT.set("accessibile-stops", list, ex: 1800)
@@ -119,8 +130,8 @@ class RedisStore
     end
 
     # Travel times
-    def add_travel_time(stops_str, travel_time, timestamp)
-      REDIS_CLIENT.zadd("travel-time:actual:#{stops_str}", timestamp, "#{timestamp}-#{travel_time}")
+    def add_travel_time(stops_str, travel_time, trip_id, timestamp)
+      REDIS_CLIENT.zadd("travel-time:actual:#{stops_str}", timestamp, "#{trip_id}-#{travel_time}")
     end
 
     def travel_times_at(stop_id_1, stop_id_2, count)
