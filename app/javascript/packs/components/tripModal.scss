@@ -8,8 +8,22 @@
       font-size: 1.2em;
     }
 
+    .route {
+      float: left;
+    }
+
+    .trip-header-info {
+      float: left;
+      margin-top: .5em;
+
+      .delayed-header {
+        margin-top: 0;
+      }
+    }
+
     .past-stops-toggle {
       float: right;
+      clear: both;
 
       @media only screen and (min-width: 768px) {
         margin-right: 1em;

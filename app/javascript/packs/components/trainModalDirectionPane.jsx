@@ -437,7 +437,7 @@ class TrainModalDirectionPane extends React.Component {
     });
     options.unshift({
       key: 'blended',
-      text: "Overall",
+      text: "All Routings",
       value: 'blended',
     });
     return options;

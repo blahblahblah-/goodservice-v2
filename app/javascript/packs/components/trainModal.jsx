@@ -27,7 +27,7 @@ class TrainModal extends React.Component {
     }
     if (selected) {
       this.fetchData();
-      this.timer = setInterval(() => this.fetchData(), 30000);
+      this.timer = setInterval(() => this.fetchData(), 15000);
     } else {
       clearInterval(this.timer);
     }
@@ -37,7 +37,7 @@ class TrainModal extends React.Component {
     const { selected } = this.props;
     if (selected) {
       this.fetchData();
-      this.timer = setInterval(() => this.fetchData(), 30000);
+      this.timer = setInterval(() => this.fetchData(), 15000);
     }
   }
 

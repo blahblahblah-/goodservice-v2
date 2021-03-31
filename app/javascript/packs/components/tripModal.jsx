@@ -21,7 +21,7 @@ class TripModal extends React.Component {
 
   componentDidMount() {
     this.fetchData();
-    this.timer = setInterval(() => this.fetchData(), 30000);
+    this.timer = setInterval(() => this.fetchData(), 15000);
   }
 
   componentWillUnmount() {
@@ -178,14 +178,16 @@ class TripModal extends React.Component {
         </Helmet>
         <Modal.Header className='modal-header'>
           <TrainBullet name={train.name} color={train.color}
-                        textColor={train.text_color} style={{display: "inline-block", marginLeft: 0}} size='large' /><br />
-          Trip: {selectedTrip.id} <br />
-          To: { destinationStationName }<br />
-          { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
-          {
-            delayed && 
-            <Header as='h5' color='red' inverted>{ delayInfo }</Header>
-          }
+                        textColor={train.text_color} style={{display: "inline-block", marginLeft: 0}} size='large' />
+          <div className='trip-header-info'>
+            Trip: {selectedTrip.id} <br />
+            To: { destinationStationName }<br />
+            { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
+            {
+              delayed &&
+              <Header className='delayed-header' as='h3' color='red' inverted>{ delayInfo }</Header>
+            }
+          </div>
           <Checkbox checked={showPastStops} onChange={this.handleToggleChange} className='past-stops-toggle' toggle label={<label className="toggle-label">Show Past Stops</label>} />
         </Modal.Header>
         <Modal.Content scrolling>

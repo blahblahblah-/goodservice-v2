@@ -50,7 +50,7 @@ class App extends React.Component {
   componentDidMount() {
     this.setState({loading: true});
     this.fetchData();
-    this.timer = setInterval(() => this.fetchData(), 30000);
+    this.timer = setInterval(() => this.fetchData(), 15000);
   }
 
   fetchData() {
