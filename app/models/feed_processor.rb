@@ -19,10 +19,10 @@ class FeedProcessor
       feed = Marshal.load(marshaled_feed) if marshaled_feed
 
       if !feed
-        throw "Error: Feed #{feed_name} not found"
+        throw "Error: #{feed_name} not found"
       end
 
-      puts "Analyzing feed #{feed_name}:#{minutes}:#{fraction_of_minute}"
+      puts "Analyzing #{feed_name}"
 
       return if feed.entity.empty?
 
@@ -38,6 +38,8 @@ class FeedProcessor
 
       trips = feed.entity.select { |entity|
         valid_trip?(timestamp, entity, feed_id)
+      }.uniq { |entity|
+        entity.trip_update.trip.trip_id
       }.map { |entity|
         convert_trip(timestamp, entity, trip_timestamps)
       }.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }

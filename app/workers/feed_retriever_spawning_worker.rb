@@ -2,7 +2,7 @@ class FeedRetrieverSpawningWorker
   include Sidekiq::Worker
   sidekiq_options retry: false, queue: 'critical'
 
-  FEEDS = ["", "-ace", "-bdfm", "-g", "-jz", "-nqrw", "-l", "-7", "-si"]
+  FEEDS = ["", "-ace", "-bdfm", "-g", "-jz", "-nqrw", "-l", "-si"]
 
   def perform
     minutes = Time.current.min
