@@ -27,8 +27,8 @@ class Api::TripsController < ApplicationController
     "G" => "-g",
     "J" => "-jz",
     "Z" => "-jz",
-    "7" => "-7",
-    "7X" => "-7",
+    "7" => "",
+    "7X" => "",
   }
 
   def show
