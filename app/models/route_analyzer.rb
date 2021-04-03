@@ -266,7 +266,18 @@ class RouteAnalyzer
         end
       end
 
-      trips_with_long_headways = processed_trips.select{ |trip| trip.estimated_time_behind_next_train && (trip.estimated_time_behind_next_train - max_scheduled_headway) >= 120 }
+      trips_with_long_headways = processed_trips.select do |trip|
+        if trip.estimated_time_behind_next_train
+          if trip.past_stops.empty? && trip.upcoming_stop != routing.first
+            false
+          else
+            (trip.estimated_time_behind_next_train - max_scheduled_headway) >= 120
+          end
+        else
+          # If there's no train ahead, we check to see if the end of the line has a long wait
+          routing.last == trip.destination && (trip.estimated_time_until_destination - max_scheduled_headway) >= 120
+        end
+      end
       objs = trips_with_long_headways.map do |trip|
         stop_count = 0
         begin_stop = trip.upcoming_stop
@@ -283,12 +294,17 @@ class RouteAnalyzer
         end
         i = processed_trips.index(trip)
         next_trip = processed_trips[i + 1]
-        j = routing.index(next_trip.upcoming_stop)
-        next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
+        if next_trip
+          j = routing.index(next_trip.upcoming_stop)
+          next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
+        else
+          # If there's no train ahead, then the identified section ends at the end of the line
+          next_trip_prev_stop = routing.last
+        end
         {
           begin: begin_stop,
           end: next_trip_prev_stop,
-          max_actual_headway: trip.estimated_time_behind_next_train,
+          max_actual_headway: trip.estimated_time_behind_next_train || trip.estimated_time_until_destination,
           max_scheduled_headway: max_scheduled_headway,
         }
       end
@@ -489,6 +505,7 @@ class RouteAnalyzer
             estimated_upcoming_stop_arrival_time: estimated_upcoming_stop_arrival_time,
             time_behind_next_train: trip.time_behind_next_train,
             estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
+            estimated_time_until_destination: trip.estimated_time_until_destination,
             destination_stop: trip.destination,
             delayed_time: trip.delayed_time,
             schedule_discrepancy: trip.schedule_discrepancy,

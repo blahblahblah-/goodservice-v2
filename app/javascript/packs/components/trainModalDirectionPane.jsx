@@ -189,7 +189,7 @@ class TrainModalDirectionPane extends React.Component {
     if (train.trips && train.trips[direction]) {
       Object.keys(train.trips[direction]).forEach((r) => {
         trips[r] = train.trips[direction][r].map((t) => {
-          return t.estimated_time_behind_next_train;
+          return t.estimated_time_behind_next_train || t.estimated_time_until_destination;
         })
       });
     }
@@ -480,7 +480,11 @@ class TrainModalDirectionPane extends React.Component {
             const delayedTime = trip.is_delayed ? effectiveDelayedTime : trip.delayed_time;
             const delayInfo = delayed ? `(${trip.is_delayed ? 'delayed' : 'held'} for ${Math.round(delayedTime / 60)} mins)` : '';
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);
-            const estimatedTimeBehindNextTrain = trip.estimated_time_behind_next_train !== null ? Math.round(trip.estimated_time_behind_next_train / 60) : null;
+            let estimatedTimeBehindNextTrainSeconds = trip.estimated_time_behind_next_train;
+            if (!estimatedTimeBehindNextTrainSeconds) {
+              estimatedTimeBehindNextTrainSeconds = trip.estimated_time_until_destination;
+            }
+            const estimatedTimeBehindNextTrain = estimatedTimeBehindNextTrainSeconds && Math.round(Math.max(estimatedTimeBehindNextTrainSeconds, 0) / 60);
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
             let scheduleDiscrepancyClass = 'early';
             if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
@@ -500,7 +504,7 @@ class TrainModalDirectionPane extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { estimatedTimeBehindNextTrain !== null && formatMinutes(estimatedTimeBehindNextTrain, false) }
+                  { estimatedTimeBehindNextTrain && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`) }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
