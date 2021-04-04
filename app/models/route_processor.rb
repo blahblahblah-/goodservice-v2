@@ -54,7 +54,7 @@ class RouteProcessor
       )
     end
 
-    def average_travel_time(a_stop, b_stop, timestamp)
+    def average_travel_time(a_stop, b_stop)
       travel_times = RedisStore.travel_times_at(a_stop, b_stop, TRAVEL_TIME_AVERAGE_TRIP_COUNT)
 
       return RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 60 unless travel_times.present?

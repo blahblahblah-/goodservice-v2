@@ -344,7 +344,7 @@ class RouteAnalyzer
         (
           r.each_cons(2).map { |a_stop, b_stop|
             scheduled_travel_time = RedisStore.scheduled_travel_time(a_stop, b_stop) || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || 0
-            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop, timestamp) || 0
+            actual_travel_time = RouteProcessor.average_travel_time(a_stop, b_stop) || 0
             diff = actual_travel_time - scheduled_travel_time
             diff >= 60.0 ? diff : 0
           }.reduce(&:+) || 0

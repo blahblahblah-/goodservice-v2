@@ -504,7 +504,7 @@ class TrainModalDirectionPane extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { estimatedTimeBehindNextTrain && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`) }
+                  { estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`) }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
