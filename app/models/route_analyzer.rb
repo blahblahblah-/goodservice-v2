@@ -14,10 +14,10 @@ class RouteAnalyzer
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
     overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
-    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, headway_discrepancy, service_changes, processed_trips, scheduled_trips)
+    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, service_changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
-    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, delayed_sections, headway_discrepancy, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+    summaries = service_summaries(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, delayed_sections, destination_station_names, processed_trips, actual_routings, scheduled_headways_by_routes, timestamp)
 
     summary = {
       status: status,
@@ -71,7 +71,7 @@ class RouteAnalyzer
 
   private
 
-  def self.route_status(delays, runtime_diff, slow_sections, headway_discrepancy, service_changes, actual_trips, scheduled_trips)
+  def self.route_status(delays, runtime_diff, slow_sections, long_headway_sections, service_changes, actual_trips, scheduled_trips)
     direction_statuses = [1, 3].map { |direction|
       direction_key = direction == 3 ? :south : :north
       scheduled_key = direction == 3 ? 1 : 0
@@ -88,7 +88,7 @@ class RouteAnalyzer
         status = 'Service Change'
       elsif (runtime_diff[direction] && runtime_diff[direction] >= 300) || slow_sections[direction].present?
         status = 'Slow'
-      elsif headway_discrepancy[direction] && headway_discrepancy[direction] >= 120
+      elsif long_headway_sections[direction].present?
         status = 'Not Good'
       end
       [direction, status]
@@ -101,7 +101,7 @@ class RouteAnalyzer
     return direction_statuses, status
   end
 
-  def self.service_summaries(delays, runtime_diff, slow_sections, long_headway_sections, delayed_sections, headway_discrepancy, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
+  def self.service_summaries(delays, runtime_diff, slow_sections, long_headway_sections, delayed_sections, destination_stations, actual_trips, actual_routings, scheduled_headways_by_routes, timestamp)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       strs = []
