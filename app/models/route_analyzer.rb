@@ -361,7 +361,7 @@ class RouteAnalyzer
 
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations)
     service_changes_by_directions.map { |direction, service_changes|
-      next [direction, ''] unless service_changes
+      next [direction, []] unless service_changes
       destination_names = destination_stations[direction]&.join('/')
 
       service_changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
@@ -380,7 +380,7 @@ class RouteAnalyzer
       end
 
       if service_changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
-        next [direction, "#{sentence_intro} not running."]
+        next [direction, ["#{sentence_intro} not running."]
       end
 
       begin_of_route = service_changes.find(&:begin_of_route?)
