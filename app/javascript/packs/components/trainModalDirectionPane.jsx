@@ -216,7 +216,7 @@ class TrainModalDirectionPane extends React.Component {
         <Divider inverted horizontal>
           <Header size='medium' inverted>
             MAX HEADWAY
-            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+            <Popup trigger={<sup>[?]</sup>}>
               <Popup.Header>Maximum Headway</Popup.Header>
               <Popup.Content>
                 <List relaxed='very' divided>
@@ -246,7 +246,7 @@ class TrainModalDirectionPane extends React.Component {
         <Divider inverted horizontal>
           <Header size='medium' inverted>
             TRIP RUNTIMES
-            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+            <Popup trigger={<sup>[?]</sup>}>
               <Popup.Header>Trip Runtimes</Popup.Header>
               <Popup.Content>
                 <List relaxed='very' divided>
@@ -364,7 +364,7 @@ class TrainModalDirectionPane extends React.Component {
         <Divider inverted horizontal>
           <Header size='medium' inverted>
             TRAVEL TIME
-            <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+            <Popup trigger={<sup>[?]</sup>}>
               <Popup.Header>Trip Runtimes</Popup.Header>
               <Popup.Content>
                 <List relaxed='very' divided>
@@ -697,7 +697,7 @@ class TrainModalDirectionPane extends React.Component {
                 <Divider inverted horizontal>
                   <Header size='medium' inverted>
                     ACTIVE TRIPS
-                    <Popup trigger={<sup>[?]</sup>} position='bottom center'>
+                    <Popup trigger={<sup>[?]</sup>}>
                       <Popup.Header>Active Trips</Popup.Header>
                       <Popup.Content>
                         <List relaxed='very' divided>
