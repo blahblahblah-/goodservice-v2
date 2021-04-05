@@ -380,7 +380,7 @@ class RouteAnalyzer
       end
 
       if service_changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
-        next [direction, ["#{sentence_intro} not running."]
+        next [direction, ["#{sentence_intro} not running."]]
       end
 
       begin_of_route = service_changes.find(&:begin_of_route?)
