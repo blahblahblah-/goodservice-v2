@@ -6,7 +6,7 @@ goodservice-v2 is a re-write of the original [goodservice](https://github.com/bl
 
 The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large. Postgres is still used to store static schedule info.
 
-See it live at [https://www.goodservice.io](https://www.goodservice.io/).
+See it live at [https://www.goodservice.io](https://www.goodservice.io/). The same set of APIs are used to power [https://www.theweekendest.com](https://www.theweekendest.com/)
 
 ## Running locally
 
@@ -66,8 +66,18 @@ The client side view libraries are a React app that is compiled by the `webpacke
 
 The React front end is fed by an API that Rails serves. The routes are specified in the `/app/controllers/api` directory. Specifically, dynamically-generated routes are specified in `/config/routes.rb`. There are only 2 endpoints for now, and they're both in the Api::RoutesController class, which serve the data as `/api/routes`
 
+## Supported external services
+
+### Twitter
+
+The cron job to update route statuses is also capable of tweeting a list of delayed routes every 10 minutes. Make sure the env variables `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET`, `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET` are populated.
 
 ## Other resources
 
 * [MTA's GTFS-realtime manual](http://datamine.mta.info/sites/all/files/pdfs/GTFS-Realtime-NYC-Subway%20version%201%20dated%207%20Sep.pdf)
 * [Most up-to-date MTA static schedule data](http://web.mta.info/developers/developer-data-terms.html)
+
+## Inspirations
+
+* [DC MetroHero](https://dcmetrohero.com)
+* [NYC Subway Stringlines](https://pvibien.com/stringline.htm)
