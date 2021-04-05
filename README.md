@@ -2,11 +2,11 @@
 
 This is a Rails app that generates live route maps, detects headway discrepancies, track delays and compare runtimes to the schedule on the New York City Subway system by comparing the data for live countdown clocks with the static schedule data provided by the MTA.
 
-goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) reduce the time to process feed data to be under 30 seconds at all times, so that data can be refreshed every 30 seconds instead of every minute, 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times like in the past for calculations, we are keeping track of trips in relation each other in order to figure out the time between trains. With these changes, the app no longer uses the concept of lines.
+goodservice-v2 is a re-write of the original [goodservice](https://github.com/blahblahblah-/goodservice) codebase. The goal for this re-write was 1) reduce the time to process feed data to be under 30 seconds at all times, so that data can be refreshed in shorter intervals instead of every minute (data is refreshed every 15 seconds in production), 2) use rolling average of past trips between each pair of stops to predict ETAs of each train to each station, and 3) instead of extracting arrival times in the past for headway calculations, we are keeping track of trips in relation each other in order to figure out the time between trains. With these changes, the app no longer uses the concept of lines, and train arrival times are now available to view via lookup by station.
 
-The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large.
+The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large. Postgres is still used to store static schedule info.
 
-See it live at [https://preview.goodservice.io](https://preview.goodservice.io/).
+See it live at [https://www.goodservice.io](https://www.goodservice.io/).
 
 ## Running locally
 
@@ -51,7 +51,7 @@ This is a Rails app that uses React as a view manager. As such, there are a lot 
 
 Regularly occuring jobs are scheduled with [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron), and are defined in the [Sidekiq initializer](https://github.com/blahblahblah-/goodservice-v2/blob/main/config/initializers/sidekiq.rb).
 
-The order of operation to process the feeds within the every 30 seconds cycle is:
+The order of operation to process the feeds within the every 15 seconds cycle is:
 FeedRetrieverSpawningWorker > FeedRetrieverWorker > FeedProcessorWorker > FeedProcessor > RouteProcessor > RouteAnalyzer
 
 Static schedule data is stored in Postgres and their associated ActiveRecord classes are in the `Scheduled` namespace. No other data is currently stored in Postgres.
