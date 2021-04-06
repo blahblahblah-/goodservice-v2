@@ -245,7 +245,7 @@ class Api::SlackController < ApplicationController
       next unless marshaled_trips
       Marshal.load(marshaled_trips)
     end
-    trips = [:north, :south].to_h { |direction|
+    trips = [1, 3].to_h { |direction|
       [direction, trips_by_routes_array.flat_map { |route_hash|
           route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
           actual_direction = Api::StopsController.determine_direction(direction, stop.internal_id, route_id)
