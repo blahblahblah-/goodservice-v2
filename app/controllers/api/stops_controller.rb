@@ -69,7 +69,6 @@ class Api::StopsController < ApplicationController
       timestamp = Time.current.to_i
       stop = Scheduled::Stop.find_by!(internal_id: stop_id)
       route_stops_futures = {}
-      status_future = nil
       REDIS_CLIENT.pipelined do
         route_stops_futures = [1, 3].to_h { |direction|
           [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]

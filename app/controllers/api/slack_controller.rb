@@ -102,7 +102,7 @@ class Api::SlackController < ApplicationController
             "action_id": "select_station",
             "placeholder": {
               "type": "plain_text",
-              "text": "Select a Station",
+              "text": "Select a station",
             },
             "option_groups": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.group_by{ |s|
               if s.stop_name[0].match?(/[[:digit:]]/)
@@ -247,8 +247,8 @@ class Api::SlackController < ApplicationController
     end
     trips = [:north, :south].to_h { |direction|
       [direction, trips_by_routes_array.flat_map { |route_hash|
-        route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
-        actual_direction = Api::StopsController.determine_direction(direction, stop.internal_id, route_id)
+          route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
+          actual_direction = Api::StopsController.determine_direction(direction, stop.internal_id, route_id)
           route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
         }.select { |trip|
           trip&.upcoming_stops(time_ref: timestamp)&.include?(stop.internal_id)
@@ -273,7 +273,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": elevator_advisories[stop.internal_id].map { |a| "Elevator for #{a} is out of service"}.join("\n\n")
+          "text": elevator_advisories[stop.internal_id].map { |a| "Elevator for #{a} is out of service."}.join("\n\n")
         }
       }
     end
