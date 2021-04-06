@@ -136,12 +136,12 @@ class Api::StopsController < ApplicationController
     render json: data
   end
 
-  private
-
-  def determine_direction(direction, stop_id, route_id)
+  def self.determine_direction(direction, stop_id, route_id)
     return direction unless M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
     direction == 3 ? 1 : 3
   end
+
+  private
 
   def transform_to_route_directions_hash(direction_futures_hash)
     routes_by_direction = direction_futures_hash.to_h do |direction, future|

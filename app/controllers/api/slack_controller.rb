@@ -120,6 +120,9 @@ class Api::SlackController < ApplicationController
   end
 
   def delays_response
+    routes_with_alternate_names = Scheduled::Route.all.where("alternate_name is not null").to_h do |r|
+      [r.internal_id, r]
+    end
     delayed_routes = RedisStore.route_status_summaries&.to_h { |k, v|
       data = JSON.parse(v)
       r = routes_with_alternate_names[k]
@@ -155,7 +158,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "*#{routes.name}#{routes.name == 'S' ? " - " + routes.alternate_name : ""} train*\n"\
+          "text": "*#{route.name}#{route.name == 'S' ? " - " + route.alternate_name : ""} train*\n"\
                   "_Status_: *#{route_data['status'] || (scheduled ? 'No Service' : 'Not Scheduled')}*"
         }
       }
