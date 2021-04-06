@@ -110,15 +110,6 @@ class Api::StopsController < ApplicationController
         next unless marshaled_trips
         Marshal.load(marshaled_trips)
       end
-      routings = trips_by_routes_array.flat_map do |route_hash|
-        route_hash.values.flat_map do |trips_by_routes|
-          trips_by_routes.values.map do |trips|
-            upcoming_stops = trips.first.upcoming_stops
-            i = upcoming_stops.index(stop_id)
-            upcoming_stops[0..i]
-          end
-        end
-      end
       travel_times_data = RedisStore.travel_times
       travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
 

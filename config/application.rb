@@ -28,5 +28,6 @@ module GoodserviceV2
           methods: %i(get)
       end
     end
+    config.hosts << "6bfc6c79b0f2.ngrok.io"
   end
 end

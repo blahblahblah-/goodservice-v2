@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>goodservice.io - New York City Subway Status Page</title>
+    <title>goodservice.io - <%= content_for?(:title) ? yield(:title) : 'New York City Subway Status Page' %></title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_pack_tag 'components/app' %>

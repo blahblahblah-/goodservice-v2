@@ -4,9 +4,16 @@ Rails.application.routes.draw do
       resources :trips, only: [:show]
     end
     resources :stops, only: [:index, :show]
+    post '/slack', to: 'slack#index'
+    post '/slack/query', to: 'slack#query'
   end
   get '/about', to: 'index#index'
   get '/trains(/*id)', to: 'index#index'
   get '/stations(/*id)', to: 'index#index'
+  get '/oauth', to: 'oauth#index'
+  get '/slack', to: 'slack#index'
+  get '/slack/help', to: 'slack#help'
+  get '/slack/privacy', to: 'slack#privacy'
+  get '/slack/install', to: 'oauth#slack_install'
   root 'index#index'
 end
