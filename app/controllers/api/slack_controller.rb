@@ -91,6 +91,37 @@ class Api::SlackController < ApplicationController
             }
           }
         },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Check arrival times"
+          },
+          "accessory": {
+            "type": "static_select",
+            "action_id": "select_station",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Select a Station",
+            },
+            "option_groups": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.group_by{ |s| s.stop_name[0].match?(/[[:digit:]]/) ? '#' : s.stop_name[0]}.map { |first_letter, stops|
+              {
+                "label": {
+                  "type": "plain_text",
+                  "text": first_letter
+                },
+                "options": stops.map { |stop|
+                  routes_stop_at = transform_to_routes_array(futures[s.internal_id])
+                  "text": {
+                    "type": "plain_text",
+                    "text": (s.secondary_name ? "#{s.stop_name.gsub(/ - /, '–')} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name.gsub(/ - /, '–')} - #{routes_stop_at.join(', ')}")
+                  },
+                  "value": s.internal_id,
+                }
+              }
+            }
+          }
+        }
       ]
     }
   end
@@ -151,7 +182,7 @@ class Api::SlackController < ApplicationController
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": summary.join("\n\n")
+            "text": summary.join("\n\n").gsub(/ - /, '–')
           }
         }
       end
@@ -231,12 +262,12 @@ class Api::SlackController < ApplicationController
 
     [:north, :south].each do |direction, trips|
       next unless trips.present?
-      destinations = trips.map { |t| t[:destination_stop]}.uniq.map { |d| Scheduled::Stop.find_by(internal_id: d) }.sort
+      destinations = trips.map { |t| t[:destination_stop]}.uniq.map { |d| Scheduled::Stop.find_by(internal_id: d).stop_name.gsub(/ - /, '–') }.sort
       result << {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "_To #{destinations.join(', ')}_"
+          "text": "_To #{destinations.join(', ').gsub(/ - /, '–')}_"
         }
       }
       result << {
