@@ -74,30 +74,9 @@ class Api::StopsController < ApplicationController
         route_stops_futures = [1, 3].to_h { |direction|
           [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
         }
-        status_future = RedisStore.route_status_summaries
       end
       route_directions = transform_to_route_directions_hash(route_stops_futures)
       route_ids = route_directions.keys
-      statuses = status_future.value
-
-      routes = Scheduled::Route.where(internal_id: route_ids).to_h do |route|
-        status = "No Service"
-        route_data_encoded = statuses[route.internal_id]
-        route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
-        if route_data['timestamp'] >= (Time.current - 5.minutes).to_i
-          status = route_data['status']
-        end
-
-        [route.internal_id, {
-          id: route.internal_id,
-          name: route.name,
-          color: route.color && "##{route.color}",
-          text_color: route.text_color && "##{route.text_color}",
-          alternate_name: route.alternate_name,
-          status: status,
-          directions: route_directions[route.internal_id]
-        }]
-      end
 
       route_futures = {}
       REDIS_CLIENT.pipelined do

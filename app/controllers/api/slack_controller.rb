@@ -227,6 +227,12 @@ class Api::SlackController < ApplicationController
 
   def stop_response(stop)
     timestamp = Time.current
+    futures = {}
+    REDIS_CLIENT.pipelined do
+      futures = [1, 3].to_h { |direction|
+        [direction, RedisStore.routes_stop_at(stop.internal_id, direction, timestamp.to_i)]
+      }
+    end
     routes_stop_at = transform_to_routes_array(futures[s.internal_id])
     elevator_advisories_str = RedisStore.elevator_advisories
     route_trips = routes_stop_at.to_h do |route_id|
@@ -325,7 +331,7 @@ class Api::SlackController < ApplicationController
   def transform_to_routes_array(direction_futures_hash)
     routes_by_direction = direction_futures_hash.flat_map { |_, future|
       future.value
-    }.compact.sort
+    }.compact.uniq.sort
   end
 
   def transform_trip(stop_id, trip, travel_times, timestamp)
