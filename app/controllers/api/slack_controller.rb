@@ -240,7 +240,7 @@ class Api::SlackController < ApplicationController
     end
     travel_times_data = RedisStore.travel_times
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
-    trips_by_routes_array = route_ids.map do |route_id|
+    trips_by_routes_array = routes_stop_at.map do |route_id|
       marshaled_trips = route_trips[route_id]
       next unless marshaled_trips
       Marshal.load(marshaled_trips)
