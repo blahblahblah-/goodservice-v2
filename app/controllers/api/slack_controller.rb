@@ -62,6 +62,7 @@ class Api::SlackController < ApplicationController
         }]
       }
     end
+
     {
       response_type: "in_channel",
       channel: params[:channel_id],
@@ -90,31 +91,6 @@ class Api::SlackController < ApplicationController
             }
           }
         },
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": "Check arrival times"
-          },
-          "accessory": {
-            "type": "static_select",
-            "action_id": "select_station",
-            "placeholder": {
-              "type": "plain_text",
-              "text": "Select a Station",
-            },
-            "options": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.map { |s|
-              routes_stop_at = transform_to_routes_array(futures[s.internal_id])
-              {
-                "text": {
-                  "type": "plain_text",
-                  "text": (s.secondary_name ? "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name} - #{routes_stop_at.join(', ')}")
-                },
-                "value": s.internal_id
-              }
-            }
-          }
-        }
       ]
     }
   end
