@@ -263,7 +263,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": stop.secondary_name ? "*#{stop.name}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}" : "*#{stop.name}* - #{routes_stop_at.join(', ')}"
+          "text": stop.secondary_name ? "*#{stop.stop_name}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}" : "*#{stop.stop_name}* - #{routes_stop_at.join(', ')}"
         }
       }
     ]
