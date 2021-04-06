@@ -173,8 +173,8 @@ class TripModal extends React.Component {
           <title>{title}</title>
           <meta property="og:title" content={title} />
           <meta name="twitter:title" content={title} />
-          <meta property="og:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
-          <meta name="twitter:url" content={`https://preview.goodservice.io/trains/${train.id}`} />
+          <meta property="og:url" content={`https://www.goodservice.io/trains/${train.id}`} />
+          <meta name="twitter:url" content={`https://www.goodservice.io/trains/${train.id}`} />
         </Helmet>
         <Modal.Header className='modal-header'>
           <TrainBullet name={train.name} color={train.color}
