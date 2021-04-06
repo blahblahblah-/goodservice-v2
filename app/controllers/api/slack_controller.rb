@@ -282,9 +282,9 @@ class Api::SlackController < ApplicationController
       "type": "divider"
     }
 
-    [:north, :south].each do |direction, trips|
-      next unless trips.present?
-      destinations = trips.map { |t| t[:destination_stop]}.uniq.map { |d| Scheduled::Stop.find_by(internal_id: d).stop_name.gsub(/ - /, '–') }.sort
+    trips.each do |_, trips_by_direction|
+      next unless trips_by_direction.present?
+      destinations = trips_by_direction.map { |t| t[:destination_stop]}.uniq.map { |d| Scheduled::Stop.find_by(internal_id: d).stop_name.gsub(/ - /, '–') }.sort
       result << {
         "type": "section",
         "text": {
@@ -296,7 +296,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": trips.slice(0, 5).map { |t|
+          "text": trips_by_direction.slice(0, 5).map { |t|
             if t[:is_delayed]
               "Delayed (#{t[:route_id]}"
             else
