@@ -233,7 +233,7 @@ class Api::SlackController < ApplicationController
         [direction, RedisStore.routes_stop_at(stop.internal_id, direction, timestamp.to_i)]
       }
     end
-    routes_stop_at = transform_to_routes_array(futures[s.internal_id])
+    routes_stop_at = transform_to_routes_array(futures[stop.internal_id])
     elevator_advisories_str = RedisStore.elevator_advisories
     route_trips = routes_stop_at.to_h do |route_id|
       [route_id, RedisStore.processed_trips(route_id)]
