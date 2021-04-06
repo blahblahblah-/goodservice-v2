@@ -110,7 +110,7 @@ class Api::SlackController < ApplicationController
                   "type": "plain_text",
                   "text": first_letter
                 },
-                "options": stops.map { |stop|
+                "options": stops.map { |s|
                   routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   {
                     "label": {
