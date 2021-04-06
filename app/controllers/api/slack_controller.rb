@@ -226,11 +226,11 @@ class Api::SlackController < ApplicationController
   end
 
   def stop_response(stop)
-    timestamp = Time.current
+    timestamp = Time.current.to_i
     futures = {}
     REDIS_CLIENT.pipelined do
       futures = [1, 3].to_h { |direction|
-        [direction, RedisStore.routes_stop_at(stop.internal_id, direction, timestamp.to_i)]
+        [direction, RedisStore.routes_stop_at(stop.internal_id, direction, timestamp)]
       }
     end
     routes_stop_at = transform_to_routes_array(futures)
