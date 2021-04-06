@@ -130,9 +130,9 @@ class RouteAnalyzer
         max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60).round
         max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60).round
         if first_stop == last_stop
-          strs << "have longer wait times at #{stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+          strs << "having longer wait times at #{stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
         else
-          strs << "have longer wait times between #{stop_name(first_stop)} and #{stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+          strs << "having longer wait times between #{stop_name(first_stop)} and #{stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
         end
       end
 
