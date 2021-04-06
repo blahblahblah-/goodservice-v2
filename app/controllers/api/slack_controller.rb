@@ -27,7 +27,7 @@ class Api::SlackController < ApplicationController
     uri = URI(payload[:response_url])
 
     if payload[:actions].first[:action_id] == 'select_route'
-      if (route = Scheduled::Route.find_by(internal_id: payload[:actions].first[:selected_option][:value])
+      if (route = Scheduled::Route.find_by(internal_id: payload[:actions].first[:selected_option][:value]))
         result = route_response(route)
       end
     elsif payload[:actions].first[:action_id] == 'select_station'
@@ -105,7 +105,7 @@ class Api::SlackController < ApplicationController
               "text": "Select a Station",
             },
             "options": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.map { |s|
-              routes_stop_at = transform_to_routes_array(futures[s.internal_id]))
+              routes_stop_at = transform_to_routes_array(futures[s.internal_id])
               {
                 "text": {
                   "type": "plain_text",
@@ -202,7 +202,7 @@ class Api::SlackController < ApplicationController
 
   def stop_response(stop)
     timestamp = Time.current
-    routes_stop_at = transform_to_routes_array(futures[s.internal_id]))
+    routes_stop_at = transform_to_routes_array(futures[s.internal_id])
     elevator_advisories_str = RedisStore.elevator_advisories
     route_trips = routes_stop_at.to_h do |route_id|
       [route_id, RedisStore.processed_trips(route_id)]
