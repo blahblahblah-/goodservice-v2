@@ -248,10 +248,10 @@ class Api::SlackController < ApplicationController
     trips = [:north, :south].to_h { |direction|
       [direction, trips_by_routes_array.flat_map { |route_hash|
         route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
-        actual_direction = Api::StopsController.determine_direction(direction, stop_id, route_id)
+        actual_direction = Api::StopsController.determine_direction(direction, stop.internal_id, route_id)
           route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
         }.select { |trip|
-          trip&.upcoming_stops(time_ref: timestamp)&.include?(stop_id)
+          trip&.upcoming_stops(time_ref: timestamp)&.include?(stop.internal_id)
         }.map { |trip| transform_trip(stop.internal_id, trip, travel_times, timestamp)}.sort_by { |trip| trip[:arrival_time] }
       ]
     }
