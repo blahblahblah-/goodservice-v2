@@ -310,6 +310,7 @@ class StationModal extends React.Component {
               }
               <Modal.Description>
                 <Header inverted as='h5'>
+                  View on a map at <a href={`https://www.theweekendest.com/stations/${station.id}`} target="_blank">The Weekendest</a>.<br />
                   Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
                 </Header>
               </Modal.Description>

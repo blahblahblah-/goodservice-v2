@@ -245,6 +245,7 @@ class TripModal extends React.Component {
               }
             </Table>
             <Header inverted as='h5'>
+              View on a map at <a href={`https://www.theweekendest.com/trains/${train.id}/${selectedTrip.id}`} target="_blank">The Weekendest</a>.<br />
               Last updated {trip && (new Date(trip.timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
             </Header>
           </Modal.Description>

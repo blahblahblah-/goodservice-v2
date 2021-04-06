@@ -171,7 +171,8 @@ class TrainModal extends React.Component {
                   <TrainModalOverviewPane train={train} trains={trains} stations={stations} />
                 }
                   <Header inverted as='h5'>
-                    Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
+                    View on a map at <a href={`https://www.theweekendest.com/trains/${train.id}`} target="_blank">The Weekendest</a>.<br />
+                    Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.
                   </Header>
                 </Modal.Description>
               </Modal.Content>
