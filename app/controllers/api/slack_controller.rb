@@ -10,10 +10,8 @@ class Api::SlackController < ApplicationController
     elsif (route = Scheduled::Route.find_by(internal_id: query))
       result = route_response(route)
     elsif query == 'delays'
-      track_event('slash', 'delays', user_id, workspace)
       result = delays_response
     else
-      track_event('slash', 'default', user_id, workspace)
       result = default_response
     end
    
