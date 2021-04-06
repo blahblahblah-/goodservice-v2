@@ -112,11 +112,13 @@ class Api::SlackController < ApplicationController
                 },
                 "options": stops.map { |stop|
                   routes_stop_at = transform_to_routes_array(futures[s.internal_id])
-                  "text": {
-                    "type": "plain_text",
-                    "text": (s.secondary_name ? "#{s.stop_name.gsub(/ - /, '–')} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name.gsub(/ - /, '–')} - #{routes_stop_at.join(', ')}")
-                  },
-                  "value": s.internal_id,
+                  {
+                    "label": {
+                      "type": "plain_text",
+                      "text": (s.secondary_name ? "#{s.stop_name.gsub(/ - /, '–')} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name.gsub(/ - /, '–')} - #{routes_stop_at.join(', ')}")
+                    },
+                    "value": s.internal_id,
+                  }
                 }
               }
             }
