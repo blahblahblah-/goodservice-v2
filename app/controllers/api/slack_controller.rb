@@ -300,7 +300,7 @@ class Api::SlackController < ApplicationController
             if t[:is_delayed]
               "Delayed (#{t[:route_id]}"
             else
-              "#{[(t[:arrival_time] / 60).round, 0].max} min (#{t[:route_id]}"
+              "#{[(t[:arrival_time] / 60).round, 0].max} min (#{t[:route_id]})"
             end
           }.join(', ')
         }

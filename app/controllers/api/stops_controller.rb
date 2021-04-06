@@ -94,7 +94,7 @@ class Api::StopsController < ApplicationController
       trips = [1, 3].to_h { |direction|
         [direction, trips_by_routes_array.flat_map { |route_hash|
             route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
-            actual_direction = determine_direction(direction, stop_id, route_id)
+            actual_direction = self.class.determine_direction(direction, stop_id, route_id)
             route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
           }.select { |trip|
             trip&.upcoming_stops(time_ref: timestamp)&.include?(stop_id)
