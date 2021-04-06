@@ -54,6 +54,7 @@ class Api::SlackController < ApplicationController
   def default_response
     routes = Scheduled::Route.all
     stops = Scheduled::Stop.all
+    futures = {}
     REDIS_CLIENT.pipelined do
       futures = stops.to_h { |stop|
         [stop.internal_id, [1, 3].to_h { |direction|
@@ -118,7 +119,7 @@ class Api::SlackController < ApplicationController
     }
   end
 
-  def delays_response(info)
+  def delays_response
     delayed_routes = RedisStore.route_status_summaries&.to_h { |k, v|
       data = JSON.parse(v)
       r = routes_with_alternate_names[k]
