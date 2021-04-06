@@ -129,7 +129,7 @@ class Api::SlackController < ApplicationController
                   {
                     "text": {
                       "type": "plain_text",
-                      "text": (s.secondary_name ? "#{s.stop_name.gsub(/ - /, '–')} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name.gsub(/ - /, '–')} - #{routes_stop_at.join(', ')}")
+                      "text": (s.secondary_name ? "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name} - #{routes_stop_at.join(', ')}")
                     },
                     "value": s.internal_id,
                   }
@@ -263,7 +263,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": stop.secondary_name ? "*#{stop.stop_name}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}" : "*#{stop.stop_name}* - #{routes_stop_at.join(', ')}"
+          "text": stop.secondary_name ? "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}" : "*#{stop.stop_name.gsub(/ - /, '–')}* - #{routes_stop_at.join(', ')}"
         }
       }
     ]
