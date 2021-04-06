@@ -127,7 +127,7 @@ class Api::SlackController < ApplicationController
                 "options": stops_start_with_this_letter.map { |s|
                   routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   {
-                    "label": {
+                    "text": {
                       "type": "plain_text",
                       "text": (s.secondary_name ? "#{s.stop_name.gsub(/ - /, '–')} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name.gsub(/ - /, '–')} - #{routes_stop_at.join(', ')}")
                     },
