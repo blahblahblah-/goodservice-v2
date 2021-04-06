@@ -104,13 +104,27 @@ class Api::SlackController < ApplicationController
               "type": "plain_text",
               "text": "Select a Station",
             },
-            "option_groups": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.group_by{ |s| s.stop_name[0].match?(/[[:digit:]]/) ? '#' : s.stop_name[0]}.map { |first_letter, stops|
+            "option_groups": Naturally.sort_by(stops){ |s| "#{s.stop_name} #{s.secondary_name}" }.group_by{ |s|
+              if s.stop_name[0].match?(/[[:digit:]]/)
+                i = s.stop_name.index(' ')
+                number = s.stop_name[0...i].to_i
+                if number < 50
+                  "1 - 49"
+                elsif number < 100
+                  "50 - 99"
+                else
+                  "100+"
+                end
+              else
+                s.stop_name[0]
+              end
+            }.map { |first_letter, stops_start_with_this_letter|
               {
                 "label": {
                   "type": "plain_text",
                   "text": first_letter
                 },
-                "options": stops.map { |s|
+                "options": stops_start_with_this_letter.map { |s|
                   routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   {
                     "label": {
