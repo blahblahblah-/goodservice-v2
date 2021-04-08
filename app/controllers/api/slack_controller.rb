@@ -119,6 +119,13 @@ class Api::SlackController < ApplicationController
                 s.stop_name[0]
               end
             }.map { |first_letter, stops_start_with_this_letter|
+              stop_name = "#{s.stop_name} - #{routes_stop_at.join(', ')}"
+              if s.secondary_name
+                stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}"
+              end
+              if accessible_stops[s.internal_id]
+                stop_name << " :wheelchair:"
+              end
               {
                 "label": {
                   "type": "plain_text",
@@ -129,7 +136,7 @@ class Api::SlackController < ApplicationController
                   {
                     "text": {
                       "type": "plain_text",
-                      "text": (s.secondary_name ? "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}" : "#{s.stop_name} - #{routes_stop_at.join(', ')}")
+                      "text": stop_name
                     },
                     "value": s.internal_id,
                   }
@@ -257,13 +264,20 @@ class Api::SlackController < ApplicationController
     }
 
     elevator_advisories = elevator_advisories_str ? JSON.parse(elevator_advisories_str) : {}
-    
+    stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* - #{routes_stop_at.join(', ')}"
+    if stop.secondary_name
+      stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}"
+    end
+    if accessible_stops[stop_name]
+      stop_name << " :wheelchair:"
+    end
+
     result = [
       {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": stop.secondary_name ? "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}" : "*#{stop.stop_name.gsub(/ - /, '–')}* - #{routes_stop_at.join(', ')}"
+          "text": stop_name,
         }
       }
     ]
@@ -349,6 +363,37 @@ class Api::SlackController < ApplicationController
       destination_stop: trip.destination,
       is_delayed: trip.delayed?,
     }
+  end
+
+  def accessible_stops
+    return @accessible_stops if @accessible_stops
+    accessible_stops_list_str = RedisStore.accessible_stops_list
+    return unless accessible_stops_list_str.present?
+    accessible_stops_list = JSON.parse(accessible_stops_list_str)
+    @accessible_stops = accessible_stops_list.to_h do |s|
+      directions = ['north', 'south']
+
+      if Api::StopsController::ADA_OVERRIDES.include?("#{s}N")
+        directions.delete('north')
+      end
+
+      if Api::StopsController::ADA_OVERRIDES.include?("#{s}S")
+        directions.delete('south')
+      end
+
+      [s, directions]
+    end
+
+    Api::StopsController::ADA_ADDITIONAL_STOPS.each do |s|
+      direction = s[3] == 'N' ? 'north' : 'south'
+      if @accessible_stops[s[0..2]]
+        @accessible_stops[s[0..2]] << direction
+      else
+        @accessible_stops[s[0..2]] = [direction]
+      end
+    end
+
+    @accessible_stops
   end
 
   def verify_slack_request
