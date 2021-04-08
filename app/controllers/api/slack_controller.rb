@@ -302,7 +302,8 @@ class Api::SlackController < ApplicationController
       destination_str = "_To #{destinations.join(', ').gsub(/ - /, '–')}_"
       if accessible_stops[stop.internal_id].present?
         destination_str << " :wheelchair:"
-        unless accessible_stops[stop.internal_id].include?(direction)
+        direction_str = direction == 1 ? 'north' : 'south'
+        unless accessible_stops[stop.internal_id].include?(direction_str)
           destination_str << ":x:"
         end
       end
