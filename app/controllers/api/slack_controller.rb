@@ -320,7 +320,7 @@ class Api::SlackController < ApplicationController
           "type": "mrkdwn",
           "text": trips_by_direction.slice(0, 5).map { |t|
             if t[:is_delayed]
-              "Delayed (#{t[:route_id]}"
+              "Delayed (#{t[:route_id]})"
             else
               "#{[(t[:arrival_time] / 60).round, 0].max} min (#{t[:route_id]})"
             end
