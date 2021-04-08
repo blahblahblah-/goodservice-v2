@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup, Icon } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -124,7 +124,7 @@ class StationModal extends React.Component {
     );
   }
 
-  renderDepartureTable(direction, station, trains, stations) {
+  renderDepartureTable(direction, selectedStation, station, trains, stations) {
     const trips = station.upcoming_trips[direction];
 
     if (!trips) {
@@ -135,7 +135,24 @@ class StationModal extends React.Component {
     const destinations = [...new Set(trips.map((t) => t.destination_stop))].map((s) => formatStation(stations[s].name)).sort().join(', ');
     return (
       <React.Fragment>
-        <Header as='h4' inverted>To { destinations }</Header>
+        <Header as='h4' inverted>
+          To { destinations }
+          {
+            selectedStation.accessibility && selectedStation.accessibility.directions.includes(direction) &&
+            <span className='accessible-icon' title='This travel direction is accessible'>
+              <Icon name='accessible' color='blue' />
+            </span>
+          }
+          {
+            selectedStation.accessibility && !selectedStation.accessibility.directions.includes(direction) &&
+            <span className='not-accessible accessible-icon' title='This travel direction is not accessible'>
+              <Icon.Group>
+                <Icon name='accessible' color='blue' />
+                <Icon size='large' color='red' name='dont' />
+              </Icon.Group>
+            </span>
+          }
+        </Header>
         <Table fixed inverted unstackable size='small' compact className='trip-table'>
           <Table.Header>
             <Table.Row>
@@ -303,10 +320,10 @@ class StationModal extends React.Component {
                 </Header>
               </Divider>
               {
-                this.renderDepartureTable('north', station, trains, stations)
+                this.renderDepartureTable('north', selectedStation, station, trains, stations)
               }
               {
-                this.renderDepartureTable('south', station, trains, stations)
+                this.renderDepartureTable('south', selectedStation, station, trains, stations)
               }
               <Modal.Description>
                 <Header inverted as='h5'>

@@ -1,9 +1,15 @@
-.accessible-icon i.icons {
-  .blue.accessible.icon {
-    margin-right: .25em !important;
+.accessible-icon {
+  i.icons {
+    .blue.accessible.icon {
+      margin-right: .25em !important;
+    }
+
+    .corner.icon {
+      text-shadow: none;
+    }
   }
 
-  .corner.icon {
-    text-shadow: none;
+  &.not-accessible {
+    margin-left: .5em;
   }
 }
