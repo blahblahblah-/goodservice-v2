@@ -268,7 +268,7 @@ class Api::SlackController < ApplicationController
     if stop.secondary_name
       stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}"
     end
-    if accessible_stops[stop_name]
+    if accessible_stops[stop.internal_id]
       stop_name << " :wheelchair:"
     end
 
@@ -296,14 +296,22 @@ class Api::SlackController < ApplicationController
       "type": "divider"
     }
 
-    trips.each do |_, trips_by_direction|
+    trips.each do |direction, trips_by_direction|
       next unless trips_by_direction.present?
       destinations = trips_by_direction.map { |t| t[:destination_stop]}.uniq.map { |d| Scheduled::Stop.find_by(internal_id: d).stop_name.gsub(/ - /, '–') }.sort
+      destination_str = "_To #{destinations.join(', ').gsub(/ - /, '–')}_"
+      if accessible_stops[stop.internal_id].present?
+        destination_str << " :wheelchair:"
+        unless accessible_stops[stop.internal_id].include?(direction)
+          destination_str << ":x:"
+        end
+      end
+
       result << {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "_To #{destinations.join(', ').gsub(/ - /, '–')}_"
+          "text": directions_str
         }
       }
       result << {
