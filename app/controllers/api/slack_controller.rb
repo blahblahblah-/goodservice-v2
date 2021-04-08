@@ -119,19 +119,19 @@ class Api::SlackController < ApplicationController
                 s.stop_name[0]
               end
             }.map { |first_letter, stops_start_with_this_letter|
-              stop_name = "#{s.stop_name} - #{routes_stop_at.join(', ')}"
-              if s.secondary_name
-                stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}"
-              end
-              if accessible_stops[s.internal_id]
-                stop_name << " :wheelchair:"
-              end
               {
                 "label": {
                   "type": "plain_text",
                   "text": first_letter
                 },
                 "options": stops_start_with_this_letter.map { |s|
+                  stop_name = "#{s.stop_name} - #{routes_stop_at.join(', ')}"
+                  if s.secondary_name
+                    stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}"
+                  end
+                  if accessible_stops[s.internal_id]
+                    stop_name << " :wheelchair:"
+                  end
                   routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   {
                     "text": {
