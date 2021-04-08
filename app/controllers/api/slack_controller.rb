@@ -125,6 +125,7 @@ class Api::SlackController < ApplicationController
                   "text": first_letter
                 },
                 "options": stops_start_with_this_letter.map { |s|
+                  routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   stop_name = "#{s.stop_name} - #{routes_stop_at.join(', ')}"
                   if s.secondary_name
                     stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}"
@@ -132,7 +133,6 @@ class Api::SlackController < ApplicationController
                   if accessible_stops[s.internal_id]
                     stop_name << " :wheelchair:"
                   end
-                  routes_stop_at = transform_to_routes_array(futures[s.internal_id])
                   {
                     "text": {
                       "type": "plain_text",
