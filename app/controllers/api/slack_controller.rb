@@ -311,7 +311,7 @@ class Api::SlackController < ApplicationController
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": directions_str
+          "text": destination_str
         }
       }
       result << {
