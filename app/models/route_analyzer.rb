@@ -111,7 +111,11 @@ class RouteAnalyzer
         first_stop = delayed_sections[direction[:route_direction]].first[:begin]
         last_stop = delayed_sections[direction[:route_direction]].last[:end]
         max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60).round
-        strs << "delayed between #{stop_name(first_stop)} and #{stop_name(last_stop)} (for #{max_delay_mins} mins)"
+        if first_stop == last_stop
+          strs << "delayed at #{stop_name(first_stop)} (for #{max_delay_mins} mins)"
+        else
+          strs << "delayed between #{stop_name(first_stop)} and #{stop_name(last_stop)} (for #{max_delay_mins} mins)"
+        end
       end
 
       if slow_sections[direction[:route_direction]].present?
