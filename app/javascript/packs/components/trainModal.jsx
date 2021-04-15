@@ -94,21 +94,23 @@ class TrainModal extends React.Component {
     let trip = null;
     let className = 'train-modal';
     if (train && match.params.id === train.id && match.params.direction && match.params.tripId) {
-      const direction = match.params.direction === 'N' ? 'north' : 'south'
-      const routingKey = Object.keys(train.trips[direction]).find((routingKey) => {
-        trip = train.trips[direction][routingKey].find((trip) => {
-          return trip.id === match.params.tripId;
+      const direction = match.params.direction === 'N' ? 'north' : 'south';
+      if (train.trips[direction]) {
+        const routingKey = Object.keys(train.trips[direction]).find((routingKey) => {
+          trip = train.trips[direction][routingKey].find((trip) => {
+            return trip.id === match.params.tripId;
+          });
+          return trip;
         });
-        return trip;
-      });
-      if (!trip) {
-        return (<Redirect to={`/trains/${train.id}`} />);
+        if (!trip) {
+          return (<Redirect to={`/trains/${train.id}`} />);
+        }
+        const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
+        tripModal = (
+          <TripModal train={train} trains={trains} selectedTrip={trip} stations={stations} direction={direction} routing={routing} />
+        );
+        className = 'train-modal dimmable dimmed blurring';
       }
-      const routing = train.actual_routings[direction].find((r) => routingHash(r) === routingKey);
-      tripModal = (
-        <TripModal train={train} trains={trains} selectedTrip={trip} stations={stations} direction={direction} routing={routing} />
-      );
-      className = 'train-modal dimmable dimmed blurring';
     }
     return (
       <Modal basic size='fullscreen' open={selected} closeIcon dimmer='blurring'
