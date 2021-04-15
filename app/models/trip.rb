@@ -113,6 +113,7 @@ class Trip
     return unless (next_stop_time - timestamp) <= 1080
     if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
       self.delayed_time = 0
+      return
     end
     self.delayed_time = previous_trip.delayed_time if previous_trip.delayed_time
     self.delayed_time += (destination_time - previous_trip.destination_time)
