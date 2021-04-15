@@ -213,6 +213,15 @@ class RedisStore
       REDIS_CLIENT.get("delayed-routes")
     end
 
+    # Delay Notifications
+    def update_delay_notifications(data)
+      REDIS_CLIENT.set("delay-notifications", data, ex: 1800)
+    end
+
+    def delay_notifications
+      REDIS_CLIENT.get("delay-notifications")
+    end
+
     # Routings
     def current_routings
       REDIS_CLIENT.get("current-routings")
