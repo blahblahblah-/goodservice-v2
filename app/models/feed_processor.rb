@@ -168,7 +168,7 @@ class FeedProcessor
       if marshaled_previous_update
         previous_update = Marshal.load(marshaled_previous_update)
 
-        if trip.timestamp != previous_update.timestamp
+        if trip.timestamp != previous_update.timestamp || (Time.current.to_i - previous_update.timestamp) >= 4.minutes.to_i
           trip.previous_trip = previous_update
           trip.previous_trip.previous_trip = nil
         else
