@@ -5,7 +5,7 @@ class DelayNotification
     @routes = [route]
     @direction = direction
     @stops = stops
-    @destinations = destinations
+    @destinations = destinations.uniq
   end
 
   def append!(route, new_stops, routing, new_destinations)
