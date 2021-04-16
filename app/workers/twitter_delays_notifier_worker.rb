@@ -4,6 +4,7 @@ class TwitterDelaysNotifierWorker
 
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
   DELAY_THRESHOLD = ENV['DELAY_NOTIFICATION_THRESHOLD'].to_i || 10.minutes.to_i
+  DELAY_CLEARED_TIMEOUT_MINS = ENV['DELAY_CLEARED_TIMEOUT_MINS'].to_i || 10
 
   def perform
     return unless twitter_client
@@ -80,6 +81,16 @@ class TwitterDelaysNotifierWorker
       end
     end
 
+    delayed_not_timed_out = prev_delays.select do |d|
+      d.update_not_observed!
+      d.mins_since_observed < DELAY_CLEARED_TIMEOUT_MINS
+    end
+
+    delayed_not_timed_out.each do |d|
+      delays << d
+      prev_delays.delete(d)
+    end
+
     tweet_delays!(prev_delays, delays, updated_delays)
     delays.select!(&:last_tweet_id)
     marshaled_delays = Marshal.dump(delays)
@@ -125,6 +136,7 @@ class TwitterDelaysNotifierWorker
     end
 
     delays.each do |d|
+      next if d.mins_since_observed && d.mins_since_observed > 0
       next if d.last_tweet_id && d.last_tweet_time > Time.current - 10.minutes
       url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
       if d.stops.size == 1

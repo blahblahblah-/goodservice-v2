@@ -1,11 +1,12 @@
 class DelayNotification
-  attr_accessor :routes, :direction, :stops, :destinations, :last_tweet_id, :last_tweet_time
+  attr_accessor :routes, :direction, :stops, :destinations, :last_tweet_id, :last_tweet_time, :mins_since_observed
 
   def initialize(route, direction, stops, routing, destinations)
     @routes = [route]
     @direction = direction
     @stops = stops
     @destinations = destinations.uniq
+    @mins_since_observed = 0
   end
 
   def append!(route, new_stops, routing, new_destinations)
@@ -17,5 +18,9 @@ class DelayNotification
 
   def match_routing?(routing)
     routing.each_cons(stops.size).any? { |arr| arr == stops }
+  end
+
+  def update_not_observed!
+    @mins_since_observed.to_i.succ
   end
 end
