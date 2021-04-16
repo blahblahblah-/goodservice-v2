@@ -46,6 +46,7 @@ class TwitterDelaysNotifierWorker
           stops = delayed_trips.map(&:upcoming_stop).uniq
           i = routing.index(stops.first)
           j = routing.index(stops.last)
+          next if i == j && i == routing.size - 1
           routing_subset = routing[i..j]
           upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, routing_subset, routing, destinations)
         else
