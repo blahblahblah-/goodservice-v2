@@ -42,11 +42,12 @@ class TwitterDelaysNotifierWorker
         route_status = JSON.parse(encoded_status)
         if trips_by_routings.keys.size == 1
           routing = route_status["actual_routings"][direction].first
+          destinations = [routing.last]
           stops = delayed_trips.map(&:upcoming_stop).uniq
           i = routing.index(stops.first)
           j = routing.index(stops.last)
           routing_subset = routing[i..j]
-          upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, routing_subset, routing)
+          upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, routing_subset, routing, destinations)
         else
           routing_keys = trips_by_routings.keys.sort { |a, b|
             if a == 'blended'
@@ -63,20 +64,23 @@ class TwitterDelaysNotifierWorker
           delayed_trips_by_routings.each do |routing_key, delayed_trips|
             if routing_key == 'blended'
               routing = route_status['common_routings'][direction]
+              destinations = route_status['actual_routings'][direction].map(&:last)
             else
               routing = route_status['actual_routings'][direction].find {|r| routing_key == "#{r.first}-#{r.last}-#{r.size}"}
+              destinations = [routing.last]
             end
             stops = delayed_trips.map(&:upcoming_stop).uniq
             i = routing.index(stops.first)
             j = routing.index(stops.last)
             routing_subset = routing[i..j]
-            upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, routing_subset, routing)
+            upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, routing_subset, routing, destinations)
           end
         end
       end
     end
 
     tweet_delays!(prev_delays, delays, updated_delays)
+    delays.select!(&:last_tweet_id)
     marshaled_delays = Marshal.dump(delays)
     RedisStore.update_delay_notifications(marshaled_delays)
   end
@@ -89,7 +93,7 @@ class TwitterDelaysNotifierWorker
     Marshal.load(marshaled_notifications)
   end
 
-  def upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, stops, routing)
+  def upsert_delay_notification(prev_delays, delays, updated_delays, route_id, direction, stops, routing, destinations)
     actual_direction = direction
     if route_id == 'M' && stops.any? { |s| Api::StopsController::M_TRAIN_SHUFFLE_STOPS.include?(s) }
       actual_direction = direction == "north" ? "south" : "north"
@@ -105,11 +109,11 @@ class TwitterDelaysNotifierWorker
 
     if matching_delay
       route_exists_for_delay = matching_delay.routes.include?(route_id)
-      matching_delay.append!(route_id, stops, routing)
+      matching_delay.append!(route_id, stops, routing, destinations)
       delay_to_add = matching_delay
       updated_delays << delay_to_add unless route_exists_for_delay || delay_to_add.last_tweet_id.nil?
     else
-      delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing)
+      delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations)
     end
     delays << delay_to_add
   end
