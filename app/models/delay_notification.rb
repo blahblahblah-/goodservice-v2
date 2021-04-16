@@ -1,5 +1,5 @@
 class DelayNotification
-  attr_accessor :routes, :direction, :stops, :destinations, :last_tweet_id
+  attr_accessor :routes, :direction, :stops, :destinations, :last_tweet_id, :last_tweet_time
 
   def initialize(route, direction, stops, routing, destinations)
     @routes = [route]

@@ -124,13 +124,17 @@ class TwitterDelaysNotifierWorker
     end
 
     delays.each do |d|
-      next if d.last_tweet_id
+      next if d.last_tweet_id && d.last_tweet_time > Time.current - 10.minutes
+      url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
       if d.stops.size == 1
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{stop_name(d.stops.first)}.")
+        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{stop_name(d.stops.first)}.#{url}")
       else
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed between #{stop_name(d.stops.first)} and #{stop_name(d.stops.last)}.")
+        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed between #{stop_name(d.stops.first)} and #{stop_name(d.stops.last)}.#{url}")
       end
-      d.last_tweet_id = results.id if results
+      if results
+        d.last_tweet_id = results.id
+        d.last_tweet_time = Time.current
+      end
     end
 
     updated_delays.each do |d|
@@ -139,7 +143,10 @@ class TwitterDelaysNotifierWorker
       else
         results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed between #{stop_name(d.stops.first)} and #{stop_name(d.stops.last)}.  #{tweet_url(d.last_tweet_id)}")
       end
-      d.last_tweet_id = results.id if results
+      if results
+        d.last_tweet_id = results.id
+        d.last_tweet_time = Time.current
+      end
     end
   end
 
