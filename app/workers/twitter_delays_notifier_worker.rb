@@ -45,7 +45,7 @@ class TwitterDelaysNotifierWorker
           routing = route_status["actual_routings"][direction].first
           destinations = [routing.last]
           stops = delayed_trips.map(&:upcoming_stop).uniq
-          max_delays = delayed_trips.map(&:effective_delayed_time).max
+          max_delay = delayed_trips.map(&:effective_delayed_time).max
           i = routing.index(stops.first)
           j = routing.index(stops.last)
           next if i == j && i == routing.size - 1
@@ -73,7 +73,7 @@ class TwitterDelaysNotifierWorker
               destinations = [routing.last]
             end
             stops = delayed_trips.map(&:upcoming_stop).uniq
-            max_delays = delayed_trips.map(&:effective_delayed_time).max
+            max_delay = delayed_trips.map(&:effective_delayed_time).max
             i = routing.index(stops.first)
             j = routing.index(stops.last)
             routing_subset = routing[i..j]
@@ -142,11 +142,7 @@ class TwitterDelaysNotifierWorker
       next if d.mins_since_observed && d.mins_since_observed > 0
       next if d.last_tweet_id && d.last_tweet_time > Time.current - 10.minutes
       url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
-      if d.stops.size == 1
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{stop_name(d.stops.first)}.#{url}")
-      else
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed between #{stop_name(d.stops.first)} and #{stop_name(d.stops.last)}.#{url}")
-      end
+      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.#{url}")
       if results
         d.last_tweet_id = results.id
         d.last_tweet_time = Time.current
@@ -154,16 +150,25 @@ class TwitterDelaysNotifierWorker
     end
 
     updated_delays.each do |d|
-      if d.stops.size == 1
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{stop_name(d.stops.first)}.  #{tweet_url(d.last_tweet_id)}")
-      else
-        results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed between #{stop_name(d.stops.first)} and #{stop_name(d.stops.last)}.  #{tweet_url(d.last_tweet_id)}")
-      end
+      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}")
       if results
         d.last_tweet_id = results.id
         d.last_tweet_time = Time.current
       end
     end
+  end
+
+  def delayed_sections(affected_sections)
+    affected_sections.each_with_index.map { |s, i|
+      str = (i == affected_sections.size - 1) ? "and " : ""
+      if s.size == 1
+        str << "at #{stop_name(s.first)}"
+      else
+        str << "between #{stop_name(s.first)} and #{stop_name(s.last)}"
+      end
+
+      str
+    }.join(", ")
   end
 
   def stop_name(stop_id)
