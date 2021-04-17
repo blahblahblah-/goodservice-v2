@@ -3,8 +3,8 @@ class TwitterDelaysNotifierWorker
   sidekiq_options retry: 1, queue: 'critical'
 
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
-  DELAY_THRESHOLD = ENV['DELAY_NOTIFICATION_THRESHOLD'].to_i || 10.minutes.to_i
-  DELAY_CLEARED_TIMEOUT_MINS = ENV['DELAY_CLEARED_TIMEOUT_MINS'].to_i || 10
+  DELAY_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
+  DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
 
   def perform
     return unless twitter_client

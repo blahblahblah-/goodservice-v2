@@ -21,6 +21,6 @@ class DelayNotification
   end
 
   def update_not_observed!
-    @mins_since_observed.to_i.succ
+    @mins_since_observed = mins_since_observed.to_i.succ
   end
 end
