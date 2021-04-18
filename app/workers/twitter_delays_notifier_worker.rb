@@ -5,6 +5,7 @@ class TwitterDelaysNotifierWorker
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
   DELAY_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
   DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
+  REANNOUNCE_DELAY_TIME = (ENV['DELAY_NOTIFICATION_REANNOUNCE_TIME'] || 15.minutes).to_i
 
   def perform
     return unless twitter_client
@@ -140,7 +141,7 @@ class TwitterDelaysNotifierWorker
 
     delays.each do |d|
       next if d.mins_since_observed && d.mins_since_observed > 0
-      next if d.last_tweet_id && d.last_tweet_time > Time.current - 10.minutes
+      next if d.last_tweet_id && d.last_tweet_time > Time.current.to_i - REANNOUNCE_DELAY_TIME
       url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
       results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.#{url}")
       if results

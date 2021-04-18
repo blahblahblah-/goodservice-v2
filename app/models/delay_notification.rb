@@ -13,7 +13,7 @@ class DelayNotification
   def append!(route, new_stops, routing, new_destinations)
     @routes = (routes + [route]).uniq.sort
     @destinations = (destinations + new_destinations).uniq
-    matched_section = affected_sections&.find { |section| routing.each_cons(section.size).any? { |arr| arr == section } }
+    matched_section = affected_sections.find { |section| routing.each_cons(section.size).any? { |arr| arr == section } }
 
     if matched_section
       indices = [matched_section.first, matched_section.last, new_stops.first, new_stops.last].map {|s| routing.index(s) }
@@ -31,6 +31,6 @@ class DelayNotification
   end
 
   def update_not_observed!
-    @mins_since_observed = mins_since_observed.to_i.succ
+    @mins_since_observed += 1
   end
 end
