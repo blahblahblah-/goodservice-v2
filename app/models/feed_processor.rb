@@ -79,7 +79,7 @@ class FeedProcessor
           route_data_encoded = RedisStore.route_status(route_id)
           if route_data_encoded
             route_data = JSON.parse(route_data_encoded)
-            if route_data['timestamp'] >= (Time.current - 4.minutes).to_i
+            if route_data['timestamp'] >= (Time.current - 2.minutes).to_i
               puts "No updated trips for #{route_id}, skipping..."
               next
             end
