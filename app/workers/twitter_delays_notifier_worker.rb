@@ -3,7 +3,7 @@ class TwitterDelaysNotifierWorker
   sidekiq_options retry: 1, queue: 'critical'
 
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
-  DELAY_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
+  DELAY_NOTIFICATION_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
   DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
   REANNOUNCE_DELAY_TIME = (ENV['DELAY_NOTIFICATION_REANNOUNCE_TIME'] || 15.minutes).to_i
 
@@ -128,7 +128,7 @@ class TwitterDelaysNotifierWorker
       delay_to_add = matching_delay
       updated_delays << delay_to_add unless route_exists_for_delay || delay_to_add.last_tweet_id.nil?
     else
-      return if max_delay < DELAY_THRESHOLD
+      return if max_delay < DELAY_NOTIFICATION_THRESHOLD
       delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations)
     end
     delays << delay_to_add

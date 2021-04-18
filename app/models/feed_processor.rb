@@ -5,8 +5,6 @@ class FeedProcessor
   UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes.to_i
   SI_FEED = '-si'
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
-  DELAY_THRESHOLD = 5.minutes.to_i
-  EXCESSIVE_DELAY_THRESHOLD = 10.minutes.to_i
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
@@ -174,7 +172,6 @@ class FeedProcessor
         else
           puts "#{trip.id} has not been updated since #{Time.zone.at(trip.timestamp)}"
           trip.previous_trip = trip.previous_trip&.previous_trip
-          trip.delayed_time = previous_update.delayed_time
           trip.latest = false
         end
 
@@ -185,12 +182,7 @@ class FeedProcessor
 
     def update_trip(feed_id, timestamp, trip)
       return unless trip.latest
-      trip.update_delay!
       process_stops(trip)
-      if trip.effective_delayed_time >= DELAY_THRESHOLD
-        puts "Delay detected for #{trip.id} for #{trip.effective_delayed_time}"
-        RedisStore.add_delay(trip.route_id, trip.direction, trip.id, trip.timestamp)
-      end
       marshaled_trip = Marshal.dump(trip)
       trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
         stop_ids = station_ids.split('-')
@@ -205,7 +197,6 @@ class FeedProcessor
 
     def process_stops(trip)
       if trip.previous_trip &&
-        trip.previous_trip.effective_delayed_time < EXCESSIVE_DELAY_THRESHOLD &&
         (trip.previous_trip.previous_stop_schedule_discrepancy >= SCHEDULE_DISCREPANCY_THRESHOLD ||
             trip.schedule_discrepancy - trip.previous_trip.previous_stop_schedule_discrepancy <= (SCHEDULE_DISCREPANCY_THRESHOLD * -1)
         )

@@ -1,4 +1,5 @@
 class Processed::Trip
+  DELAY_THRESHOLD = 5.minutes.to_i
   delegate :id, :route_id, :stops_behind, :timestamp, :direction, :upcoming_stop, :upcoming_stops, :time_until_upcoming_stop,
   :effective_delayed_time, :delayed_time, :delayed?,
   :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :schedule_discrepancy, :past_stops, to: :trip
@@ -16,6 +17,18 @@ class Processed::Trip
       determine_previous_stop_info!(routing)
     end
     calculate_time_until_next_trip!(next_trip, routing)
+  end
+
+  def delayed_time
+    [Time.current.to_i - estimated_upcoming_stop_arrival_time, 0].max
+  end
+
+  def effective_delayed_time
+    [[schedule_discrepancy, delayed_time].min, 0].max
+  end
+
+  def delayed?
+    effective_delayed_time >= DELAY_THRESHOLD
   end
 
   private

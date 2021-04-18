@@ -1,6 +1,6 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :delayed_time, :schedule, :past_stops, :latest
+  attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest
 
   def initialize(route_id, direction, id, timestamp, trip_update)
     @route_id = route_id
@@ -14,7 +14,6 @@ class Trip
     @schedule = stop_time_hash
     @past_stops = {}
     @latest = true
-    @delayed_time = 0
   end
 
   def similar(trip)
@@ -107,22 +106,6 @@ class Trip
     end
   end
 
-  def update_delay!
-    return unless previous_trip
-    return unless next_stop_time
-    return unless (next_stop_time - timestamp) <= 1080
-    if stops_made.present? && (destination_time - previous_trip.destination_time) <= 30
-      self.delayed_time = 0
-      return
-    end
-    self.delayed_time = previous_trip.delayed_time if previous_trip.delayed_time
-    self.delayed_time += (destination_time - previous_trip.destination_time)
-  end
-
-  def effective_delayed_time
-    [[schedule_discrepancy, delayed_time].min, 0].max
-  end
-
   def time_between_stops(time_limit)
     stops.select { |_, time| time <= timestamp + time_limit}.each_cons(2).map { |a, b| ["#{a.first}-#{b.first}", b.last - a.last]}.to_h
   end
@@ -146,9 +129,5 @@ class Trip
   def previous_stop_schedule_discrepancy
     return 0 unless previous_stop
     previous_stop_arrival_time - scheduled_previous_stop_arrival_time
-  end
-
-  def delayed?
-    effective_delayed_time >= FeedProcessor::DELAY_THRESHOLD
   end
 end

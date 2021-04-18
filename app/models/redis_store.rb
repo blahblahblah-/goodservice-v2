@@ -115,11 +115,6 @@ class RedisStore
       REDIS_CLIENT.hdel("active-trips:#{feed_id}", trip_id)
     end
 
-    # Delays
-    def add_delay(route_id, direction, trip_id, timestamp)
-      REDIS_CLIENT.zadd("delay:#{route_id}:#{direction}", timestamp, trip_id)
-    end
-
     # Route stops
     def add_route_to_route_stop(route_id, stop_id, direction, timestamp)
       REDIS_CLIENT.zadd("routes-stop:#{stop_id}:#{direction}", timestamp, route_id)

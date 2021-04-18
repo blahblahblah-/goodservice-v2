@@ -82,7 +82,7 @@ class RouteAnalyzer
         else
           status = 'No Service'
         end
-      elsif delays[direction] && delays[direction] >= FeedProcessor::DELAY_THRESHOLD
+      elsif delays[direction] && delays[direction] >= Processed::Trip::DELAY_THRESHOLD
         status = 'Delay'
       elsif service_changes[direction_key]&.select(&:not_long_term?).present? || service_changes[:both]&.select(&:not_long_term?).present?
         status = 'Service Change'
@@ -334,7 +334,7 @@ class RouteAnalyzer
             end: next_trip_prev_stop,
             delayed_time: t.effective_delayed_time
           }
-        }.select { |t| t[:delayed_time] >= FeedProcessor::DELAY_THRESHOLD }
+        }.select { |t| t[:delayed_time] >= Processed::Trip::DELAY_THRESHOLD }
       }&.uniq { |t| t[:end] }
       [direction, delayed_trips]
     end
