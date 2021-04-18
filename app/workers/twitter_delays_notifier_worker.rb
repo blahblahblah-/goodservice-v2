@@ -151,7 +151,7 @@ class TwitterDelaysNotifierWorker
     end
 
     updated_delays.each do |d|
-      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed at #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}")
+      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}")
       if results
         d.last_tweet_id = results.id
         d.last_tweet_time = Time.current
