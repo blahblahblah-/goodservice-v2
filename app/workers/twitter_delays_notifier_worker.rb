@@ -160,7 +160,7 @@ class TwitterDelaysNotifierWorker
 
   def delayed_sections(affected_sections)
     affected_sections.each_with_index.map { |s, i|
-      str = (i == affected_sections.size - 1) ? "and " : ""
+      str = (i > 0 && i == affected_sections.size - 1) ? "and " : ""
       if s.size == 1
         str << "at #{stop_name(s.first)}"
       else
