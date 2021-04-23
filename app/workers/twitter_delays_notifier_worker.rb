@@ -207,7 +207,7 @@ class TwitterDelaysNotifierWorker
         end
         puts "Tweeting #{tweet_text} for #{route_id}"
         client = route_id == "all" ? twitter_client : twitter_route_client(route_id)
-        result = twitter_client.update!(text)
+        result = client.update!(text)
         if result
           delay_notification.last_tweet_ids[route_id] = result.id
           delay_notification.last_tweet_time = Time.current
