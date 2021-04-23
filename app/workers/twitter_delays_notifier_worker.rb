@@ -99,7 +99,7 @@ class TwitterDelaysNotifierWorker
     end
 
     tweet_delays!(prev_delays, delays, updated_delays)
-    delays.select!(&:last_tweet_id)
+    delays.select!(&:last_tweet_time)
     marshaled_delays = Marshal.dump(delays)
     RedisStore.update_delay_notifications(marshaled_delays)
   end
@@ -130,7 +130,7 @@ class TwitterDelaysNotifierWorker
       route_exists_for_delay = matching_delay.routes.include?(route_id)
       matching_delay.append!(route_id, stops, routing, destinations)
       delay_to_add = matching_delay
-      updated_delays << delay_to_add unless route_exists_for_delay || delay_to_add.last_tweet_id.nil?
+      updated_delays << delay_to_add unless route_exists_for_delay || delay_to_add.last_tweet_ids.empty?
     else
       return if max_delay < DELAY_NOTIFICATION_THRESHOLD
       delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations)
@@ -145,7 +145,7 @@ class TwitterDelaysNotifierWorker
 
     delays.each do |d|
       next if d.mins_since_observed && d.mins_since_observed > 0
-      next if d.last_tweet_id && d.last_tweet_time.to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
+      next if d.last_tweet_ids.present? && d.last_tweet_time.to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
       tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.")
     end
 
