@@ -140,26 +140,17 @@ class TwitterDelaysNotifierWorker
 
   def tweet_delays!(prev_delays, delays, updated_delays)
     prev_delays.each do |d|
-      tweet("Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains. #{tweet_url(d.last_tweet_id)}", d.routes)
+      tweet(d, "Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains.")
     end
 
     delays.each do |d|
       next if d.mins_since_observed && d.mins_since_observed > 0
       next if d.last_tweet_id && d.last_tweet_time.to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
-      url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
-      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.#{url}", d.routes)
-      if results
-        d.last_tweet_id = results.id
-        d.last_tweet_time = Time.current
-      end
+      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.")
     end
 
     updated_delays.each do |d|
-      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}", d.routes)
-      if results
-        d.last_tweet_id = results.id
-        d.last_tweet_time = Time.current
-      end
+      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.")
     end
   end
 
@@ -197,29 +188,34 @@ class TwitterDelaysNotifierWorker
     }.sort.join(', ')
   end
 
-  def tweet_url(tweet_id)
-    twitter_account = ENV['TWITTER_USERNAME'] || "goodservicetest"
-    "https://twitter.com/#{twitter_account}/status/#{tweet_id}"
+  def tweet_url(tweet_id, route_id)
+    if route_id == 'all'
+      twitter_account = ENV['TWITTER_USERNAME'] || "goodservicetest"
+      "https://twitter.com/#{twitter_account}/status/#{tweet_id}"
+    else
+      twitter_account_name_prefix = ENV['TWITTER_USERNAME_ROUTE_CLIENT_PREFIX'] || "goodservice_"
+      "https://twitter.com/#{twitter_account_name_prefix}#{route_id}/status/#{tweet_id}"
+    end
   end
 
-  def tweet(text, affected_routes)
-    puts "Tweeting #{text}"
-    result = twitter_client.update!(text)
-
-    return unless result
-
-    affected_routes.map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
+  def tweet(delay_notification, text)
+    (["all"] + delay_notification.routes).map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
       begin
-        client = twitter_route_client(route_id)
-        client.retweet!(result)
+        tweet_text = text
+        if d.last_tweet_ids[route_id]
+          tweet_text = "#{text} #{tweet_url(d.last_tweet_ids[route_id], route_id)}"
+        end
+        puts "Tweeting #{tweet_text} for #{route_id}"
+        client = route_id == "all" ? twitter_client : twitter_route_client(route_id)
+        result = twitter_client.update!(text)
+        if results
+          d.last_tweet_ids[route_id] = results.id
+          d.last_tweet_time = Time.current
+        end
       rescue StandardError => e
-        puts "Error retweeting: #{e.message}"
+        puts "Error tweeting: #{e.message}"
       end
     end
-
-    result
-  rescue StandardError => e
-    puts "Error tweeting: #{e.message}"
   end
 
   def twitter_client
