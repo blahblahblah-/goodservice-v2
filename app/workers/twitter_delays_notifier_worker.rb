@@ -6,7 +6,7 @@ class TwitterDelaysNotifierWorker
   DELAY_NOTIFICATION_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
   DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
   REANNOUNCE_DELAY_TIME = (ENV['DELAY_NOTIFICATION_REANNOUNCE_TIME'] || 15.minutes).to_i
-  ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h do { |str|
+  ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h { |str|
     array = str.split(":")
     [array.first, array.second]
   }
