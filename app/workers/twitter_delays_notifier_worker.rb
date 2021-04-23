@@ -233,12 +233,12 @@ class TwitterDelaysNotifierWorker
   end
 
   def twitter_route_client(route_id)
-    return unless ENV["TWITTER_TEST_CONSUMER_KEY"] && ENV["TWITTER_#{route_id}_ACCESS_TOKEN"]
-    @twitter_client ||= Twitter::REST::Client.new do |config|
+    return unless ENV["TWITTER_CONSUMER_KEY"] && ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
+    Twitter::REST::Client.new do |config|
       config.consumer_key        = ENV["TWITTER_CONSUMER_KEY"]
       config.consumer_secret     = ENV["TWITTER_CONSUMER_SECRET"]
-      config.access_token        = ENV["TWITTER_#{route_id}_ACCESS_TOKEN"]
-      config.access_token_secret = ENV["TWITTER_#{route_id}_ACCESS_TOKEN_SECRET"]
+      config.access_token        = ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
+      config.access_token_secret = ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN_SECRET"]
     end
   end
 end
