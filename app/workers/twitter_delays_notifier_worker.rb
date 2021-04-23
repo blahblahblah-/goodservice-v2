@@ -202,15 +202,15 @@ class TwitterDelaysNotifierWorker
     (["all"] + delay_notification.routes).map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
       begin
         tweet_text = text
-        if d.last_tweet_ids[route_id]
-          tweet_text = "#{text} #{tweet_url(d.last_tweet_ids[route_id], route_id)}"
+        if delay_notification.last_tweet_ids[route_id]
+          tweet_text = "#{text} #{tweet_url(delay_notification.last_tweet_ids[route_id], route_id)}"
         end
         puts "Tweeting #{tweet_text} for #{route_id}"
         client = route_id == "all" ? twitter_client : twitter_route_client(route_id)
         result = twitter_client.update!(text)
         if results
-          d.last_tweet_ids[route_id] = results.id
-          d.last_tweet_time = Time.current
+          delay_notification.last_tweet_ids[route_id] = results.id
+          delay_notification.last_tweet_time = Time.current
         end
       rescue StandardError => e
         puts "Error tweeting: #{e.message}"
