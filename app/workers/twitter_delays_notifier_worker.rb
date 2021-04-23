@@ -6,6 +6,10 @@ class TwitterDelaysNotifierWorker
   DELAY_NOTIFICATION_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
   DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
   REANNOUNCE_DELAY_TIME = (ENV['DELAY_NOTIFICATION_REANNOUNCE_TIME'] || 15.minutes).to_i
+  ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h do { |str|
+    array = str.split(":")
+    [array.first, array.second]
+  }
 
   def perform
     return unless twitter_client
@@ -136,14 +140,14 @@ class TwitterDelaysNotifierWorker
 
   def tweet_delays!(prev_delays, delays, updated_delays)
     prev_delays.each do |d|
-      tweet("Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains. #{tweet_url(d.last_tweet_id)}")
+      tweet("Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains. #{tweet_url(d.last_tweet_id)}", d.routes)
     end
 
     delays.each do |d|
       next if d.mins_since_observed && d.mins_since_observed > 0
       next if d.last_tweet_id && d.last_tweet_time.to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
       url = d.last_tweet_id ? " #{tweet_url(d.last_tweet_id)}" : ""
-      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.#{url}")
+      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.#{url}", d.routes)
       if results
         d.last_tweet_id = results.id
         d.last_tweet_time = Time.current
@@ -151,7 +155,7 @@ class TwitterDelaysNotifierWorker
     end
 
     updated_delays.each do |d|
-      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}")
+      results = tweet("#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.  #{tweet_url(d.last_tweet_id)}", d.routes)
       if results
         d.last_tweet_id = results.id
         d.last_tweet_time = Time.current
@@ -198,9 +202,22 @@ class TwitterDelaysNotifierWorker
     "https://twitter.com/#{twitter_account}/status/#{tweet_id}"
   end
 
-  def tweet(text)
+  def tweet(text, affected_routes)
     puts "Tweeting #{text}"
-    twitter_client.update!(text)
+    result = twitter_client.update!(text)
+
+    return unless result
+
+    affected_routes.map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
+      begin
+        client = twitter_route_client(route_id)
+        client.retweet!(result)
+      rescue StandardError => e
+        puts "Error retweeting: #{e.message}"
+      end
+    end
+
+    result
   rescue StandardError => e
     puts "Error tweeting: #{e.message}"
   end
@@ -212,6 +229,16 @@ class TwitterDelaysNotifierWorker
       config.consumer_secret     = ENV["TWITTER_TEST_CONSUMER_SECRET"]
       config.access_token        = ENV["TWITTER_TEST_ACCESS_TOKEN"]
       config.access_token_secret = ENV["TWITTER_TEST_ACCESS_TOKEN_SECRET"]
+    end
+  end
+
+  def twitter_route_client(route_id)
+    return unless ENV["TWITTER_TEST_CONSUMER_KEY"] && ENV["TWITTER_#{route_id}_ACCESS_TOKEN"]
+    @twitter_client ||= Twitter::REST::Client.new do |config|
+      config.consumer_key        = ENV["TWITTER_CONSUMER_KEY"]
+      config.consumer_secret     = ENV["TWITTER_CONSUMER_SECRET"]
+      config.access_token        = ENV["TWITTER_#{route_id}_ACCESS_TOKEN"]
+      config.access_token_secret = ENV["TWITTER_#{route_id}_ACCESS_TOKEN_SECRET"]
     end
   end
 end
