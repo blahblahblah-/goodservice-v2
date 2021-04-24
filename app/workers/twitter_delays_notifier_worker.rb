@@ -10,6 +10,7 @@ class TwitterDelaysNotifierWorker
     array = str.split(":")
     [array.first, array.second]
   }
+  ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ROUTE_CLIENT_MAPPING'])) : true
 
   def perform
     return unless twitter_client
@@ -229,7 +230,7 @@ class TwitterDelaysNotifierWorker
   end
 
   def twitter_route_client(route_id)
-    return unless ENV["TWITTER_CONSUMER_KEY"] && ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
+    return unless ENABLE_ROUTE_CLIENTS && ENV["TWITTER_CONSUMER_KEY"] && ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
     Twitter::REST::Client.new do |config|
       config.consumer_key        = ENV["TWITTER_CONSUMER_KEY"]
       config.consumer_secret     = ENV["TWITTER_CONSUMER_SECRET"]
