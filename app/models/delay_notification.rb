@@ -1,5 +1,5 @@
 class DelayNotification
-  attr_accessor :routes, :direction, :stops, :affected_sections, :destinations, :last_tweet_ids, :last_tweet_time, :mins_since_observed
+  attr_accessor :routes, :direction, :stops, :affected_sections, :destinations, :last_tweet_ids, :last_tweet_times, :mins_since_observed
 
   def initialize(route, direction, stops, routing, destinations)
     @routes = [route]
@@ -9,6 +9,7 @@ class DelayNotification
     @destinations = destinations.uniq
     @mins_since_observed = 0
     @last_tweet_ids = {}
+    @last_tweet_times = {}
   end
 
   def append!(route, new_stops, routing, new_destinations)

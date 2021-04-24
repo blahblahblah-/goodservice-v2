@@ -100,7 +100,7 @@ class TwitterDelaysNotifierWorker
     end
 
     tweet_delays!(prev_delays, delays, updated_delays)
-    delays.select!(&:last_tweet_time)
+    delays.select! { |d| d.last_tweet_times.present? }
     marshaled_delays = Marshal.dump(delays)
     RedisStore.update_delay_notifications(marshaled_delays)
   end
@@ -141,17 +141,16 @@ class TwitterDelaysNotifierWorker
 
   def tweet_delays!(prev_delays, delays, updated_delays)
     prev_delays.each do |d|
-      tweet(d, "Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains.")
+      tweet(d, "Delays cleared for #{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains.", true, false)
     end
 
     delays.each do |d|
       next if d.mins_since_observed && d.mins_since_observed > 0
-      next if d.last_tweet_ids.present? && d.last_tweet_time.to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
-      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.")
+      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.", false, false)
     end
 
     updated_delays.each do |d|
-      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.")
+      tweet(d, "#{stop_names(d.destinations)}-bound #{route_names(d.routes)} trains are currently delayed #{delayed_sections(d.affected_sections)}.", false, true)
     end
   end
 
@@ -199,7 +198,7 @@ class TwitterDelaysNotifierWorker
     end
   end
 
-  def tweet(delay_notification, text)
+  def tweet(delay_notification, text, required_update, force_update_on_main_feed)
     (["all"] + delay_notification.routes).map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
       begin
         tweet_text = text
@@ -208,10 +207,16 @@ class TwitterDelaysNotifierWorker
         end
         puts "Tweeting #{tweet_text} for #{route_id}"
         client = route_id == "all" ? twitter_client : twitter_route_client(route_id)
+        if route_id != "all" && !required_update && delay_notification.last_tweet_times[route_id]
+          next if delay_notification.last_tweet_times[route_id].to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
+        end
+        if route_id == "all" && !force_update_on_main_feed
+          next if delay_notification.last_tweet_times[route_id].to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
+        end
         result = client.update!(tweet_text)
         if result
           delay_notification.last_tweet_ids[route_id] = result.id
-          delay_notification.last_tweet_time = Time.current
+          delay_notification.last_tweet_times[route_id] = Time.current
         end
       rescue StandardError => e
         puts "Error tweeting: #{e.message}"
