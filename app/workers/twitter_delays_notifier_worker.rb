@@ -10,7 +10,7 @@ class TwitterDelaysNotifierWorker
     array = str.split(":")
     [array.first, array.second]
   }
-  ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ROUTE_CLIENT_MAPPING']) : true
+  ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ENABLE_ROUTE_CLIENTS']) : true
 
   def perform
     return unless twitter_client
