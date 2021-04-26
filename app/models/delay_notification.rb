@@ -28,8 +28,14 @@ class DelayNotification
     end
   end
 
-  def match_routing?(routing)
-    routing.each_cons(stops.size).any? { |arr| arr == stops }
+  def match_routing?(routing, potential_matched_stops)
+    return false unless routing.each_cons(stops.size).any? { |arr| arr == stops }
+    return true if stops.any? { |s| potential_matched_stops.include?(s) }
+
+    stop_indices = [stops.first, stops.last].map {|s| routing.index(s) }
+    potential_stop_indices = [potential_matched_stops.first, potential_matched_stops.last].map {|s| routing.index(s) }
+    diffs = stop_indices.flat_map { |s| potential_stop_indices.map {|ps| (ps - s).abs }}
+    diffs.min <= 5
   end
 
   def update_not_observed!
