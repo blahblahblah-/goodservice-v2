@@ -119,11 +119,11 @@ class TwitterDelaysNotifierWorker
       actual_direction = direction == "north" ? "south" : "north"
     end
 
-    matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing) }
+    matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
     if matching_delay
       prev_delays.delete(matching_delay)
     else
-      matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing) }
+      matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
       delays.delete(matching_delay) if matching_delay
     end
 
