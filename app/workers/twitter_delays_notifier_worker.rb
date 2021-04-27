@@ -82,6 +82,7 @@ class TwitterDelaysNotifierWorker
             max_delay = delayed_trips.map(&:effective_delayed_time).max
             i = routing.index(stops.first)
             j = routing.index(stops.last)
+            next if i == j && i == routing.size - 1
             routing_subset = routing[i..j]
             upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, routing_subset, routing, destinations)
           end
