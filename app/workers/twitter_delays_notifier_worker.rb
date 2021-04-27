@@ -155,6 +155,10 @@ class TwitterDelaysNotifierWorker
   end
 
   def delayed_sections(affected_sections)
+    sections = affected_sections.select do |as|
+      affected_sections.none? { |s| as != s && s.include?(as.first) && s.include?(as.last) }
+    end
+
     affected_sections.each_with_index.map { |s, i|
       str = (i > 0 && i == affected_sections.size - 1) ? "and " : ""
       if s.size == 1
