@@ -180,16 +180,20 @@ class TwitterDelaysNotifierWorker
     stop_ids.map { |s|
       Scheduled::Stop.find_by(internal_id: s).stop_name.gsub(/ - /, '–')
     }.map { |s|
-      if s.include?("/")
-        array = s.split("–")
-        if array.size > 1
-          array.find { |str| !str.include?("/") }
-        else
-          array = s.split("/")
-          array.first
-        end
-      else
+      if stop_ids.size == 1
         s
+      else
+        if s.include?("/")
+          array = s.split("–")
+          if array.size > 1
+            array.find { |str| !str.include?("/") }
+          else
+            array = s.split("/")
+            array.first
+          end
+        else
+          s
+        end
       end
     }.join('/')
   end
