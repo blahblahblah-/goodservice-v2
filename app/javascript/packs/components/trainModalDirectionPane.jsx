@@ -3,7 +3,7 @@ import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider, Popup, List
 import { Link } from 'react-router-dom';
 
 import TrainMap from './trainMap';
-import { statusColor, formatStation, formatMinutes, replaceTrainBulletsInParagraphs, routingHash } from './utils';
+import { statusColor, formatStation, formatMinutes, replaceTrainBulletsInParagraphs, routingHash, twitterLink } from './utils';
 
 import './trainModalDirectionPane.scss';
 
@@ -653,7 +653,6 @@ class TrainModalDirectionPane extends React.Component {
     }
     return (
       <Segment basic className='train-modal-direction-pane'>
-
         <Grid textAlign='center' stackable>
           <Grid.Row>
             <Grid.Column width={4} className='map-cell'>
@@ -666,7 +665,10 @@ class TrainModalDirectionPane extends React.Component {
               <Statistic.Group widths={1} color={ statusColor(this.directionStatus()) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{ this.directionStatus() }</Statistic.Value>
-                  <Statistic.Label>{train.destinations && train.destinations[direction] ? `${formatStation(train.destinations[direction].join('/'))}-bound trains Status` : 'Status' }</Statistic.Label>
+                  <Statistic.Label>
+                    {train.destinations && train.destinations[direction] ? `${formatStation(train.destinations[direction].join('/'))}-bound trains Status` : 'Status' }
+                    { twitterLink(train.id) }
+                  </Statistic.Label>
                 </Statistic>
               </Statistic.Group>
               {

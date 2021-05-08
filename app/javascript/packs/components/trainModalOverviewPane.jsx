@@ -2,7 +2,7 @@ import React from 'react';
 import { Header, Segment, Statistic, Grid } from "semantic-ui-react";
 
 import TrainMap from './trainMap';
-import { statusColor, formatStation, replaceTrainBulletsInParagraphs } from './utils';
+import { statusColor, formatStation, replaceTrainBulletsInParagraphs, twitterLink } from './utils';
 
 import './trainModalOverviewPane.scss';
 
@@ -46,7 +46,10 @@ class TrainModalOverviewPane extends React.Component {
               <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{train.status}</Statistic.Value>
-                  <Statistic.Label>Status</Statistic.Label>
+                  <Statistic.Label>
+                    Status
+                    { twitterLink(train.id) }
+                  </Statistic.Label>
                 </Statistic>
               </Statistic.Group>
               {
