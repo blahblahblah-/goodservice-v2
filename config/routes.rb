@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     post '/slack/query', to: 'slack#query'
   end
   get '/about', to: 'index#index'
+  get '/twitter', to: 'index#index'
   get '/trains(/*id)', to: 'index#index'
   get '/stations(/*id)', to: 'index#index'
   get '/oauth', to: 'oauth#index'

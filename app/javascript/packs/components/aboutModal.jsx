@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header, Modal } from 'semantic-ui-react';
 import { withRouter } from 'react-router-dom';
+import { Helmet } from "react-helmet";
 
 class AboutModal extends React.Component {
   handleOnClose = () => {
@@ -13,6 +14,13 @@ class AboutModal extends React.Component {
       <Modal basic
         open={this.props.open} onClose={this.handleOnClose}
         closeIcon dimmer="blurring" closeOnDocumentClick closeOnDimmerClick>
+        <Helmet>
+          <title>goodservice.io - About</title>
+          <meta property="og:title" content="goodservice.io - About" />
+          <meta name="twitter:title" content="goodservice.io - About" />
+          <meta property="og:url" content="https://www.goodservice.io/about" />
+          <meta name="twitter:url" content="https://www.goodservice.io/about" />
+        </Helmet>
         <Modal.Header>
           What is Good Service?
         </Modal.Header>

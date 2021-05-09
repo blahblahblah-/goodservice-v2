@@ -14,6 +14,7 @@ import Train from './train';
 import TrainBullet from './trainBullet';
 import AboutModal from './aboutModal';
 import StationModal from './stationModal';
+import TwitterModal from './twitterModal';
 import history from './history';
 import { formatStation } from './utils';
 import { accessibilityIcon } from './accessibility.jsx';
@@ -156,6 +157,17 @@ class App extends React.Component {
     );
   }
 
+  renderTwitter() {
+    return (
+      <React.Fragment>
+        <TwitterModal open={true} />
+        {
+          this.renderTrains(null)
+        }
+      </React.Fragment>
+    );
+  }
+
   renderStation(stationId) {
     const { trains, stations } = this.state;
     const selectedStation = stations.find((s) => s.id === stationId);
@@ -285,6 +297,9 @@ class App extends React.Component {
                 <Route path='/about' render={() => {
                   return this.renderAbout();
                 }} />
+                <Route path='/twitter' render={() => {
+                  return this.renderTwitter();
+                }} />
                 <Route path='/' render={() => {
                   return this.renderTrains(null);
                 }} />
@@ -295,11 +310,11 @@ class App extends React.Component {
         <Segment inverted vertical style={{padding: '1em 2em'}}>
           <Grid>
             <Grid.Column width={7}>
+              <Link to='/twitter'>
+                <Button circular color='twitter' icon='twitter' />
+              </Link>
               <a href='https://www.medium.com/good-service' target='_blank'>
                 <Button circular className='medium-icon' icon='medium m' />
-              </a>
-              <a href='https://twitter.com/goodservice_io' target='_blank'>
-                <Button circular color='twitter' icon='twitter' />
               </a>
               <a href='https://www.goodservice.io/slack' target='_blank'>
                 <Button circular className='slack-icon' icon={{ className: 'slack-icon' }} />
