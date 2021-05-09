@@ -647,7 +647,7 @@ class TrainModalDirectionPane extends React.Component {
     const { selectedRouting, routings, travelTimeFrom, travelTimeTo } = this.state;
     const routingToMap = selectedRouting === 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
     let tripsForMap = train.trips && train.trips[direction] && train.trips[direction][selectedRouting] || [];
-    if (selectedRouting === 'blended' && train.trips[direction]) {
+    if (selectedRouting === 'blended' && train.trips && train.trips[direction]) {
       tripsForMap = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').flatMap((key) => train.trips[direction][key])
       tripsForMap = tripsForMap.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
     }
