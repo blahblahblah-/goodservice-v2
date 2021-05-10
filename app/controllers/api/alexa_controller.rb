@@ -66,6 +66,7 @@ class Api::AlexaController < ApplicationController
           [direction, trips_by_routes_array.map { |route_hash|
             route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
             actual_direction = Api::StopsController.determine_direction(direction, stop_id, route_id)
+            next unless route_hash[actual_direction]
             [route_id, route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }.select{ |t| t.upcoming_stops(time_ref: timestamp)&.include?(stop_id)}.map {|t| Api::SlackController.transform_trip(stop_id, t, travel_times, timestamp)}.sort_by { |t| t[:arrival_time]}[0..2]]
           }]
         }
