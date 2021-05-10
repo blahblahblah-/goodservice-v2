@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     resources :stops, only: [:index, :show]
     post '/slack', to: 'slack#index'
     post '/slack/query', to: 'slack#query'
+    post '/alexa', to: 'alexa#index'
   end
   get '/about', to: 'index#index'
   get '/twitter', to: 'index#index'

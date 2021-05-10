@@ -39,6 +39,39 @@ class Api::SlackController < ApplicationController
     render json: result
   end
 
+  def self.transform_to_routes_array(direction_futures_hash)
+    routes_by_direction = direction_futures_hash.flat_map { |_, future|
+      future.value
+    }.compact.uniq.sort
+  end
+
+  def self.transform_trip(stop_id, trip, travel_times, timestamp)
+    upcoming_stops = trip.upcoming_stops
+    i = upcoming_stops.index(stop_id)
+    estimated_current_stop_arrival_time = trip.estimated_upcoming_stop_arrival_time
+    if i > 0
+      estimated_current_stop_arrival_time += upcoming_stops[0..i].each_cons(2).map { |a_stop, b_stop|
+        travel_times["#{a_stop}-#{b_stop}"] || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 0
+      }.reduce(&:+)
+    end
+    {
+      route_id: trip.route_id,
+      arrival_time: estimated_current_stop_arrival_time - timestamp,
+      destination_stop: trip.destination,
+      is_delayed: trip.delayed?,
+    }
+  end
+
+  def self.routes_stop_at(stop_id, timestamp)
+    futures = {}
+    REDIS_CLIENT.pipelined do
+      futures = [1, 3].to_h { |direction|
+        [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp)]
+      }
+    end
+    transform_to_routes_array(futures)
+  end
+
   private
 
   def help_response
@@ -125,10 +158,10 @@ class Api::SlackController < ApplicationController
                   "text": first_letter
                 },
                 "options": stops_start_with_this_letter.map { |s|
-                  routes_stop_at = transform_to_routes_array(futures[s.internal_id])
-                  stop_name = "#{s.stop_name} - #{routes_stop_at.join(', ')}"
+                  routes_stopping = transform_to_routes_array(futures[s.internal_id])
+                  stop_name = "#{s.stop_name} - #{routes_stopping.join(', ')}"
                   if s.secondary_name
-                    stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stop_at.join(', ')}"
+                    stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stopping.join(', ')}"
                   end
                   if accessible_stops[s.internal_id]
                     stop_name << " :wheelchair:"
@@ -234,20 +267,14 @@ class Api::SlackController < ApplicationController
 
   def stop_response(stop)
     timestamp = Time.current.to_i
-    futures = {}
-    REDIS_CLIENT.pipelined do
-      futures = [1, 3].to_h { |direction|
-        [direction, RedisStore.routes_stop_at(stop.internal_id, direction, timestamp)]
-      }
-    end
-    routes_stop_at = transform_to_routes_array(futures)
+    routes_stopping = routes_stop_at(stop.internal_id, timestamp)
     elevator_advisories_str = RedisStore.elevator_advisories
-    route_trips = routes_stop_at.to_h do |route_id|
+    route_trips = routes_stopping.to_h do |route_id|
       [route_id, RedisStore.processed_trips(route_id)]
     end
     travel_times_data = RedisStore.travel_times
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
-    trips_by_routes_array = routes_stop_at.map do |route_id|
+    trips_by_routes_array = routes_stopping.map do |route_id|
       marshaled_trips = route_trips[route_id]
       next unless marshaled_trips
       Marshal.load(marshaled_trips)
@@ -264,9 +291,9 @@ class Api::SlackController < ApplicationController
     }
 
     elevator_advisories = elevator_advisories_str ? JSON.parse(elevator_advisories_str) : {}
-    stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* - #{routes_stop_at.join(', ')}"
+    stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* - #{routes_stopping.join(', ')}"
     if stop.secondary_name
-      stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stop_at.join(', ')}"
+      stop_name = "*#{stop.stop_name.gsub(/ - /, '–')}* (#{stop.secondary_name}) - #{routes_stopping.join(', ')}"
     end
     if accessible_stops[stop.internal_id]
       stop_name << " :wheelchair:"
@@ -348,29 +375,6 @@ class Api::SlackController < ApplicationController
       response_type: "in_channel",
       channel: params[:channel_id],
       blocks: result
-    }
-  end
-
-  def transform_to_routes_array(direction_futures_hash)
-    routes_by_direction = direction_futures_hash.flat_map { |_, future|
-      future.value
-    }.compact.uniq.sort
-  end
-
-  def transform_trip(stop_id, trip, travel_times, timestamp)
-    upcoming_stops = trip.upcoming_stops
-    i = upcoming_stops.index(stop_id)
-    estimated_current_stop_arrival_time = trip.estimated_upcoming_stop_arrival_time
-    if i > 0
-      estimated_current_stop_arrival_time += upcoming_stops[0..i].each_cons(2).map { |a_stop, b_stop|
-        travel_times["#{a_stop}-#{b_stop}"] || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 0
-      }.reduce(&:+)
-    end
-    {
-      route_id: trip.route_id,
-      arrival_time: estimated_current_stop_arrival_time - timestamp,
-      destination_stop: trip.destination,
-      is_delayed: trip.delayed?,
     }
   end
 
