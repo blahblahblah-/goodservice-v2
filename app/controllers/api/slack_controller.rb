@@ -158,7 +158,7 @@ class Api::SlackController < ApplicationController
                   "text": first_letter
                 },
                 "options": stops_start_with_this_letter.map { |s|
-                  routes_stopping = transform_to_routes_array(futures[s.internal_id])
+                  routes_stopping = self.transform_to_routes_array(futures[s.internal_id])
                   stop_name = "#{s.stop_name} - #{routes_stopping.join(', ')}"
                   if s.secondary_name
                     stop_name = "#{s.stop_name} (#{s.secondary_name}) - #{routes_stopping.join(', ')}"
@@ -267,7 +267,7 @@ class Api::SlackController < ApplicationController
 
   def stop_response(stop)
     timestamp = Time.current.to_i
-    routes_stopping = routes_stop_at(stop.internal_id, timestamp)
+    routes_stopping = self.routes_stop_at(stop.internal_id, timestamp)
     elevator_advisories_str = RedisStore.elevator_advisories
     route_trips = routes_stopping.to_h do |route_id|
       [route_id, RedisStore.processed_trips(route_id)]
