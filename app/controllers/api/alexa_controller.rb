@@ -82,7 +82,7 @@ class Api::AlexaController < ApplicationController
               if eta < 1
                 strs << "The next #{first_trip_destination.normalized_name}-bound #{route_id} train is now arriving."
               else
-                strs << "The next #{first_trip_destination.normalized_name}-bound #{route_id} train arrives in #{eta} #{"minutes".pluralize(eta)}."
+                strs << "The next #{first_trip_destination.normalized_name}-bound #{route_id} train arrives in #{eta} #{"minute".pluralize(eta)}."
               end
 
               if trips.size > 1
@@ -92,13 +92,13 @@ class Api::AlexaController < ApplicationController
                   if eta < 1
                     strs << "The next #{second_trip_destination.normalized_name}-bound #{route_id} train is now arriving."
                   else
-                    strs << "The next #{second_trip_destination.normalized_name}-bound #{route_id} train arrives in #{eta} #{"minutes".pluralize(eta)}."
+                    strs << "The next #{second_trip_destination.normalized_name}-bound #{route_id} train arrives in #{eta} #{"minute".pluralize(eta)}."
                   end
                 else
                   if eta < 1
                     strs << "The following train is now arriving."
                   else
-                    strs << "The following in #{eta} #{"minutes".pluralize(eta)}."
+                    strs << "The following in #{eta} #{"minute".pluralize(eta)}."
                   end
                 end
               end
