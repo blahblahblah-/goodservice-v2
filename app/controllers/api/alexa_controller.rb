@@ -109,7 +109,7 @@ class Api::AlexaController < ApplicationController
           strs = ["There are no upcoming train arrivals for #{stop.normalized_full_name}."]
         end
 
-        if elevator_advisories.[stop.internal_id].present?
+        if elevator_advisories[stop.internal_id].present?
           elevator_advisories[stop.internal_id].each { |a|
             strs << "The elevator for #{a} is out of service."
           }
