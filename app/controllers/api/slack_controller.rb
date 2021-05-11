@@ -69,7 +69,7 @@ class Api::SlackController < ApplicationController
         [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp)]
       }
     end
-    self.class.transform_to_routes_array(futures)
+    transform_to_routes_array(futures)
   end
 
   private
