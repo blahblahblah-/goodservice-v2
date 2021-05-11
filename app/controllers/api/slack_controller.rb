@@ -286,7 +286,7 @@ class Api::SlackController < ApplicationController
           route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }
         }.select { |trip|
           trip&.upcoming_stops(time_ref: timestamp)&.include?(stop.internal_id)
-        }.map { |trip| transform_trip(stop.internal_id, trip, travel_times, timestamp)}.sort_by { |trip| trip[:arrival_time] }
+        }.map { |trip| self.class.transform_trip(stop.internal_id, trip, travel_times, timestamp)}.sort_by { |trip| trip[:arrival_time] }
       ]
     }
 
