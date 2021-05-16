@@ -42,7 +42,7 @@ class Scheduled::Stop < ActiveRecord::Base
   def normalized_partial_name(name)
     array = name.downcase.split(" - ")
     str = array.map { |s|
-      if PREFIX_ABBREVIATIONS[s[0...2]]
+      if PREFIX_ABBREVIATIONS[s[0...2]] && s[2] == ' '
         s.sub(s[0...2], PREFIX_ABBREVIATIONS[s[0...2]])
       else
         s
