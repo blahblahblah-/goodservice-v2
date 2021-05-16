@@ -40,7 +40,9 @@ class TwitterModal extends React.Component {
                   <a href='https://twitter.com/goodservice_io' target='_blank'>@goodservice_io</a>
                 </List.Content>
                 <List.Content>
-                  All Trains
+                  <strong>
+                    All Trains
+                  </strong>
                 </List.Content>
               </List.Item>
               <List.Item>
