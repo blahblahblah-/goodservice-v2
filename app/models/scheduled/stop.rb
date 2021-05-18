@@ -7,14 +7,20 @@ class Scheduled::Stop < ActiveRecord::Base
   }
 
   ABBREVIATIONS = {
+    "&" => "and",
     "n" => "north",
+    "ne" => "northeast",
+    "nw" => "northwest",
     "e" => "east",
     "s" => "south",
+    "se" => "southeast",
+    "sw" => "southwest",
     "w" => "west",
     "lex" => "lexington",
     "st" => "street",
     "sts" => "streets",
     "av" => "avenue",
+    "ave" => "avenue",
     "avs" => "avenues",
     "rd" => "road",
     "dr" => "drive",
@@ -31,15 +37,15 @@ class Scheduled::Stop < ActiveRecord::Base
     "pl" => "place",
   }
 
-  def normalized_full_name
-    secondary_name ? "#{normalized_partial_name(stop_name)} #{normalized_partial_name(secondary_name)}" : normalized_partial_name(stop_name)
+  def normalized_full_name(separator: "")
+    secondary_name ? "#{self.class.normalized_partial_name(stop_name)} #{separator} #{self.class.normalized_partial_name(secondary_name)}" : self.class.normalized_partial_name(stop_name)
   end
 
   def normalized_name
-    normalized_partial_name(stop_name)
+    self.class.normalized_partial_name(stop_name)
   end
 
-  def normalized_partial_name(name)
+  def self.normalized_partial_name(name)
     array = name.downcase.split(" - ")
     str = array.map { |s|
       if PREFIX_ABBREVIATIONS[s[0...2]] && s[2] == ' '

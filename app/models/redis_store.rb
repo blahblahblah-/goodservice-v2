@@ -234,6 +234,19 @@ class RedisStore
       REDIS_CLIENT.set("evergreen-routings", json)
     end
 
+    # Alexa
+    def alexa_most_recent_stop(user_id)
+      REDIS_CLIENT.get("alexa-recent-stop:#{user_id}")
+    end
+
+    def set_alexa_most_recent_stop(user_id, stop_id)
+      REDIS_CLIENT.set("alexa-recent-stop:#{user_id}", stop_id, ex: 2592000)
+    end
+
+    def add_alexa_stop_query_miss(query)
+      REDIS_CLIENT.sadd("alexa-query-misses", query)
+    end
+
     # Dynos
     def last_unempty_workqueue_timestamp
       REDIS_CLIENT.get("last-unempty-workqueue-timestamp")&.to_i
