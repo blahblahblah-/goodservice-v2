@@ -112,9 +112,9 @@ class RouteAnalyzer
         last_stop = delayed_sections[direction[:route_direction]].last[:end]
         max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60).round
         if first_stop == last_stop
-          strs << "delayed at #{stop_name(first_stop)} (for #{max_delay_mins} mins)"
+          strs << "delayed at #{stop_name(first_stop)} (since #{max_delay_mins} mins ago)"
         else
-          strs << "delayed between #{stop_name(first_stop)} and #{stop_name(last_stop)} (for #{max_delay_mins} mins)"
+          strs << "delayed between #{stop_name(first_stop)} and #{stop_name(last_stop)} (since #{max_delay_mins} mins ago)"
         end
       end
 
@@ -492,7 +492,9 @@ class RouteAnalyzer
   end
 
   def self.stop_name(stop_id)
-    Scheduled::Stop.find_by(internal_id: stop_id)&.stop_name
+    stop = Scheduled::Stop.find_by(internal_id: stop_id)
+    return unless stop
+    "((#{stop.stop_name}))"
   end
 
   def self.format_processed_trips(processed_trips)

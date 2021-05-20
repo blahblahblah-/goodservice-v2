@@ -40,7 +40,7 @@ class Api::RoutesController < ApplicationController
       route = Scheduled::Route.find_by!(internal_id: route_id)
       scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
       route_data_encoded = RedisStore.route_status(route_id)
-      route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+      route_data = route_data_encoded ? JSON.parse(route_data_encoded.gsub(/\(\(/, '').gsub(/\)\)/, '')) : {}
       if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
         route_data = {}
       else

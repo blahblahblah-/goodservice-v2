@@ -160,6 +160,56 @@ class Api::AlexaController < ApplicationController
   end
 
   def route_status_response
+    if !params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]
+      output = "Please specify which train you would like to lookup the status for. For example, you can say: ask good service, what's the status of the A train?"
+    else
+      train_resolution_code = params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]["resolutionsPerAuthority"].first["status"]["code"]
+
+      if train_resolution_code == "ER_SUCCESS_NO_MATCH"
+        value = params["alexa"]["request"]["intent"]["slots"]["train"]["value"]
+        output = "Sorry, there are no trains named #{value}. Please try again."
+      else
+        route_id = params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"]
+        route = Scheduled::Route.find_by!(internal_id: route_id)
+        route_name = route.alternate_name && Scheduled::Stop.normalized_partial_name(route.alternate_name) || "#{route_id} train"
+        route_name = "Staten Island Railway" if route_name == "SI train"
+        route_name.gsub!(/X/, ' Express')
+        scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
+        route_data_encoded = RedisStore.route_status(route_id)
+        route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+        if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
+          route_data = {}
+        end
+
+        status = route_data['status'] || (scheduled ? 'No Service' : 'Not Scheduled')
+        strs = ["The current status of the #{route_name} is #{status}."]
+
+        if route_data.present?
+          summaries = route_data['service_summaries'].map { |_, summary| summary }.compact + route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact
+          summaries.each do |summary|
+            strs << summary.gsub(/\//, ' ').gsub(/\(\((.*?)\)\)/) do |stop_name|
+              Scheduled::Stop.normalized_partial_name($1)
+            end
+          end
+        end
+
+        output = strs.join(" ")
+        PRONOUNCIATION_MAPPING.each do |k, v|
+          output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
+        end
+      end
+    end
+
+
+    {
+      version: "1.0",
+      response: {
+        outputSpeech: {
+          type: "SSML",
+          ssml: "<speak>#{output}</speak>"
+        }
+      }
+    }
   end
 
   def upcoming_arrival_times_response(stop_id, user_id)
