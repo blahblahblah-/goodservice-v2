@@ -8,6 +8,7 @@ class Api::AlexaController < ApplicationController
     "schermerhorn" => "ʃɜrmərhərn",
     "kosciuszko" => "ˌkɒʒiˈʊʃkoʊ",
     "tremont" => "tɹimɑnt",
+    "dyre" => "ˈdaɪɚ",
   }
 
   def index
@@ -185,7 +186,7 @@ class Api::AlexaController < ApplicationController
         strs = ["The current status of the #{route_name} is #{status}."]
 
         if route_data.present?
-          summaries = route_data['service_summaries'].map { |_, summary| summary }.compact + route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact
+          summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
           summaries.each do |summary|
             strs << summary.gsub(/\//, ' ').gsub(/\(\((.*?)\)\)/) do |stop_name|
               Scheduled::Stop.normalized_partial_name($1)
