@@ -9,6 +9,7 @@ class Api::AlexaController < ApplicationController
     "kosciuszko" => "ˌkɒʒiˈʊʃkoʊ",
     "tremont" => "tɹimɑnt",
     "dyre" => "ˈdaɪɚ",
+    "via" => "ˈviːə",
   }
 
   def index
