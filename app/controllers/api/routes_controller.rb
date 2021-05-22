@@ -8,7 +8,7 @@ class Api::RoutesController < ApplicationController
       {
         routes: Scheduled::Route.all.sort_by { |r| "#{r.name} #{r.alternate_name}" }.map { |route|
           route_data_encoded = data_hash[route.internal_id]
-          route_data = route_data_encoded ? JSON.parse(route_data_encoded) : {}
+          route_data = route_data_encoded ? JSON.parse(route_data_encoded.gsub(/\(\(/, '').gsub(/\)\)/, '')) : {}
           if !route_data['timestamp'] || route_data['timestamp'] < (Time.current - 5.minutes).to_i
             route_data = {}
           else
