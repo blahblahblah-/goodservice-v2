@@ -69,7 +69,11 @@ class ServiceChangeAnalyzer
                         ongoing_service_change = routing_changes.pop
                         ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
                       else
-                        ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                        if scheduled_routing.include?(previous_actual_station)
+                          ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                        else
+                          ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                        end
                       end
                     else
                       ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
