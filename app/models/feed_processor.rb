@@ -34,8 +34,22 @@ class FeedProcessor
 
       trip_timestamps = extract_vehicle_timestamps(feed.entity)
 
-      trips = feed.entity.select { |entity|
+      trip_entities = feed.entity.select { |entity|
         valid_trip?(timestamp, entity, feed_id)
+      }
+
+      duplicate_trip_ids = trip_entities.select { |entity|
+        trip_entities.any? { |e| e != entity && e.trip_update.trip.trip_id == entity.trip_update.trip.trip_id }
+      }.map { |entity|
+        entity.trip_update.trip.trip_id
+      }
+
+      trips = trip_entities.map { |entity|
+        if duplicate_trip_ids.include?(entity.trip_update.trip.trip_id)
+          entity.trip_update.trip.trip_id = "#{entity.trip_update.trip.trip_id}-#{entity.trip_update.stop_time_update.last.stop_id[0..2]}"
+        end
+
+        entity
       }.uniq { |entity|
         entity.trip_update.trip.trip_id
       }.map { |entity|

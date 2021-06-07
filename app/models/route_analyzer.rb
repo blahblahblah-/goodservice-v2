@@ -398,53 +398,50 @@ class RouteAnalyzer
         else
           sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
         end
-        if begin_of_route && end_of_route && begin_of_route != end_of_route && [begin_of_route, end_of_route].all? {|c| c.is_a?(ServiceChanges::TruncatedServiceChange)} && ([begin_of_route.stations_affected[1...-1] & end_of_route.stations_affected[1...-1]]).present?
-          sentence += " in two sections: between #{stop_name(end_of_route.origin)} and #{stop_name(end_of_route.first_station)}, and #{stop_name(begin_of_route.last_station)} and #{stop_name(begin_of_route.destination)}."
-        else
-          if end_of_route.present? && direction != :both
-            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + " #{stop_name(end_of_route.destination)}-bound trains are running"
-          end
+        if end_of_route.present? && direction != :both
+          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + " #{stop_name(end_of_route.destination)}-bound trains are running"
+        end
 
-          if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
-            if begin_of_route.related_routes.present? && !begin_of_route.related_routes.include?(route_id)
-              if begin_of_route == end_of_route
-                if begin_of_route.first_station == begin_of_route.last_station
-                  sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} to"
-                else
-                  sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name(begin_of_route.first_station)} and"
-                end
+        if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
+          if begin_of_route.related_routes.present? && !begin_of_route.related_routes.include?(route_id)
+            if begin_of_route == end_of_route
+              if begin_of_route.first_station == begin_of_route.last_station
+                sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} to"
               else
-                sentence += " #{begin_preposition} #{stop_name(begin_of_route.first_station)} via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')}, and between #{stop_name(begin_of_route.last_station)} and"
+                sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name(begin_of_route.first_station)} and"
               end
             else
-              sentence += " between #{stop_name(begin_of_route.first_station)} and"
+              sentence += " #{begin_preposition} #{stop_name(begin_of_route.first_station)} via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')}, and between #{stop_name(begin_of_route.last_station)} and"
             end
-          elsif begin_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
-            sentence += " between #{stop_name(begin_of_route.last_station)} and"
           else
-            sentence += " between #{stop_name(end_of_route.origin)} and"
+            sentence += " between #{stop_name(begin_of_route.first_station)} and"
           end
+        elsif begin_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
+          sentence += " between #{stop_name(begin_of_route.last_station)} and"
+        elsif end_of_route
+          sentence += " between #{stop_name(end_of_route.origin)} and"
+        end
 
-          if end_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
-            if end_of_route.related_routes.present? && begin_of_route != end_of_route && !end_of_route.related_routes.include?(route_id)
-              sentence += " #{stop_name(end_of_route.first_station)}, via  #{end_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} #{end_preposition} #{stop_name(end_of_route.last_station)}."
-            else
-              sentence += " #{stop_name(end_of_route.last_station)}."
-            end
-          elsif end_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
-            sentence += " #{stop_name(end_of_route.first_station)}."
+        if end_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
+          if end_of_route.related_routes.present? && begin_of_route != end_of_route && !end_of_route.related_routes.include?(route_id)
+            sentence += " #{stop_name(end_of_route.first_station)}, via  #{end_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} #{end_preposition} #{stop_name(end_of_route.last_station)}."
           else
-            sentence += " #{stop_name(begin_of_route.destination)}."
+            sentence += " #{stop_name(end_of_route.last_station)}."
           end
+        elsif end_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
+          sentence += " #{stop_name(end_of_route.first_station)}."
+        elsif begin_of_route
+          sentence += " #{stop_name(begin_of_route.destination)}."
         end
 
         notices << sentence
       end
 
-      split_route_changes = service_changes.select { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
+      split_route_changes = service_changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
 
       if split_route_changes.present?
-        notices << sentence_intro + " running in two sections: between #{stop_name(split_route_changes.first.first_station)} and #{stop_name(split_route_changes.first.last_station)}, and between #{stop_name(split_route_changes.second.first_station)} and #{stop_name(split_route_changes.second.last_station)}."
+        split_routes = split_route_changes.routing_tuples.map { |rt| "between #{stop_name(rt.first)} and #{stop_name(rt.last)}" }.to_sentence
+        notices << sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}."
       end
 
       service_changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|

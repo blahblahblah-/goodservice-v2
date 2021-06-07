@@ -32,11 +32,11 @@ class Api::TripsController < ApplicationController
   }
 
   def show
-    trip_id = params[:id].gsub("-", "..")
+    trip_id = params[:id].sub("-", "..")
     marshaled_trip = RedisStore.active_trip(ROUTE_FEED_MAPPING[params[:route_id]], trip_id)
 
     if !marshaled_trip && trip_id.include?("..")
-      trip_id = trip_id.gsub("..", ".")
+      trip_id = trip_id.sub("..", ".")
       marshaled_trip = RedisStore.active_trip(ROUTE_FEED_MAPPING[params[:route_id]], trip_id)
     end
 
