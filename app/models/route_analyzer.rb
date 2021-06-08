@@ -142,11 +142,7 @@ class RouteAnalyzer
 
       next [direction[:route_direction], nil] unless strs.present?
 
-      if strs.size > 1
-        strs[strs.size - 1] = "and #{strs.last}"
-      end
-
-      [direction[:route_direction], "#{intro}#{strs.join(', ')}."]
+      [direction[:route_direction], "#{intro}#{strs.to_sentence(two_words_connector: ", and ")}."]
     }.to_h
   end
 
@@ -440,7 +436,7 @@ class RouteAnalyzer
       split_route_changes = service_changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
 
       if split_route_changes.present?
-        split_routes = split_route_changes.routing_tuples.map { |rt| "between #{stop_name(rt.first)} and #{stop_name(rt.last)}" }.to_sentence
+        split_routes = split_route_changes.routing_tuples.map { |rt| "between #{stop_name(rt.first)} and #{stop_name(rt.last)}" }.to_sentence(two_words_connector: ", and ")
         notices << sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}."
       end
 
