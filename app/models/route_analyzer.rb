@@ -436,7 +436,13 @@ class RouteAnalyzer
       split_route_changes = service_changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
 
       if split_route_changes.present?
-        split_routes = split_route_changes.routing_tuples.map { |rt| "between #{stop_name(rt.first)} and #{stop_name(rt.last)}" }.to_sentence(two_words_connector: ", and ")
+        split_routes = split_route_changes.routing_tuples.map { |rt|
+          if rt.first == rt.last
+            "at #{stop_name(rt.first)}"
+          else
+            "between #{stop_name(rt.first)} and #{stop_name(rt.last)}"
+          end
+        }.to_sentence(two_words_connector: ", and ")
         notices << sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}."
       end
 
