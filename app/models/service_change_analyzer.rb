@@ -64,7 +64,7 @@ class ServiceChangeAnalyzer
                       previous_scheduled_station = actual_station
                     end
                   else
-                    if actual_routing.include?(scheduled_station) || interchangeable_transfers[scheduled_station]&.any? { |t| actual_routing.include?(t.from_stop_internal_id) } && previous_actual_station
+                    if (actual_routing.include?(scheduled_station) || interchangeable_transfers[scheduled_station]&.any? { |t| actual_routing.include?(t.from_stop_internal_id) }) && previous_actual_station
                       if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
                         ongoing_service_change = routing_changes.pop
                         ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
