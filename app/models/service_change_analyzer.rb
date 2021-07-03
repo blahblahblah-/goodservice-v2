@@ -146,7 +146,15 @@ class ServiceChangeAnalyzer
       end
 
       condensed_changes = direction_changes.map do |d|
-        changes = d.flatten.uniq
+        flatten_changes = d.flatten
+        changes = flatten_changes.select.with_index { |c1, i|
+          if amended_change = flatten_changes[0...i].find { |c2| c1.eql?(c2) }
+            amended_change.destinations = [amended_change.destinations + c1.destinations].flatten.compact.uniq
+            false
+          else
+            true
+          end
+        }
 
         changes.each do |c|
           c.affects_some_trains = d.each_index.select { |i|
@@ -255,7 +263,7 @@ class ServiceChangeAnalyzer
       if service_change.begin_of_route?
         routings.any? do |r|
           next if r == service_change.routing
-          i = r.index(service_change.destination)
+          i = r.index(service_change.destinations.first)
           i && i > 0
         end
       else

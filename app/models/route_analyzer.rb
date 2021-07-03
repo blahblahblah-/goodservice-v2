@@ -388,14 +388,18 @@ class RouteAnalyzer
 
       if begin_of_route || end_of_route
         if direction != :both && begin_of_route.present? && end_of_route.nil?
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{stop_name(begin_of_route.destination)}-bound trains are running"
+          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{begin_of_route.destinations.map { |d| stop_name(d) }.join('/')}-bound trains are running"
         elsif direction != :both && end_of_route.present?
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{stop_name(end_of_route.destination)}-bound trains are running"
+          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name(d) }.join('/')}-bound trains are running"
         else
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
+          if direction == :both
+            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
+          else
+            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{service_changes.map(&:destinations).flatten.uniq.map { |d| stop_name(d) }.join('/')}-bound trains are running"
+          end
         end
         if end_of_route.present? && direction != :both
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + " #{stop_name(end_of_route.destination)}-bound trains are running"
+          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + " #{end_of_route.destinations.map { |d| stop_name(d) }.join('/')}-bound trains are running"
         end
 
         if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
@@ -427,7 +431,7 @@ class RouteAnalyzer
         elsif end_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
           sentence += " #{stop_name(end_of_route.first_station)}."
         elsif begin_of_route
-          sentence += " #{stop_name(begin_of_route.destination)}."
+          sentence += " #{begin_of_route.destinations.map { |d| stop_name(d) }.join('/')}."
         end
 
         notices << sentence
@@ -447,7 +451,11 @@ class RouteAnalyzer
       end
 
       service_changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|
-        sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " running"
+        if direction == :both
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " running"
+          else
+            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name(d) }.join('/')}-bound trains are running"
+          end
         if change.related_routes.present?
           if change.related_routes.include?(route_id)
             sentence += " between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
@@ -469,12 +477,20 @@ class RouteAnalyzer
         else
           skipped_stops_text = skipped_stops.first
         end
-        sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " skipping #{skipped_stops_text}."
+        if direction == :both
+          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " skipping #{skipped_stops_text}."
+        else
+          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + "#{local_to_express.map(&:destinations).flatten.uniq.map { |d| stop_name(d) }.join('/')}-bound trains are skipping  #{skipped_stops_text}."
+        end
         notices << sentence
       end
 
       service_changes.select { |c| c.is_a?(ServiceChanges::ExpressToLocalServiceChange)}.each do |change|
-        sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " making local stops between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+        if direction == :both
+          sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " making local stops between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+        else
+          sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name(d) }.join('/')}-bound trains are making local stops between #{stop_name(change.first_station)} and #{stop_name(change.last_station)}."
+        end
         notices << sentence
       end
 

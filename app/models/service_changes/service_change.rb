@@ -1,5 +1,5 @@
 class ServiceChanges::ServiceChange
-  attr_accessor :direction, :stations_affected, :related_routes, :affects_some_trains, :origin, :destination, :routing
+  attr_accessor :direction, :stations_affected, :related_routes, :affects_some_trains, :origin, :destinations, :routing
 
   def initialize(direction, stations_affected, origin, routing)
     self.direction = direction
@@ -7,7 +7,7 @@ class ServiceChanges::ServiceChange
     self.affects_some_trains = false
     self.origin = origin
     self.routing = routing
-    self.destination = routing&.last
+    self.destinations = [routing&.last].compact
   end
 
   def first_station
