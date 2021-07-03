@@ -114,6 +114,15 @@ class ServiceChangeAnalyzer
             changes << routing_changes
           end
         end
+
+        changes.each do |changes_by_routing|
+          changes_by_routing.each do |c|
+            if c.is_a?(ServiceChanges::ReroutingServiceChange)
+              match_route(route_id, c, recent_scheduled_routings, timestamp)
+            end
+          end
+        end
+
         if actual && actual.size > 1
           unique_actual_routings = actual.uniq { |a|
             "#{a.first}-#{a.last}"
@@ -124,7 +133,15 @@ class ServiceChangeAnalyzer
           scheduled_tuples = scheduled.map { |s| [s.first, s.last] }.uniq
 
           if actual_tuples.size > 1 && (scheduled_tuples.size != actual_tuples.size || !scheduled_tuples.all? { |s| actual_tuples.any? { |a| a == s }})
-            changes.first << ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], actual_tuples)
+            split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], actual_tuples)
+            changes.each_with_index do |changes_by_routing, i|
+              rerouting_changes = changes_by_routing.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && (c.begin_of_route? || c.end_of_route?)}
+              related_routes = rerouting_changes.flat_map { |c| c.related_routes }.uniq
+              if related_routes.size > 0
+                split_change.related_routes_by_segments[i] = related_routes
+              end
+            end
+            changes.first << split_change
           end
         end
         changes.map { |r| r.select { |c|
@@ -134,16 +151,6 @@ class ServiceChangeAnalyzer
       end
 
       both = []
-
-      direction_changes.each do |d|
-        d.each do |r|
-          r.each do |c|
-            if c.is_a?(ServiceChanges::ReroutingServiceChange)
-              match_route(route_id, c, recent_scheduled_routings, timestamp)
-            end
-          end
-        end
-      end
 
       condensed_changes = direction_changes.map do |d|
         flatten_changes = d.flatten
@@ -194,8 +201,8 @@ class ServiceChangeAnalyzer
 
       {
         both: both,
-        south: condensed_changes[1],
         north: condensed_changes[0],
+        south: condensed_changes[1],
       }
     end
 
