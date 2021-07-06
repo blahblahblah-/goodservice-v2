@@ -96,7 +96,7 @@
     }
 
     .branch-start {
-      height: 35px;
+      height: calc(100% - 35px);
       width: 30px;
       border-top-right-radius: 50%;
       display: block;
