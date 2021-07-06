@@ -136,7 +136,7 @@ class ServiceChangeAnalyzer
             split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], actual_tuples)
             changes.each_with_index do |changes_by_routing, i|
               rerouting_changes = changes_by_routing.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && (c.begin_of_route? || c.end_of_route?)}
-              related_routes = rerouting_changes.flat_map { |c| c.related_routes }.uniq
+              related_routes = rerouting_changes.flat_map { |c| c.related_routes }.compact.uniq
               if related_routes.size > 0
                 split_change.related_routes_by_segments[i] = related_routes
               end
