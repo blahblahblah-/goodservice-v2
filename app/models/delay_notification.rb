@@ -19,6 +19,11 @@ class DelayNotification
       (new_stops.include?(section.first) && new_stops.include?(section.last)) || (section.include?(new_stops.first) && section.include?(new_stops.last))
     }
 
+    p "Routes: #{routes}"
+    p "Existing sections: #{affected_sections}"
+    p "New section: #{new_stops}"
+    p "Matched section: #{matched_section}"
+
     if matched_section
       indices = [matched_section.first, matched_section.last, new_stops.first, new_stops.last].map {|s| routing.index(s) }
       @affected_sections.delete(matched_section)
