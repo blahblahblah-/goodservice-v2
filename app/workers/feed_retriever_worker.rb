@@ -33,6 +33,5 @@ class FeedRetrieverWorker
     RedisStore.update_feed_timestamp(feed_id, decoded_data.header.timestamp)
     RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
     FeedProcessorWorker.perform_async(feed_id, minutes, fraction_of_minute)
-    puts "Feed #{feed_id} done!"
   end
 end

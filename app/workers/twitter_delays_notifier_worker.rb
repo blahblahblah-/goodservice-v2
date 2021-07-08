@@ -15,8 +15,6 @@ class TwitterDelaysNotifierWorker
   def perform
     return unless twitter_client
 
-    puts "Running TwitterDelaysNotifierWorker"
-
     route_ids = Scheduled::Route.all.pluck(:internal_id)
     trips_by_routes_futures = {}
     route_status_futures = {}

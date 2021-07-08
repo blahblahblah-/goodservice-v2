@@ -30,8 +30,6 @@ class FeedProcessor
         return
       end
 
-      puts "Timestamp of #{feed_name} is #{timestamp}"
-
       trip_timestamps = extract_vehicle_timestamps(feed.entity)
 
       trip_entities = feed.entity.select { |entity|
@@ -134,7 +132,6 @@ class FeedProcessor
       direction = entity.trip_update.trip.nyct_trip_descriptor.direction.to_i
 
       if is_a_shuttle?(route_id, entity)
-        puts "A Shuttle found, reversing trip #{trip_id}"
         entity.trip_update, direction = reverse_trip_update(entity.trip_update)
       end
 
@@ -167,11 +164,8 @@ class FeedProcessor
 
       if potential_match
         RedisStore.add_trip_translation(feed_id, trip.id, potential_match.id)
-        puts "Matched trip #{trip.id} with #{potential_match.id}"
         trip.id = potential_match.id
         unmatched_trip_ids.delete(trip.id)
-      else
-        puts "New trip #{trip.id}"
       end
     end
 
@@ -184,7 +178,6 @@ class FeedProcessor
           trip.previous_trip = previous_update
           trip.previous_trip.previous_trip = nil
         else
-          puts "#{trip.id} has not been updated since #{Time.zone.at(trip.timestamp)}"
           trip.previous_trip = trip.previous_trip&.previous_trip
           trip.latest = false
         end
@@ -230,7 +223,6 @@ class FeedProcessor
         if marshaled_trip
           trip = Marshal.load(marshaled_trip)
           next unless trip.stops.size < 2
-          puts "Completing trip #{trip_id} with stops at #{trip.stops.keys.join(", ")}"
           stops_hash = {}
 
           if trip.past_stops.present?

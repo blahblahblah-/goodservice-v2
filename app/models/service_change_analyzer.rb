@@ -295,7 +295,6 @@ class ServiceChangeAnalyzer
     end
 
     def refresh_routings(timestamp)
-      puts "Refresh current routings"
       data = Scheduled::Trip.soon_grouped(timestamp, nil).map { |route_id, trips_by_direction|
         [route_id, trips_by_direction.map { |direction, trips|
           potential_routings = trips.map { |t|
@@ -317,7 +316,6 @@ class ServiceChangeAnalyzer
       from_cache = RedisStore.evergreen_routings
       return JSON.parse(from_cache) if from_cache
 
-      puts "Get evergreen routings"
       ref_time = Scheduled::CalendarException.next_weekday.to_time.change(hour: 12).to_i
       data = Scheduled::Trip.soon_grouped(ref_time, nil).map { |route_id, trips_by_direction|
         [route_id, trips_by_direction.map { |direction, trips|
