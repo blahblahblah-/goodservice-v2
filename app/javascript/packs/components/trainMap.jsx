@@ -192,7 +192,6 @@ class TrainMap extends React.Component {
                 delete transfers[train.id];
                 let station = stations[stopId];
                 overrideStopId = null;
-
                 if (stopId === "") {
                   segments.branches.splice(0, 1);
                   currentBranches = [];
@@ -208,7 +207,7 @@ class TrainMap extends React.Component {
                     const branchesToTraverse = [...currentBranches];
                     branchedStopId = stopId;
                     if (currentBranchIncludesStop || currentBranchIncludesStop === 0) {
-                      branchStart = currentBranchIncludesStop;
+                      branchStart = branchesToTraverse.length - 1;
                       segments.branches[potentialBranchIndex].splice(0, 1);
                     } else {
                       branchesToTraverse.push(potentialBranchIndex);
@@ -263,9 +262,12 @@ class TrainMap extends React.Component {
                     });
                   }
                 }
-                const activeBranches = branchStops.map((isStopping, index) => {
-                  return isStopping || segments.branches[index].length > 0;
+                let activeBranches = currentBranches.map((obj, index) => {
+                  return branchStops[index] || segments.branches[obj].length > 0;
                 });
+                if (branchStart !== null) {
+                  activeBranches = activeBranches.slice(0, activeBranches.length - 1);
+                }
                 const results = (
                   <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} overrideStopId={overrideStopId} station={station} southStop={stopPattern.southStops[stopId]}
                     northStop={stopPattern.northStops[stopId]} transfers={transfers} branchStops={branchStops} branchStart={branchStart}
