@@ -69,32 +69,45 @@ class TrainMapStop extends React.Component {
   }
 
   renderLine(isActiveBranch, index, branchStart, branchEnd, trips) {
-    const { branchStops, arrivalTime, train, stopId } = this.props;
+    const { branchStops, arrivalTime, train } = this.props;
     const color = train.color;
     const stopExists = branchStops[index];
     const branchStartHere = branchStart !== null && branchStart === index;
     const branchEndHere = branchEnd !== null && branchEnd === index;
-    const marginValue = "20px";
+    let marginValue = "20px";
     const branching = branchStartHere || branchEndHere;
     // Skipped branching is where branching occurs from second-to-last branch instead of the last
     const skippedBranching = branchStart !== null && (index === branchStart - 1 && !branchStops[index + 1]);
     const lineSkippedBranching = branchStart !== null && !branchStops[index];
     const branchingConnectedToPrevLine = branchStartHere && !branchStops[index];
+
+    if (index === 0) {
+      marginValue = "12px";
+    }
+
     let margin = branching || skippedBranching ? ("0 0 0 " + marginValue) : (arrivalTime ? ("0 10px") : ("0 " + marginValue));
-    let minWidth = (arrivalTime ? "45px" : "60px");
+    let minWidthValue = (arrivalTime ? 45 : 60);
     let background;
 
     if (branching) {
-      minWidth = "120px";
+      minWidthValue = 120;
     }
 
     if (skippedBranching) {
-      minWidth = "80px";
+      minWidthValue = 80;
     }
 
     if (lineSkippedBranching && index > 0) {
-      minWidth = "100px";
+      minWidthValue = 100;
       margin = "0";
+    }
+
+    let minWidth;
+
+    if (index === 0) {
+      minWidth = (minWidthValue - 8) + 'px';
+    } else {
+      minWidth = minWidthValue + 'px';
     }
 
     if (stopExists) {
@@ -125,12 +138,12 @@ class TrainMapStop extends React.Component {
         }
         {
           branching && !branchingConnectedToPrevLine &&
-          <div style={{margin: "15px 0", height: "20px", width: marginValue, backgroundColor: color, display: "inline-block", alignSelf: "flex-start"}}>
+          <div style={{margin: "15px 0", height: "20px", width: "20px", backgroundColor: color, display: "inline-block", alignSelf: "flex-start"}}>
           </div>
         }
         {
           branching && branchingConnectedToPrevLine &&
-          <div style={{margin: "15px 0", height: "20px", width: marginValue, backgroundColor: color, display: "inline-block", alignSelf: "flex-start", borderLeft: "1px solid black"}}>
+          <div style={{margin: "15px 0", height: "20px", width: "20px", backgroundColor: color, display: "inline-block", alignSelf: "flex-start", borderLeft: "1px solid black"}}>
           </div>
         }
         {
@@ -220,10 +233,6 @@ class TrainMapStop extends React.Component {
             <Header as='h6' className='travel-time' inverted>
               { this.renderTravelTime() }
             </Header>
-          }
-          {
-            !showTravelTime &&
-            <div className='left-margin'></div>
           }
           { activeBranches.map((obj, index) => {
               return this.renderLine(obj, index, branchStart, branchEnd, trips);
