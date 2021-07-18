@@ -130,7 +130,7 @@ class ServiceChangeAnalyzer
           actual_tuples = unique_actual_routings.select { |a1|
             unique_actual_routings.none? { |a2| a1 != a2 && a2.include?(a1.first) && a2.include?(a1.last) }
           }.map { |a| [a.first, a.last] }.uniq
-          scheduled_tuples = scheduled.map { |s| [s.first, s.last] }.uniq
+          scheduled_tuples = scheduled&.map { |s| [s.first, s.last] }&.uniq || []
 
           if actual_tuples.size > 1 && (scheduled_tuples.size != actual_tuples.size || !scheduled_tuples.all? { |s| actual_tuples.any? { |a| a == s }})
             split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], actual_tuples)
