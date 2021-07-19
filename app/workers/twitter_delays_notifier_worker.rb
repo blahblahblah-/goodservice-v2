@@ -118,6 +118,7 @@ class TwitterDelaysNotifierWorker
       actual_direction = direction == "north" ? "south" : "north"
     end
 
+    previously_updated = false
     matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
     if matching_delay
       prev_delays.delete(matching_delay)
@@ -125,13 +126,14 @@ class TwitterDelaysNotifierWorker
       delays.delete(matching_delay)
     elsif matching_delay = updated_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
       updated_delays.delete(matching_delay)
+      previously_updated = true
     end
 
     if matching_delay
       route_exists_for_delay = matching_delay.routes.include?(route_id)
       matching_delay.append!(route_id, stops, routing, destinations)
       delay_to_add = matching_delay
-      if route_exists_for_delay || delay_to_add.last_tweet_ids.empty?
+      if route_exists_for_delay || delay_to_add.last_tweet_ids.empty? || previously_updated
         updated_delays << delay_to_add 
       else
         delays << delay_to_add
