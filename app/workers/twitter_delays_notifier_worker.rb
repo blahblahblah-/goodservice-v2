@@ -121,9 +121,10 @@ class TwitterDelaysNotifierWorker
     matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
     if matching_delay
       prev_delays.delete(matching_delay)
-    else
-      matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
-      delays.delete(matching_delay) if matching_delay
+    elsif matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
+      delays.delete(matching_delay)
+    elsif matching_delay = updated_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
+      updated_delays.delete(matching_delay)
     end
 
     if matching_delay
@@ -134,8 +135,8 @@ class TwitterDelaysNotifierWorker
     else
       return if max_delay < DELAY_NOTIFICATION_THRESHOLD
       delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations)
+      updated_delays << delay_to_add
     end
-    delays << delay_to_add
   end
 
   def tweet_delays!(prev_delays, delays, updated_delays)
