@@ -99,8 +99,9 @@ class TwitterDelaysNotifierWorker
     end
 
     tweet_delays!(prev_delays, delays, updated_delays)
-    delays.select! { |d| d.last_tweet_times.present? }
-    marshaled_delays = Marshal.dump(delays)
+    delays_to_be_saved = delays + updated_delays
+    delays_to_be_saved.select! { |d| d.last_tweet_times.present? }
+    marshaled_delays = Marshal.dump(delays_to_be_saved)
     RedisStore.update_delay_notifications(marshaled_delays)
   end
 
