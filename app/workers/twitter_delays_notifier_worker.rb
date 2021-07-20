@@ -134,7 +134,7 @@ class TwitterDelaysNotifierWorker
       route_exists_for_delay = matching_delay.routes.include?(route_id)
       matching_delay.append!(route_id, stops, routing, destinations)
       delay_to_add = matching_delay
-      if route_exists_for_delay || delay_to_add.last_tweet_ids.empty? || previously_updated
+      if (!route_exists_for_delay && delay_to_add.last_tweet_ids.present?) || previously_updated
         updated_delays << delay_to_add 
       else
         delays << delay_to_add
