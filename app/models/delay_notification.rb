@@ -36,6 +36,7 @@ class DelayNotification
       @affected_sections = [] unless affected_sections
       @affected_sections << routing[indices.min..indices.max]
     end
+    p "Updated affected sections: #{affected_sections}"
   end
 
   def match_routing?(routing, potential_matched_stops)
