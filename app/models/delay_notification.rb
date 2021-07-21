@@ -2,10 +2,13 @@ class DelayNotification
   attr_accessor :routes, :direction, :stops, :affected_sections, :destinations, :last_tweet_ids, :last_tweet_times, :mins_since_observed
 
   def initialize(route, direction, stops, routing, destinations)
+    affected_section_indices = stops.map {|s| routing.index(s) }
+    affected_section = routing[affected_section_indices.min..affected_section_indices.max]
+
     @routes = [route]
     @direction = direction
     @stops = stops
-    @affected_sections = [stops]
+    @affected_sections = [affected_section]
     @destinations = destinations.uniq
     @mins_since_observed = 0
     @last_tweet_ids = {}
