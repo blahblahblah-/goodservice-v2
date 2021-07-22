@@ -733,7 +733,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='mobile-map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} scheduledRoutings={train.scheduled_routings} showTravelTime direction={direction} trips={selectedRouting === 'blended' ? Object.keys(train.trips[direction]).map((key) => train.trips[direction][key]).flat() : train.trips[direction][selectedRouting]} />
             }
             </Grid.Column>
          </Grid.Row>

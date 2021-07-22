@@ -60,7 +60,7 @@ class TrainModalOverviewPane extends React.Component {
               }
             </Grid.Column>
             <Grid.Column width={4} className='mobile-map-cell'>
-              <TrainMap trains={trains} train={train} stations={stations} routings={train.actual_routings} />
+              <TrainMap trains={trains} train={train} stations={stations} routings={train.actual_routings} scheduledRoutings={train.scheduled_routings} />
             </Grid.Column>
          </Grid.Row>
         </Grid>

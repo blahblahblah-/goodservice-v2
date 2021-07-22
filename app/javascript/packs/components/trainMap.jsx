@@ -237,7 +237,7 @@ class TrainMap extends React.Component {
     const color = train.color;
     const segments = this.generateSegments();
     const stopPattern = this.calculateStops();
-    const stationsWithAmbiguousNames = this.getStationsWithAmbigiousNames(routings, scheduledRoutings, stations)
+    const stationsWithAmbiguousNames = this.getStationsWithAmbigiousNames(routings, scheduledRoutings, stations);
     let previousStopId;
     let branchedStopId;
     let overrideStopId;
