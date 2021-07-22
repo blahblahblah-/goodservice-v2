@@ -658,7 +658,7 @@ class TrainModalDirectionPane extends React.Component {
             <Grid.Column width={4} className='map-cell'>
             {
               train.actual_routings && train.actual_routings[direction] &&
-                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} showTravelTime direction={direction} trips={tripsForMap} />
+                <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} scheduledRoutings={train.scheduled_routings} showTravelTime direction={direction} trips={tripsForMap} />
             }
             </Grid.Column>
             <Grid.Column width={12} className='trip-table-cell'>

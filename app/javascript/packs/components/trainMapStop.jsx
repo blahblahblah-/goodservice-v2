@@ -224,7 +224,7 @@ class TrainMapStop extends React.Component {
   }
 
   render() {
-    const { stopId, station, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips } = this.props;
+    const { stopId, station, transfers, trains, activeBranches, branchStart, branchEnd, showTravelTime, trips, showSecondaryName } = this.props;
     return (
       <li className='train-map-stop'>
         <div className='container'>
@@ -242,6 +242,12 @@ class TrainMapStop extends React.Component {
             <Header as='h5' className='station-name' inverted>
               <Link to={`/stations/${stopId}`}>
                 { formatStation(station.name) }
+                {
+                  showSecondaryName &&
+                  <span className='secondary-name'>
+                    {station.secondary_name}
+                  </span>
+                }
                 { accessibilityIcon(station.accessibility) }
               </Link>
             </Header>

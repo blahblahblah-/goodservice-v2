@@ -30,6 +30,7 @@ class RouteAnalyzer
       service_summaries: convert_to_readable_directions(summaries),
       service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names),
       actual_routings: convert_to_readable_directions(actual_routings),
+      scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       slow_sections: convert_to_readable_directions(slow_sections),
       long_headway_sections: convert_to_readable_directions(long_headway_sections),
       delayed_sections: convert_to_readable_directions(delayed_sections),
@@ -56,6 +57,7 @@ class RouteAnalyzer
       scheduled_headways: convert_scheduled_to_readable_directions(scheduled_headways_by_routes),
       actual_routings: convert_to_readable_directions(actual_routings),
       common_routings: convert_to_readable_directions(common_routings),
+      scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
       timestamp: timestamp,
     }.to_json
@@ -67,6 +69,10 @@ class RouteAnalyzer
 
   def self.convert_to_readable_directions(hash)
     hash.map { |direction, data| [direction == 3 ? :south : :north, data] }.to_h
+  end
+
+  def self.convert_scheduled_to_readable_directions(hash)
+    hash.map { |direction, data| [direction == 1 ? :south : :north, data] }.to_h
   end
 
   private

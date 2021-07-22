@@ -24,6 +24,12 @@
       display: inline;
       margin: auto 0;
       // cursor: pointer;
+
+      .secondary-name {
+        font-weight: normal;
+        font-size: 12px;
+        margin: 0 .5em;
+      }
     }
 
     .transfers {

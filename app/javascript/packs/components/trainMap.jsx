@@ -162,11 +162,82 @@ class TrainMap extends React.Component {
     };
   }
 
+  getStationsWithAmbigiousNames(routings, scheduledRoutings, stations) {
+    if (!routings) {
+      return;
+    }
+
+    const stationNames = {};
+
+    routings.south?.forEach((r) => {
+      r.forEach((stopId) => {
+        const station = stations[stopId];
+        if (station) {
+          if (stationNames[station.name]) {
+            if (!stationNames[station.name].includes(stopId)) {
+              stationNames[station.name].push(stopId);
+            }
+          } else {
+            stationNames[station.name] = [stopId];
+          }
+        }
+      });
+    });
+    routings.north?.forEach((r) => {
+      r.forEach((stopId) => {
+        const station = stations[stopId];
+        if (station) {
+          if (stationNames[station.name]) {
+            if (!stationNames[station.name].includes(stopId)) {
+              stationNames[station.name].push(stopId);
+            }
+          } else {
+            stationNames[station.name] = [stopId];
+          }
+        }
+      });
+    });
+
+    if (scheduledRoutings) {
+      scheduledRoutings.south?.forEach((r) => {
+        r.forEach((stopId) => {
+          const station = stations[stopId];
+          if (station) {
+            if (stationNames[station.name]) {
+              if (!stationNames[station.name].includes(stopId)) {
+                stationNames[station.name].push(stopId);
+              }
+            } else {
+              stationNames[station.name] = [stopId];
+            }
+          }
+        });
+      });
+      scheduledRoutings.north?.forEach((r) => {
+        r.forEach((stopId) => {
+          const station = stations[stopId];
+          if (station) {
+            if (stationNames[station.name]) {
+              if (!stationNames[station.name].includes(stopId)) {
+                stationNames[station.name].push(stopId);
+              }
+            } else {
+              stationNames[station.name] = [stopId];
+            }
+          }
+        });
+      });
+    }
+
+    return Object.keys(stationNames).filter((key) => stationNames[key].length > 1).flatMap((key) => stationNames[key]);
+  }
+
   render() {
-    const { routings, trains, train, showTravelTime, direction, trips, stations } = this.props;
+    const { routings, trains, train, showTravelTime, direction, trips, stations, scheduledRoutings } = this.props;
     const color = train.color;
     const segments = this.generateSegments();
     const stopPattern = this.calculateStops();
+    const stationsWithAmbiguousNames = this.getStationsWithAmbigiousNames(routings, scheduledRoutings, stations)
     let previousStopId;
     let branchedStopId;
     let overrideStopId;
@@ -271,7 +342,7 @@ class TrainMap extends React.Component {
                 const results = (
                   <TrainMapStop key={stopId} trains={trains} train={train} stopId={stopId} previousStopId={previousStopId} overrideStopId={overrideStopId} station={station} southStop={stopPattern.southStops[stopId]}
                     northStop={stopPattern.northStops[stopId]} transfers={transfers} branchStops={branchStops} branchStart={branchStart}
-                    branchEnd={branchEnd} activeBranches={activeBranches} showTravelTime={showTravelTime}
+                    branchEnd={branchEnd} activeBranches={activeBranches} showTravelTime={showTravelTime} showSecondaryName={stationsWithAmbiguousNames.includes(stopId)}
                     trips={trips && trips.filter((t) => t.upcoming_stop === stopId )} direction={direction}/>
                 );
                 previousStopId = stopId;
