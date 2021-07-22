@@ -19,7 +19,7 @@ class DelayNotification
     @routes = (routes + [route]).uniq.sort
     @destinations = (destinations + new_destinations).uniq
     matched_section = affected_sections.find { |section|
-      (new_stops.include?(section.first) && new_stops.include?(section.last)) || (section.include?(new_stops.first) && section.include?(new_stops.last))
+      routing.include?(section.first) && routing.include?(section.last)
     }
 
     p "Routes: #{routes}"
