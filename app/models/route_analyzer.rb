@@ -370,7 +370,7 @@ class RouteAnalyzer
           next_trip_prev_stop = routing.last
           if next_trip
             j = routing.index(next_trip.upcoming_stop)
-            next_trip_prev_stop = j > 0 ? routing[j - 1] : routing[0]
+            next_trip_prev_stop = j && j > 0 ? routing[j - 1] : routing[0]
           end
           {
             begin: t.upcoming_stop,
