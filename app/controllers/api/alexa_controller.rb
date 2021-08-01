@@ -22,6 +22,10 @@ class Api::AlexaController < ApplicationController
         data = delays_response
       when "LookupTrainStatus"
         data = route_status_response
+      when "CancelIntent", "NavigateHomeIntent", "StopIntent"
+        data = quit_response
+      when "HelpIntent", "FallbackIntent"
+        data = help_response
       else
         return render nothing: true, status: :bad_request
       end
@@ -210,6 +214,28 @@ class Api::AlexaController < ApplicationController
         outputSpeech: {
           type: "SSML",
           ssml: "<speak>#{output}</speak>"
+        }
+      }
+    }
+  end
+
+  def quit_response
+    {
+      version: "1.0",
+      response: {
+        shouldEndSession: true,
+      }
+    }
+  end
+
+  def help_response
+    {
+      version: "1.0",
+      response: {
+        outputSpeech: {
+          type: "PlainText",
+          text: "You can use good service to look up new york city subway train status or upcoming departure times for a particular station."\
+            "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue?"
         }
       }
     }
