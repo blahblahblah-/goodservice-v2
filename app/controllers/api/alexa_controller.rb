@@ -12,8 +12,10 @@ class Api::AlexaController < ApplicationController
     "via" => "ˈviːə",
     "evers" => "ˈɛvərz",
   }
+  TIMESTAMP_TOLERANCE_IN_SECONDS = 150
 
   def index
+    verify_timestamp
     if params["alexa"]["request"]["type"] == "IntentRequest"
       case params["alexa"]["request"]["intent"]["name"]
       when "LookupTrainTimes"
@@ -32,9 +34,20 @@ class Api::AlexaController < ApplicationController
     end
 
     render json: data
+  rescue
+    render nothing: true, status: :bad_request
   end
 
   private
+
+  def verify_timestamp
+    timestamp = DateTime.iso8601(params["alexa"]["request"]["timestamp"])
+    day_diff = (timestamp - DateTime.current)
+    seconds_diff = (day_diff * 24 * 60 * 60).to_i.abs
+    if seconds_diff > TIMESTAMP_TOLERANCE_IN_SECONDS
+      throw "Error invalid timestamp"
+    end
+  end
 
   def stop_times_response
     full_user_id = params["alexa"]["session"]["user"] && params["alexa"]["session"]["user"]["userId"]
