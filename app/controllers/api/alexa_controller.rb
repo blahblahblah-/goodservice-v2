@@ -22,9 +22,9 @@ class Api::AlexaController < ApplicationController
         data = delays_response
       when "LookupTrainStatus"
         data = route_status_response
-      when "CancelIntent", "NavigateHomeIntent", "StopIntent"
+      when "AMAZON.CancelIntent", "AMAZON.NavigateHomeIntent", "AMAZON.StopIntent"
         data = quit_response
-      when "HelpIntent", "FallbackIntent"
+      when "AMAZON.HelpIntent", "AMAZON.FallbackIntent"
         data = help_response
       else
         return render nothing: true, status: :bad_request
