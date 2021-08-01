@@ -24,13 +24,11 @@ class Api::AlexaController < ApplicationController
         data = route_status_response
       when "AMAZON.CancelIntent", "AMAZON.NavigateHomeIntent", "AMAZON.StopIntent"
         data = quit_response
-      when "AMAZON.HelpIntent", "AMAZON.FallbackIntent"
-        data = help_response
       else
-        return render nothing: true, status: :bad_request
+        data = help_response
       end
     else
-      render nothing: true, status: :bad_request
+      data = help_response
     end
 
     render json: data
@@ -234,8 +232,9 @@ class Api::AlexaController < ApplicationController
       response: {
         outputSpeech: {
           type: "PlainText",
-          text: "You can use good service to look up new york city subway train status or upcoming departure times for a particular station."\
-            "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue?"
+          text: "You can use good service to look up train statuses, or upcoming departure times for a particular station of the new york city subway. "\
+            "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue? "\
+            "Or, ask good service, what trains are delayed?"
         }
       }
     }
