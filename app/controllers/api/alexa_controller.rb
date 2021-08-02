@@ -35,7 +35,9 @@ class Api::AlexaController < ApplicationController
     end
 
     render json: data
-  rescue
+  rescue => e
+    p e.message
+    p e.backtrace.join("\n")
     render nothing: true, status: :bad_request
   end
 
