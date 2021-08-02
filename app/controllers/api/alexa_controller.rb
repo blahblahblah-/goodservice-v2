@@ -16,6 +16,7 @@ class Api::AlexaController < ApplicationController
 
   def index
     verify_timestamp
+    verify_header
     if params["alexa"]["request"]["type"] == "IntentRequest"
       case params["alexa"]["request"]["intent"]["name"]
       when "LookupTrainTimes"
