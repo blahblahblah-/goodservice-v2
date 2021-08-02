@@ -45,8 +45,58 @@ class Api::AlexaController < ApplicationController
     day_diff = (timestamp - DateTime.current)
     seconds_diff = (day_diff * 24 * 60 * 60).to_i.abs
     if seconds_diff > TIMESTAMP_TOLERANCE_IN_SECONDS
-      throw "Error invalid timestamp"
+      raise "Error invalid timestamp"
     end
+  end
+
+  def verify_header
+    verify_url
+    verify_cert
+  end
+
+  def verify_url
+    uri = parsed_cert_uri
+
+    if uri.scheme != "https"
+      raise "URI protocol #{uri.scheme} is not https"
+    end
+
+    if uri.host.upcase != "s3.amazonaws.com".upcase
+      raise "URI host #{uri.host} is not s3.amazonaws.com"
+    end
+
+    if uri.port != 443
+      raise "URI port #{uri.port} is not 443"
+    end
+
+    if uri.path[0..9] != "/echo.api/"
+      raise "URI path #{uri.path} does not start with /echo.api/"
+    end
+  end
+
+  def verify_cert
+    response = HTTParty.get(request.headers["SignatureCertChainUrl"])
+    raise "Invalid cert response code" unless response.code == 200
+    cert = OpenSSL::X509::Certificate.new(response.body)
+    current_time = Time.current
+
+    if cert.not_before > current_time || cert.not_after < current_time
+      raise "Certificate is outdated for #{cert.not_before} to #{cert.not_after}"
+    end
+
+    if !cert.subject.to_a.flatten.include?("echo-api.amazon.com")
+      raise "Invalid Subject Alternative Names #{cert.subject.to_a.flatten}"
+    end
+
+    signature = Base64.decode64(request.headers["Signature"])
+    if cert.public_key.verify(OpenSSL::Digest::SHA1.new, signature, request.body)
+      raise "Signature does not match request hash"
+    end
+  end
+
+  def parsed_cert_uri
+    uri_str = request.headers["SignatureCertChainUrl"]
+    URI.parse(uri_str)
   end
 
   def stop_times_response

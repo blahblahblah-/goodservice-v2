@@ -41,6 +41,7 @@ gem 'barnes'
 gem 'naturally'
 gem 'twitter'
 gem 'rack-cors'
+gem 'httparty'
 
 # gem 'rack-cors'
 # gem 'twitter'
