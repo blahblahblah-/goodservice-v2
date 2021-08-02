@@ -92,7 +92,7 @@ class Api::AlexaController < ApplicationController
     end
 
     signature = Base64.decode64(request.headers["Signature"])
-    if cert.public_key.verify(OpenSSL::Digest::SHA1.new, signature, request.body.read)
+    if !cert.public_key.verify(OpenSSL::Digest::SHA1.new, signature, request.body.read)
       raise "Signature does not match request hash"
     end
   end
