@@ -30,6 +30,10 @@
         font-size: 12px;
         margin: 0 .5em;
       }
+
+      .icon:only-child {
+        margin-right: 0;
+      }
     }
 
     .transfers {
