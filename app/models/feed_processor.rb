@@ -17,7 +17,7 @@ class FeedProcessor
       feed = Marshal.load(marshaled_feed) if marshaled_feed
 
       if !feed
-        throw "Error: #{feed_name} not found"
+        raise "Error: #{feed_name} not found"
       end
 
       puts "Analyzing #{feed_name}"

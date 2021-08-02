@@ -7,7 +7,7 @@ class RouteProcessorWorker
     trips = Marshal.load(marshaled_trips) if marshaled_trips
 
     if !trips
-      throw "Error: Trips for #{route_id} at #{Time.zone.at(timestamp)} not found"
+      raise "Error: Trips for #{route_id} at #{Time.zone.at(timestamp)} not found"
     end
 
     RouteProcessor.process_route(route_id, trips, timestamp)
