@@ -1,46 +1,6 @@
 class RouteAnalyzer
   SLOW_SECTION_STATIONS_RANGE = 3..7
 
-  class StopNameFormatter
-    attr_accessor :stops, :ambiguous_stop_names
-
-    def initialize(actual_routings, scheduled_routings)
-      stop_ids = Set.new
-      actual_routings.each do |_, routings|
-        routings.each do |r|
-          r.each do |stop_id|
-            stop_ids << stop_id
-          end
-        end
-      end
-      scheduled_routings.each do |_, routings|
-        routings.each do |r|
-          r.each do |stop_id|
-            stop_ids << stop_id
-          end
-        end
-      end
-
-      self.stops = Scheduled::Stop.where(internal_id: stop_ids).to_h { |stop| [stop.internal_id, stop] }
-      self.ambiguous_stop_names = stops.values.group_by(&:stop_name).select { |_, v| v.size > 1}.map(&:first)
-    end
-
-    def stop_name(stop_id)
-      stop = stops[stop_id]
-      return unless stop
-      if ambiguous_stop_names.include?(stop.stop_name)
-        return "((#{stop.stop_name} (#{stop.secondary_name})))"
-      end
-      "((#{stop.stop_name}))"
-    end
-
-    def brief_stop_name(stop_id)
-      stop = stops[stop_id]
-      return unless stop
-      "((#{stop.stop_name}))"
-    end
-  end
-
   def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
     stop_name_formatter = StopNameFormatter.new(actual_routings, scheduled_routings)
     travel_times_data = RedisStore.travel_times
@@ -606,5 +566,45 @@ class RouteAnalyzer
         }
       }]
     }
+  end
+
+  class StopNameFormatter
+    attr_accessor :stops, :ambiguous_stop_names
+
+    def initialize(actual_routings, scheduled_routings)
+      stop_ids = Set.new
+      actual_routings.each do |_, routings|
+        routings.each do |r|
+          r.each do |stop_id|
+            stop_ids << stop_id
+          end
+        end
+      end
+      scheduled_routings.each do |_, routings|
+        routings.each do |r|
+          r.each do |stop_id|
+            stop_ids << stop_id
+          end
+        end
+      end
+
+      self.stops = Scheduled::Stop.where(internal_id: stop_ids).to_h { |stop| [stop.internal_id, stop] }
+      self.ambiguous_stop_names = stops.values.group_by(&:stop_name).select { |_, v| v.size > 1}.map(&:first)
+    end
+
+    def stop_name(stop_id)
+      stop = stops[stop_id]
+      return unless stop
+      if ambiguous_stop_names.include?(stop.stop_name)
+        return "((#{stop.stop_name} (#{stop.secondary_name})))"
+      end
+      "((#{stop.stop_name}))"
+    end
+
+    def brief_stop_name(stop_id)
+      stop = stops[stop_id]
+      return unless stop
+      "((#{stop.stop_name}))"
+    end
   end
 end

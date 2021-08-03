@@ -210,18 +210,25 @@ class RouteProcessor
     end
 
     def calculate_scheduled_headway(departure_times)
-      # This probably means departure times span across midnight
       d = departure_times.clone
+
+      need_to_add_hours = false
+      # This probably means departure times span across midnight
+      current_time = Time.current - Time.current.beginning_of_day
       if (departure_times.max - departure_times.min) > 4.hours.to_i
         d = departure_times.map do |time|
           if time < 8.hours.to_i
+            need_to_add_hours = true
             time + 24.hours.to_i
           else
             time
           end
         end
       end
-      d.sort.each_cons(2).map { |a,b| b - a }
+      d.sort!
+      time_until_first_trip = d.first - current_time
+      time_until_first_trip = d.first - (current_time + 24.hours.to_i) if time_until_first_trip > 4.hours.to_i
+      [time_until_first_trip] + d.sort.each_cons(2).map { |a,b| b - a }
     end
 
     def update_scheduled_runtimes(scheduled_trips)
