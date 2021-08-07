@@ -1,13 +1,21 @@
 class RouteProcessor
   TRAVEL_TIME_AVERAGE_TRIP_COUNT = 20
 
+  ACTUAL_TO_SCHEDULED_DIRECTION_MAPPING = {
+    1 => 0,
+    3 => 1,
+  }
+
   class << self
     def process_route(route_id, trips, timestamp)
       puts "Processing route #{route_id} at #{Time.zone.at(timestamp)}"
 
       trips_by_direction = trips.group_by(&:direction)
 
-      routings = determine_routings(trips_by_direction)
+      scheduled_trips = Scheduled::Trip.soon_grouped(timestamp, route_id)
+      scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: true)
+
+      routings = determine_routings(trips_by_direction, scheduled_routings)
 
       common_routings = determine_common_routings(routings)
 
@@ -25,9 +33,6 @@ class RouteProcessor
       }.to_h
 
       processed_trips = process_trips(trips_by_routes, timestamp)
-
-      scheduled_trips = Scheduled::Trip.soon_grouped(timestamp, route_id)
-      scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp, exclude_past_stops: true)
 
       # Reload to load all stops
       scheduled_trips.each do |_, trips|
@@ -110,9 +115,9 @@ class RouteProcessor
       processed_values.sum / processed_values.count
     end
 
-    def determine_routings(trips_by_direction)
+    def determine_routings(trips_by_direction, scheduled_routings)
       trips_by_direction.map { |direction, t|
-        [direction, determine_routings_for_direction(t)]
+        [direction, sort_routings(determine_routings_for_direction(t), scheduled_routings[ACTUAL_TO_SCHEDULED_DIRECTION_MAPPING[direction]])]
       }.to_h
     end
 
@@ -125,6 +130,20 @@ class RouteProcessor
 
         [direction, routings.map { |r| r[r.index(common_start)..r.index(common_end)] }.sort_by(&:size).reverse.first]
       end
+    end
+
+    def sort_routings(actual_routings, scheduled_routings)
+      unless scheduled_routings.present? && actual_routings&.size > 1
+        return actual_routings
+      end
+
+      selected_routing = scheduled_routings.find { |sr| actual_routings.all? { |ar| ar.any? { |stop| sr.include?(stop) }}}
+
+      unless selected_routing
+        return actual_routings
+      end
+
+      actual_routings.sort_by { |routing| selected_routing.index(routing.find { |stop| selected_routing.include?(stop) })}
     end
 
     def determine_routings_for_direction(trips)
