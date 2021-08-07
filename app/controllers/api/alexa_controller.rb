@@ -259,11 +259,11 @@ class Api::AlexaController < ApplicationController
           summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
           summaries.each do |summary|
             if route_name != "#{route_id} train"
-              strs << summary.gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '\1').gsub("to/from", "to and from").gsub(/\(\((.*?)\)\)/) do |stop_name|
+              strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '\1').gsub(/\(\((.*?)\)\)/) do |stop_name|
                 Scheduled::Stop.normalized_partial_name($1)
               end
             else
-              strs << summary.gsub(/\//, ' ').gsub(/<(.*?)>/, '\1').gsub("to/from", "to and from").gsub(/\(\((.*?)\)\)/) do |stop_name|
+              strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<(.*?)>/, '\1').gsub(/\(\((.*?)\)\)/) do |stop_name|
                 Scheduled::Stop.normalized_partial_name($1)
               end
             end
