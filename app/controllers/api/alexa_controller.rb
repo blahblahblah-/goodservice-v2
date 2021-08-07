@@ -258,13 +258,19 @@ class Api::AlexaController < ApplicationController
         if route_data.present?
           summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
           summaries.each do |summary|
-            strs << summary.gsub(/\//, ' ').gsub(/<(.*?)>/, '\1').gsub(/\(\((.*?)\)\)/) do |stop_name|
-              Scheduled::Stop.normalized_partial_name($1)
+            if route_name != "#{route_id} train"
+              strs << summary.gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '\1').gsub(/\(\((.*?)\)\)/) do |stop_name|
+                Scheduled::Stop.normalized_partial_name($1)
+              end
+            else
+              strs << summary.gsub(/\//, ' ').gsub(/<(.*?)>/, '\1').gsub(/\(\((.*?)\)\)/) do |stop_name|
+                Scheduled::Stop.normalized_partial_name($1)
+              end
             end
           end
         end
 
-        output = strs.join(" ")
+        output = strs.join(" ").gsub("to/from", "to and from")
         PRONOUNCIATION_MAPPING.each do |k, v|
           output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
         end
