@@ -595,7 +595,7 @@ class RouteAnalyzer
     def stop_name(stop_id)
       stop = stops[stop_id]
       return unless stop
-      if ambiguous_stop_names.include?(stop.stop_name)
+      if ambiguous_stop_names.include?(stop.stop_name) && !stop.secondary_name.include?('Level')
         return "((#{stop.stop_name} (#{stop.secondary_name})))"
       end
       "((#{stop.stop_name}))"
