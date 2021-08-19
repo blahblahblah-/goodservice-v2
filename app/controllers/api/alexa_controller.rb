@@ -340,7 +340,7 @@ class Api::AlexaController < ApplicationController
     }
 
     stop = Scheduled::Stop.find_by(internal_id: stop_id)
-    strs = ["Here are the upcoming arrival times for #{stop.normalized_full_name(separator: "<break strength='weak'/>")}."]
+    strs = ["#{stop.normalized_full_name(separator: "<break strength='weak'/>")} upcoming arrival times."]
 
     trips.each do |_, routes|
       routes.each do |route_id, trips|
@@ -349,28 +349,38 @@ class Api::AlexaController < ApplicationController
         route_name.gsub!(/X/, ' Express') if route_name
         if trips.present?
           first_trip_destination = Scheduled::Stop.find_by(internal_id: trips.first[:destination_stop])
-          eta = (trips.first[:arrival_time] / 60).round
-          if eta < 1
-            strs << "The next #{first_trip_destination.normalized_name}-bound #{route_name} train is now arriving."
-          else
-            strs << "The next #{first_trip_destination.normalized_name}-bound #{route_name} train arrives in #{eta} #{"minute".pluralize(eta)}."
+          second_trip_destination = trips.second && Scheduled::Stop.find_by(internal_id: trips.second[:destination_stop])
+
+          if trips.size == 1 || first_trip_destination != second_trip_destination
+            eta = (trips.first[:arrival_time] / 60).round
+            if eta < 1
+              strs << "#{route_name} train to #{first_trip_destination.normalized_name} is now arriving."
+            else
+              strs << "#{route_name} train to #{first_trip_destination.normalized_name} in #{eta} #{"minute".pluralize(eta)}."
+            end
           end
 
           if trips.size > 1
-            second_trip_destination = Scheduled::Stop.find_by(internal_id: trips.second[:destination_stop])
-            eta = (trips.second[:arrival_time] / 60).round
+            first_eta = (trips.first[:arrival_time] / 60).round
+            second_eta = (trips.second[:arrival_time] / 60).round
             if first_trip_destination != second_trip_destination
-              if eta < 1
-                strs << "The next #{second_trip_destination.normalized_name}-bound #{route_name} train is now arriving."
+              if second_eta < 1
+                strs << "#{route_name} train to #{second_trip_destination.normalized_name} is now arriving."
               else
-                strs << "The next #{second_trip_destination.normalized_name}-bound #{route_name} train arrives in #{eta} #{"minute".pluralize(eta)}."
+                strs << "#{route_name} train to #{second_trip_destination.normalized_name} in #{second_eta} #{"minute".pluralize(second_eta)}."
               end
             else
-              if eta < 1
-                strs << "The following train is now arriving."
+              sentence = "#{route_name} train to #{first_trip_destination.normalized_name} "
+              if first_eta < 1
+                if second_eta < 1
+                  sentence += "is now arriving."
+                else
+                  sentence += "is now arriving, next in #{second_eta} #{"minute".pluralize(second_eta)}."
+                end
               else
-                strs << "The following in #{eta} #{"minute".pluralize(eta)}."
+                sentence += "in #{first_eta} #{"minute".pluralize(first_eta)}, and #{second_eta} #{"minute".pluralize(second_eta)}."
               end
+              strs << sentence
             end
           end
         end
@@ -385,7 +395,7 @@ class Api::AlexaController < ApplicationController
 
     if elevator_advisories[stop.internal_id].present?
       elevator_advisories[stop.internal_id].each { |a|
-        strs << "The elevator for #{Scheduled::Stop.normalized_partial_name(a)} is out of service.".gsub(/\//, ' ')
+        strs << "Elevator for #{Scheduled::Stop.normalized_partial_name(a)} is out of service.".gsub(/\//, ' ')
       }
     end
 
