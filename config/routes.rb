@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     post '/slack', to: 'slack#index'
     post '/slack/query', to: 'slack#query'
     post '/alexa', to: 'alexa#index'
+    post '/gactions', to: 'gactions#index'
   end
   get '/about', to: 'index#index'
   get '/twitter', to: 'index#index'
