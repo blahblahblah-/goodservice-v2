@@ -378,7 +378,7 @@ class Api::AlexaController < ApplicationController
                   sentence += "is now arriving, next in #{second_eta} #{"minute".pluralize(second_eta)}."
                 end
               else
-                sentence += "in #{first_eta} #{"minute".pluralize(first_eta)}, and #{second_eta} #{"minute".pluralize(second_eta)}."
+                sentence += "in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
               end
               strs << sentence
             end
