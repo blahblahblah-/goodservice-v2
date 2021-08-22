@@ -340,7 +340,7 @@ class Api::AlexaController < ApplicationController
     }
 
     stop = Scheduled::Stop.find_by(internal_id: stop_id)
-    strs = ["#{stop.normalized_full_name(separator: "<break strength='weak'/>")} upcoming arrival times."]
+    strs = ["Upcoming arrival times for #{stop.normalized_full_name(separator: "<break strength='weak'/>")}."]
 
     trips.each do |_, routes|
       routes.each do |route_id, trips|
@@ -354,9 +354,9 @@ class Api::AlexaController < ApplicationController
           if trips.size == 1 || first_trip_destination != second_trip_destination
             eta = (trips.first[:arrival_time] / 60).round
             if eta < 1
-              strs << "#{route_name} train to #{first_trip_destination.normalized_name} is now arriving."
+              strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} is now arriving."
             else
-              strs << "#{route_name} train to #{first_trip_destination.normalized_name} in #{eta} #{"minute".pluralize(eta)}."
+              strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} arrives in #{eta} #{"minute".pluralize(eta)}."
             end
           end
 
@@ -365,9 +365,9 @@ class Api::AlexaController < ApplicationController
             second_eta = (trips.second[:arrival_time] / 60).round
             if first_trip_destination != second_trip_destination
               if second_eta < 1
-                strs << "#{route_name} train to #{second_trip_destination.normalized_name} is now arriving."
+                strs << "Next #{route_name} train to #{second_trip_destination.normalized_name} is now arriving."
               else
-                strs << "#{route_name} train to #{second_trip_destination.normalized_name} in #{second_eta} #{"minute".pluralize(second_eta)}."
+                strs << "Next #{route_name} train to #{second_trip_destination.normalized_name} arrives in #{second_eta} #{"minute".pluralize(second_eta)}."
               end
             else
               sentence = "#{route_name} train to #{first_trip_destination.normalized_name} "
@@ -375,10 +375,10 @@ class Api::AlexaController < ApplicationController
                 if second_eta < 1
                   sentence += "is now arriving."
                 else
-                  sentence += "is now arriving, next in #{second_eta} #{"minute".pluralize(second_eta)}."
+                  sentence += "is now arriving, following in #{second_eta} #{"minute".pluralize(second_eta)}."
                 end
               else
-                sentence += "in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
+                sentence += "arrives in #{first_eta} #{"minute".pluralize(first_eta)}, following in #{second_eta} #{"minute".pluralize(second_eta)}."
               end
               strs << sentence
             end
