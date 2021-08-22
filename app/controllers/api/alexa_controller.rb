@@ -370,7 +370,7 @@ class Api::AlexaController < ApplicationController
                 strs << "Next #{route_name} train to #{second_trip_destination.normalized_name} arrives in #{second_eta} #{"minute".pluralize(second_eta)}."
               end
             else
-              sentence = "#{route_name} train to #{first_trip_destination.normalized_name} "
+              sentence = "Next #{route_name} train to #{first_trip_destination.normalized_name} "
               if first_eta < 1
                 if second_eta < 1
                   sentence += "is now arriving."
