@@ -63,9 +63,11 @@ class RouteAnalyzer
       timestamp: timestamp,
     }.to_json
 
-    RedisStore.add_route_status_summary(route_id, summary)
-    RedisStore.add_route_status_detailed_summary(route_id, detailed_summary)
-    RedisStore.update_route_status(route_id, detailed_stats)
+    REDIS_CLIENT.pipelined do
+      RedisStore.add_route_status_summary(route_id, summary)
+      RedisStore.add_route_status_detailed_summary(route_id, detailed_summary)
+      RedisStore.update_route_status(route_id, detailed_stats)
+    end
   end
 
   def self.convert_to_readable_directions(hash)
@@ -117,7 +119,7 @@ class RouteAnalyzer
       if delayed_sections[direction[:route_direction]].present?
         first_stop = delayed_sections[direction[:route_direction]].first[:begin]
         last_stop = delayed_sections[direction[:route_direction]].last[:end]
-        max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60).round
+        max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60.0).round
         if first_stop == last_stop
           strs << "delayed at #{stop_name_formatter.stop_name(first_stop)} (since #{max_delay_mins} mins ago)"
         else
@@ -127,19 +129,19 @@ class RouteAnalyzer
 
       if slow_sections[direction[:route_direction]].present?
         slow_strs = slow_sections[direction[:route_direction]].map do |s|
-           "#{(s[:runtime_diff] / 60).round} mins longer to travel between #{stop_name_formatter.stop_name(s[:begin])} and #{stop_name_formatter.stop_name(s[:end])}"
+           "#{(s[:runtime_diff] / 60.0).round} mins longer to travel between #{stop_name_formatter.stop_name(s[:begin])} and #{stop_name_formatter.stop_name(s[:end])}"
         end
         slow_strs[0] = "taking #{slow_strs[0]}"
         strs << slow_strs.join(", ")
       elsif runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
-        strs << "taking #{(runtime_diff[direction[:route_direction]] / 60).round} mins longer to travel per trip"
+        strs << "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip"
       end
 
       if long_headway_sections[direction[:route_direction]].present?
         first_stop = long_headway_sections[direction[:route_direction]].first[:begin]
         last_stop = long_headway_sections[direction[:route_direction]].last[:end]
-        max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60).round
-        max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60).round
+        max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60.0).round
+        max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60.0).round
         if first_stop == last_stop
           strs << "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
         else

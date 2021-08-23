@@ -183,7 +183,7 @@ class FeedProcessor
         end
 
         trip.schedule = previous_update.schedule if previous_update
-        trip.past_stops = trip.previous_trip.past_stops if trip.previous_trip&.past_stops
+        trip.past_stops = previous_update.past_stops if previous_update&.past_stops
       end
     end
 
