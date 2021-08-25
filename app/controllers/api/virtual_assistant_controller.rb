@@ -52,7 +52,7 @@ class Api::VirtualAssistantController < ApplicationController
       output.gsub!(/\b#{k}\b/, " <phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme> ")
     end
 
-    return output, (["#{route_name} status: #{status}."] + summaries).join("\n\n").gsub(/<|>/, '').gsub(/\(\(|\)\)/, '').gsub(/\s\-\s/, '–')
+    return output, (["#{route_name} status: #{status}."] + summaries).join("\n").gsub(/<|>/, '').gsub(/\(\(|\)\)/, '').gsub(/\s\-\s/, '–')
   end
 
   def stop_times_text(stop_ids, user_id: nil)
@@ -228,7 +228,7 @@ class Api::VirtualAssistantController < ApplicationController
       output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
     end
 
-    return output, text.join("\n\n")
+    return output, text.join("\n")
   end
 
   def delays_text

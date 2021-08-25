@@ -96,6 +96,9 @@ class Api::AlexaController < Api::VirtualAssistantController
         stop_id = RedisStore.alexa_most_recent_stop(user_id)
         if stop_id
           speech, text = upcoming_arrival_times_response(stop_id, user_id: user_id)
+          text_array = text.split("\n")
+          title = text_array.first
+          text = text_array[1..-1].join("\n")
           {
             version: "1.0",
             response: {
@@ -105,7 +108,7 @@ class Api::AlexaController < Api::VirtualAssistantController
               },
               card: {
                 type: "Simple",
-                title: "goodservice.io",
+                title: title,
                 content: text
               },
             },
@@ -150,6 +153,9 @@ class Api::AlexaController < Api::VirtualAssistantController
       else
         stop_ids = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"].split(",")
         speech, text = stop_times_text(stop_ids, user_id: user_id)
+        text_array = text.split("\n")
+        title = text_array.first
+        text = text_array[1..-1].join("\n")
         timestamp = Time.current.to_i
         {
           version: "1.0",
@@ -160,7 +166,7 @@ class Api::AlexaController < Api::VirtualAssistantController
             },
             card: {
               type: "Simple",
-              title: "goodservice.io",
+              title: title,
               content: text
             },
           }
@@ -201,6 +207,10 @@ class Api::AlexaController < Api::VirtualAssistantController
       text = speech
     end
 
+    text_array = text.split("\n")
+    title = text_array.first
+    text = text_array[1..-1].join("\n")
+
     {
       version: "1.0",
       response: {
@@ -210,7 +220,7 @@ class Api::AlexaController < Api::VirtualAssistantController
         },
         card: {
           type: "Simple",
-          title: "goodservice.io",
+          title: title,
           content: text
         },
       }
