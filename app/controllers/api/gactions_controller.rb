@@ -13,6 +13,22 @@ class Api::GactionsController < Api::VirtualAssistantController
 
   def route_status_response
     slot = params["intent"]["params"]["Train"] || params["intent"]["params"]["train"]
+
+    if !slot
+      return {
+        session: {
+          id: params["session"]["id"],
+        },
+        scene: {
+          "name": "TrainStatus",
+          "slots": {},
+          "next": {
+            "name": "Welcome"
+          }
+        }
+      }
+    end
+
     route_id = slot["resolved"]
     output, output_text = route_status_text(route_id)
 
