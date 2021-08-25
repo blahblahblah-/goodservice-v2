@@ -95,9 +95,18 @@ class Api::AlexaController < Api::VirtualAssistantController
       if user_id
         stop_id = RedisStore.alexa_most_recent_stop(user_id)
         if stop_id
-          data = upcoming_arrival_times_response(stop_id, user_id)
+          text = upcoming_arrival_times_response(stop_id, user_id: user_id)
+          {
+            version: "1.0",
+            response: {
+              outputSpeech: {
+                type: "SSML",
+                text: "<speak>#{text}</speak>",
+              }
+            }
+          }
         else
-          data = {
+          {
             version: "1.0",
             response: {
               outputSpeech: {
@@ -108,15 +117,15 @@ class Api::AlexaController < Api::VirtualAssistantController
           }
         end
       else
-        data = {
-            version: "1.0",
-            response: {
-              outputSpeech: {
-                type: "PlainText",
-                text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: ask good service, when are the next trains arriving at bedford avenue?"
-              }
+        {
+          version: "1.0",
+          response: {
+            outputSpeech: {
+              type: "PlainText",
+              text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: ask good service, when are the next trains arriving at bedford avenue?"
             }
           }
+        }
       end
     else
       stop_resolution_code = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["status"]["code"]
@@ -124,7 +133,7 @@ class Api::AlexaController < Api::VirtualAssistantController
       if stop_resolution_code == "ER_SUCCESS_NO_MATCH"
         value = params["alexa"]["request"]["intent"]["slots"]["station"]["value"]
         RedisStore.add_alexa_stop_query_miss(value)
-        data = {
+        {
           version: "1.0",
           response: {
             outputSpeech: {
@@ -135,84 +144,31 @@ class Api::AlexaController < Api::VirtualAssistantController
         }
       else
         stop_ids = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"].split(",")
+        text = stop_times_text(stop_ids, user_id: user_id)
         timestamp = Time.current.to_i
-
-        if stop_ids.size > 1
-          routes_with_alternate_names = Scheduled::Route.all.where("alternate_name is not null").to_h do |r|
-            [r.internal_id, r]
-          end
-          stops = stop_ids.map { |id| Scheduled::Stop.find_by(internal_id: id) }
-          strs = stops.map { |stop|
-            routes_stopped_ids = Api::SlackController.routes_stop_at(stop.internal_id, timestamp)
-            routes_stopped = routes_stopped_ids.map do |route_id|
-              route_name = (routes_with_alternate_names[route_id] && Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)) || route_id
-              route_name = "Staten Island Railway" if route_name == "SI"
-              route_name.gsub!(/X/, ' Express')
-              route_name
-            end
-            if routes_stopped.size > 1
-              routes_stopped.last.prepend("and ") if routes_stopped.size > 1
-              "#{stop.normalized_full_name(separator: "<break strength='weak'/>")} (currently served by #{routes_stopped.join(" ")} trains)? "
-            elsif routes_stopped.size == 1
-              "#{stop.normalized_full_name(separator: "<break strength='weak'/>")} (currently served by the #{routes_stopped.first} train)? "
-            else
-              "#{stop.normalized_full_name(separator: "<break strength='weak'/>")} (not currently in service)? "
-            end
-          }
-          strs.last.prepend("or ")
-          output = strs.join(", ")
-          PRONOUNCIATION_MAPPING.each do |k, v|
-            output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
-          end
-
-          data = {
-            version: "1.0",
-            response: {
-              outputSpeech: {
-                type: "SSML",
-                ssml: "<speak>There is more than one station with that name. Do you mean #{output}</speak>"
-              }
+        {
+          version: "1.0",
+          response: {
+            outputSpeech: {
+              type: "SSML",
+              ssml: "<speak>#{text}</speak>",
             }
           }
-        else
-          stop_id = stop_ids.first
-          data = upcoming_arrival_times_response(stop_id, user_id)
-        end
+        }
       end
     end
   end
 
   def delays_response
-    routes_with_alternate_names = Scheduled::Route.all.where("alternate_name is not null").to_h do |r|
-      [r.internal_id, r]
-    end
-    delayed_routes = RedisStore.route_status_summaries&.to_h { |k, v|
-      data = JSON.parse(v)
-      r = routes_with_alternate_names[k]
-      [r ? r.alternate_name : k, data['timestamp'] && data['timestamp'] >= (Time.current - 5.minutes).to_i && data['status'] == 'Delay']
-    }.select { |k, v| v }.map { |k, _| k }.sort
-
-    if delayed_routes.any?
-      {
-        version: "1.0",
-        response: {
-          outputSpeech: {
-            type: "PlainText",
-            text: "Delays detected on #{delayed_routes.join(', ')} trains"
-          }
+    {
+      version: "1.0",
+      response: {
+        outputSpeech: {
+          type: "PlainText",
+          text: delays_text
         }
       }
-    else
-      {
-        version: "1.0",
-        response: {
-          outputSpeech: {
-            type: "PlainText",
-            text: "There are no delays currently detected."
-          }
-        }
-      }
-    end
+    }
   end
 
   def route_status_response
@@ -260,107 +216,6 @@ class Api::AlexaController < Api::VirtualAssistantController
           text: "You can use good service to check the status of a new york city subway train, or to look up upcoming departure times for a particular station. "\
             "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue? "\
             "Or, ask good service, what trains are delayed?"
-        }
-      }
-    }
-  end
-
-  def upcoming_arrival_times_response(stop_id, user_id)
-    timestamp = Time.current.to_i
-    routes_stopped = Api::SlackController.routes_stop_at(stop_id, timestamp)
-    routes_with_alternate_names = Scheduled::Route.all.where("alternate_name is not null").to_h do |r|
-      [r.internal_id, r]
-    end
-    elevator_advisories_str = RedisStore.elevator_advisories
-    route_trips = routes_stopped.to_h do |route_id|
-      [route_id, RedisStore.processed_trips(route_id)]
-    end
-    travel_times_data = RedisStore.travel_times
-    travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
-    trips_by_routes_array = routes_stopped.map do |route_id|
-      marshaled_trips = route_trips[route_id]
-      next unless marshaled_trips
-      Marshal.load(marshaled_trips)
-    end
-    elevator_advisories = elevator_advisories_str ? JSON.parse(elevator_advisories_str) : {}
-    trips = [1, 3].to_h { |direction|
-      [direction, trips_by_routes_array.map { |route_hash|
-        route_id = route_hash.values.map(&:values)&.first&.first&.first&.route_id
-        actual_direction = Api::StopsController.determine_direction(direction, stop_id, route_id)
-        next unless route_hash[actual_direction]
-        [route_id, route_hash[actual_direction]&.values&.flatten&.uniq { |t| t.id }.select{ |t| t.upcoming_stops(time_ref: timestamp)&.include?(stop_id)}.map {|t| Api::SlackController.transform_trip(stop_id, t, travel_times, timestamp)}.sort_by { |t| t[:arrival_time]}[0..2]]
-      }]
-    }
-
-    stop = Scheduled::Stop.find_by(internal_id: stop_id)
-    strs = ["Upcoming arrival times for #{stop.normalized_full_name(separator: "<break strength='weak'/>")}."]
-
-    trips.each do |_, routes|
-      routes.each do |route_id, trips|
-        route_name = (routes_with_alternate_names[route_id] && Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)) || route_id
-        route_name = "Staten Island Railway" if route_name == "SI"
-        route_name.gsub!(/X/, ' Express') if route_name
-        if trips.present?
-          first_trip_destination = Scheduled::Stop.find_by(internal_id: trips.first[:destination_stop])
-          second_trip_destination = trips.second && Scheduled::Stop.find_by(internal_id: trips.second[:destination_stop])
-
-          if trips.size == 1 || first_trip_destination != second_trip_destination
-            eta = (trips.first[:arrival_time] / 60).round
-            if eta < 1
-              strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} is now arriving."
-            else
-              strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} arrives in #{eta} #{"minute".pluralize(eta)}."
-            end
-          end
-
-          if trips.size > 1
-            first_eta = (trips.first[:arrival_time] / 60).round
-            second_eta = (trips.second[:arrival_time] / 60).round
-            if first_trip_destination != second_trip_destination
-              if second_eta < 1
-                strs << "Next #{route_name} train to #{second_trip_destination.normalized_name} is now arriving."
-              else
-                strs << "Next #{route_name} train to #{second_trip_destination.normalized_name} arrives in #{second_eta} #{"minute".pluralize(second_eta)}."
-              end
-            else
-              if first_eta < 1
-                if second_eta < 1
-                  strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} is now arriving."
-                else
-                  strs << "Next #{route_name} train to #{first_trip_destination.normalized_name} is now arriving, following in #{second_eta} #{"minute".pluralize(second_eta)}."
-                end
-              else
-                strs << "Next #{route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
-              end
-            end
-          end
-        end
-      end
-    end
-
-    RedisStore.set_alexa_most_recent_stop(user_id, stop_id) if user_id
-
-    if strs.size == 1
-      strs = ["There are no upcoming train arrivals for #{stop.normalized_full_name}."]
-    end
-
-    if elevator_advisories[stop.internal_id].present?
-      elevator_advisories[stop.internal_id].each { |a|
-        strs << "Elevator for #{Scheduled::Stop.normalized_partial_name(a)} is out of service.".gsub(/\//, ' ')
-      }
-    end
-
-    output = strs.join(" ")
-    PRONOUNCIATION_MAPPING.each do |k, v|
-      output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
-    end
-
-    {
-      version: "1.0",
-      response: {
-        outputSpeech: {
-          type: "SSML",
-          ssml: "<speak>#{output}</speak>"
         }
       }
     }
