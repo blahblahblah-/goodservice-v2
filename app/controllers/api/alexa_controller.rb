@@ -144,7 +144,7 @@ class Api::AlexaController < Api::VirtualAssistantController
         }
       else
         stop_ids = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"].split(",")
-        text = stop_times_text(stop_ids, user_id: user_id)
+        text, _ = stop_times_text(stop_ids, user_id: user_id)
         timestamp = Time.current.to_i
         {
           version: "1.0",
