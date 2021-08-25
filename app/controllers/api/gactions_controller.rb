@@ -7,6 +7,8 @@ class Api::GactionsController < Api::VirtualAssistantController
       data = stop_times_response
     when "LookupDelays"
       data = delays_response
+    when "actions.intent.HEALTH_CHECK"
+      data = {}
     end
     render json: data
   end
