@@ -198,7 +198,7 @@ class Api::AlexaController < Api::VirtualAssistantController
     end
 
     unless text
-      speech = text
+      text = speech
     end
 
     {
