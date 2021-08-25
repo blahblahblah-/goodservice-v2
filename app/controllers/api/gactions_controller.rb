@@ -7,7 +7,7 @@ class Api::GactionsController < Api::VirtualAssistantController
       data = stop_times_response
     when "LookupDelays"
       data = delays_response
-    when "actions.intent.HEALTH_CHECK"
+    else
       data = {}
     end
     render json: data
@@ -16,19 +16,8 @@ class Api::GactionsController < Api::VirtualAssistantController
   def route_status_response
     slot = params["intent"]["params"]["Train"] || params["intent"]["params"]["train"]
 
-    if !slot
-      return {
-        session: {
-          id: params["session"]["id"],
-        },
-        scene: {
-          "name": "TrainStatus",
-          "slots": {},
-          "next": {
-            "name": "Welcome"
-          }
-        }
-      }
+    unless slot
+      return fallback
     end
 
     route_id = slot["resolved"]
@@ -57,6 +46,11 @@ class Api::GactionsController < Api::VirtualAssistantController
 
   def stop_times_response
     slot = params["intent"]["params"]["Station"] || params["intent"]["params"]["station"]
+
+    unless slot
+      return fallback
+    end
+
     stop_ids = slot["resolved"].split(',')
     output, output_text = stop_times_text(stop_ids)
 
@@ -128,6 +122,21 @@ class Api::GactionsController < Api::VirtualAssistantController
         "slots": {},
         "next": {
           "name": "actions.scene.END_CONVERSATION"
+        }
+      }
+    }
+  end
+
+  def fallback
+    {
+      session: {
+        id: params["session"]["id"],
+      },
+      scene: {
+        "name": "TrainStatus",
+        "slots": {},
+        "next": {
+          "name": "Welcome"
         }
       }
     }
