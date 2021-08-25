@@ -106,7 +106,7 @@ class Api::AlexaController < Api::VirtualAssistantController
               card: {
                 type: "Simple",
                 title: "goodservice.io",
-                text: text
+                content: text
               },
             },
           }
@@ -161,7 +161,7 @@ class Api::AlexaController < Api::VirtualAssistantController
             card: {
               type: "Simple",
               title: "goodservice.io",
-              text: text
+              content: text
             },
           }
         }
@@ -211,7 +211,7 @@ class Api::AlexaController < Api::VirtualAssistantController
         card: {
           type: "Simple",
           title: "goodservice.io",
-          text: text
+          content: text
         },
       }
     }
