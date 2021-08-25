@@ -233,7 +233,7 @@ class Api::VirtualAssistantController < ApplicationController
     }.select { |k, v| v }.map { |k, _| k }.sort
 
     if delayed_routes.any?
-      "Delays detected on #{delayed_routes.join(', ')} trains."
+      "Delays detected on #{delayed_routes.to_sentence} trains."
     else
       "There are no delays currently detected."
     end
