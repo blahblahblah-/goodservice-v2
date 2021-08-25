@@ -8,7 +8,7 @@ class Scheduled::Stop < ActiveRecord::Base
 
   ABBREVIATIONS = {
     "&" => "and",
-    "n" => "north",
+    # "n" => "north",
     "ne" => "northeast",
     "nw" => "northwest",
     "e" => "east",
@@ -25,6 +25,7 @@ class Scheduled::Stop < ActiveRecord::Base
     "rd" => "road",
     "dr" => "drive",
     "ln" => "lane",
+    "ny" => "new york",
     "blvd" => "boulevard",
     "pk" => "park",
     "sq" => "square",
