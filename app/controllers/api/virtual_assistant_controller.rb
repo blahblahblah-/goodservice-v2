@@ -188,7 +188,7 @@ class Api::VirtualAssistantController < ApplicationController
                 text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: due."
               else
                 strs << "Next #{pronounceable_route_name} train to #{second_trip_destination.normalized_name} arrives in #{second_eta} #{"minute".pluralize(second_eta)}."
-                text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: #{eta} #{"min".pluralize(eta)}."
+                text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: #{second_eta} #{"min".pluralize(second_eta)}."
               end
             else
               if first_eta < 1
