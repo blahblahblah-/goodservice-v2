@@ -95,7 +95,7 @@ class Api::AlexaController < Api::VirtualAssistantController
       if user_id
         stop_id = RedisStore.alexa_most_recent_stop(user_id)
         if stop_id
-          text = upcoming_arrival_times_response(stop_id, user_id: user_id)
+          text, _ = upcoming_arrival_times_response(stop_id, user_id: user_id)
           {
             version: "1.0",
             response: {
@@ -182,7 +182,7 @@ class Api::AlexaController < Api::VirtualAssistantController
         output = "Sorry, there are no trains named #{value}. Please try again."
       else
         route_id = params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"]
-        output = route_status_text(route_id)
+        output, _ = route_status_text(route_id)
       end
     end
 
