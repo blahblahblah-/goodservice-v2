@@ -105,7 +105,7 @@ class Api::VirtualAssistantController < ApplicationController
       PRONOUNCIATION_MAPPING.each do |k, v|
         output.gsub!(/\b#{k}\b/, "<phoneme alphabet=\"ipa\" ph=\"#{v}\">#{k}</phoneme>")
       end
-      output_text = "Did you mean...?\n\n" + text.join("\n\n")
+      output_text = "Did you mean...?\n" + text.join("\n")
 
       return "There is more than one station with that name. Do you mean #{output}", output_text
     else
