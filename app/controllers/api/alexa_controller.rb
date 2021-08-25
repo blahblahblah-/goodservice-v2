@@ -95,15 +95,20 @@ class Api::AlexaController < Api::VirtualAssistantController
       if user_id
         stop_id = RedisStore.alexa_most_recent_stop(user_id)
         if stop_id
-          text, _ = upcoming_arrival_times_response(stop_id, user_id: user_id)
+          speech, text = upcoming_arrival_times_response(stop_id, user_id: user_id)
           {
             version: "1.0",
             response: {
               outputSpeech: {
                 type: "SSML",
-                text: "<speak>#{text}</speak>",
-              }
-            }
+                text: "<speak>#{speech}</speak>",
+              },
+              card: {
+                type: "Simple",
+                title: "goodservice.io",
+                text: text
+              },
+            },
           }
         else
           {
@@ -144,15 +149,20 @@ class Api::AlexaController < Api::VirtualAssistantController
         }
       else
         stop_ids = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"].split(",")
-        text, _ = stop_times_text(stop_ids, user_id: user_id)
+        speech, text = stop_times_text(stop_ids, user_id: user_id)
         timestamp = Time.current.to_i
         {
           version: "1.0",
           response: {
             outputSpeech: {
               type: "SSML",
-              ssml: "<speak>#{text}</speak>",
-            }
+              ssml: "<speak>#{speech}</speak>",
+            },
+            card: {
+              type: "Simple",
+              title: "goodservice.io",
+              text: text
+            },
           }
         }
       end
@@ -172,28 +182,37 @@ class Api::AlexaController < Api::VirtualAssistantController
   end
 
   def route_status_response
+    text = nil
     if !params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]
-      output = "Please specify which train you would like to lookup the status for. For example, you can say: ask good service, what's the status of the A train?"
+      speech = "Please specify which train you would like to lookup the status for. For example, you can say: ask good service, what's the status of the A train?"
     else
       train_resolution_code = params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]["resolutionsPerAuthority"].first["status"]["code"]
 
       if train_resolution_code == "ER_SUCCESS_NO_MATCH"
         value = params["alexa"]["request"]["intent"]["slots"]["train"]["value"]
-        output = "Sorry, there are no trains named #{value}. Please try again."
+        speech = "Sorry, there are no trains named #{value}. Please try again."
       else
         route_id = params["alexa"]["request"]["intent"]["slots"]["train"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"]
-        output, _ = route_status_text(route_id)
+        speech, text = route_status_text(route_id)
       end
     end
 
+    unless text
+      speech = text
+    end
 
     {
       version: "1.0",
       response: {
         outputSpeech: {
           type: "SSML",
-          ssml: "<speak>#{output}</speak>"
-        }
+          ssml: "<speak>#{speech}</speak>"
+        },
+        card: {
+          type: "Simple",
+          title: "goodservice.io",
+          text: text
+        },
       }
     }
   end
