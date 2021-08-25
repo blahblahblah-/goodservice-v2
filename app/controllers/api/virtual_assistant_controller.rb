@@ -66,7 +66,13 @@ class Api::VirtualAssistantController < ApplicationController
       strs = stops.map { |stop|
         routes_stopped_ids = Api::SlackController.routes_stop_at(stop.internal_id, timestamp)
         routes_stopped = routes_stopped_ids.map do |route_id|
-          route_name = (routes_with_alternate_names[route_id] && Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)) || "<say-as interpret-as='characters'>#{route_id}</say-as>"
+          if routes_with_alternate_names[route_id]
+            route_name = Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)
+          elsif route_id.length == 1
+            route_name = "<say-as interpret-as='characters'>#{route_id}</say-as>"
+          else
+            route_name = route_id
+          end
           route_name = "Staten Island Railway" if route_name == "SI"
           route_name.gsub!(/X/, ' Express')
           route_name
@@ -154,7 +160,10 @@ class Api::VirtualAssistantController < ApplicationController
           pronounceable_route_name = "Staten Island Railway"
         end
 
-        pronounceable_route_name.gsub!(/X/, ' Express')
+        if route_id =~ /[[:alnum:]]X/
+          pronounceable_route_name = route_id.gsub(/X/, ' Express')
+        end
+
         if trips.present?
           first_trip_destination = Scheduled::Stop.find_by(internal_id: trips.first[:destination_stop])
           second_trip_destination = trips.second && Scheduled::Stop.find_by(internal_id: trips.second[:destination_stop])
