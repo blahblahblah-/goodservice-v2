@@ -36,11 +36,11 @@ class Api::VirtualAssistantController < ApplicationController
       summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
       summaries.each do |summary|
         if route_name != "#{route_id} train"
-          strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '<say-as interpret-as="verbatim">\1</say-as>').gsub(/\(\((.*?)\)\)/) do |stop_name|
+          strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '<say-as interpret-as="characters">\1</say-as>').gsub(/\(\((.*?)\)\)/) do |stop_name|
             Scheduled::Stop.normalized_partial_name($1)
           end
         else
-          strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<(.*?)>/, '<say-as interpret-as="verbatim">\1</say-as>').gsub(/\(\((.*?)\)\)/) do |stop_name|
+          strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<(.*?)>/, '<say-as interpret-as="characters">\1</say-as>').gsub(/\(\((.*?)\)\)/) do |stop_name|
             Scheduled::Stop.normalized_partial_name($1)
           end
         end
@@ -66,7 +66,7 @@ class Api::VirtualAssistantController < ApplicationController
       strs = stops.map { |stop|
         routes_stopped_ids = Api::SlackController.routes_stop_at(stop.internal_id, timestamp)
         routes_stopped = routes_stopped_ids.map do |route_id|
-          route_name = (routes_with_alternate_names[route_id] && Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)) || "<say-as interpret-as='verbatim'>#{route_id}</say-as>"
+          route_name = (routes_with_alternate_names[route_id] && Scheduled::Stop.normalized_partial_name(routes_with_alternate_names[route_id].alternate_name)) || "<say-as interpret-as='characters'>#{route_id}</say-as>"
           route_name = "Staten Island Railway" if route_name == "SI"
           route_name.gsub!(/X/, ' Express')
           route_name
@@ -142,7 +142,7 @@ class Api::VirtualAssistantController < ApplicationController
     trips.each do |_, routes|
       routes.each do |route_id, trips|
         route_name = route_id
-        pronounceable_route_name = "<say-as interpret-as='verbatim'>#{route_id}</say-as>"
+        pronounceable_route_name = "<say-as interpret-as='characters'>#{route_id}</say-as>"
 
         if routes_with_alternate_names[route_id]
           route_name = routes_with_alternate_names[route_id].alternate_name
