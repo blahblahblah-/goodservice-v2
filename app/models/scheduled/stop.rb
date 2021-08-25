@@ -22,6 +22,7 @@ class Scheduled::Stop < ActiveRecord::Base
     "av" => "avenue",
     "ave" => "avenue",
     "avs" => "avenues",
+    "hwy" => "highway",
     "rd" => "road",
     "dr" => "drive",
     "ln" => "lane",
