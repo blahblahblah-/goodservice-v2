@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Segment, Grid, Button, Dimmer, Loader, Dropdown } from "semantic-ui-react";
+import { Header, Segment, Grid, Button, Dimmer, Loader, Dropdown, List } from "semantic-ui-react";
 import {
   Router,
   Switch,
@@ -308,25 +308,61 @@ class App extends React.Component {
             }
         </Segment>
         <Segment inverted vertical style={{padding: '1em 2em'}}>
-          <Grid>
-            <Grid.Column width={7}>
-              <Link to='/twitter'>
-                <Button circular color='twitter' icon='twitter' />
-              </Link>
-              <a href='https://www.medium.com/good-service' target='_blank'>
-                <Button circular className='medium-icon' icon='medium m' />
-              </a>
-              <a href='https://www.goodservice.io/slack' target='_blank'>
-                <Button circular className='slack-icon' icon={{ className: 'slack-icon' }} />
-              </a>
-            </Grid.Column>
-            <Grid.Column width={9} textAlign='right'>
-              <Header inverted as='h5'>
-                Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
-                Created by <a href='https://sunny.ng'>Sunny Ng</a>.<br />
-                <a href='https://github.com/blahblahblah-/goodservice-v2'>Source code</a>.
-              </Header>
-            </Grid.Column>
+          <Grid divided inverted stackable>
+            <Grid.Row>
+              <Grid.Column width={4}>
+                <Header inverted as='h4' content='Use goodservice.io on' />
+                <List link inverted>
+                  <List.Item>
+                    <a href='https://www.amazon.com/dp/B09BNC892W/' target='_blank'>
+                      Alexa
+                    </a>
+                  </List.Item>
+                  <List.Item>
+                    <a href='https://assistant.google.com/services/a/uid/0000008e2bd43866' target='_blank'>
+                      Google Assistant
+                    </a>
+                  </List.Item>
+                  <List.Item>
+                    <a href='https://www.goodservice.io/slack' target='_blank'>
+                      Slack
+                    </a>
+                  </List.Item>
+                  <List.Item>
+                    <Link to='/twitter'>Twitter</Link>
+                  </List.Item>
+                </List>
+              </Grid.Column>
+              <Grid.Column width={8}>
+                <Header inverted as='h4' content='Related' />
+                <List link inverted>
+                  <List.Item>
+                    <a href='https://www.medium.com/good-service' target='_blank'>
+                      Good Service Blog
+                    </a>
+                  </List.Item>
+                  <List.Item>
+                    <a href='https://www.theweekendest.com' target='_blank'>
+                      The Weekendest - Real-Time Map
+                    </a>
+                  </List.Item>
+                  <List.Item>
+                    <a href='https://www.nycsubwayridership.nyc' target='_blank'>
+                      NYC Subway Ridership
+                    </a>
+                  </List.Item>
+                </List>
+              </Grid.Column>
+              <Grid.Column width={4}>
+                <Header as='h4' inverted>
+                  Created by <a href='https://sunny.ng'>Sunny Ng</a>.
+                </Header>
+                <p>
+                  Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
+                  <a href='https://github.com/blahblahblah-/goodservice-v2'>Source code</a>.
+                </p>
+              </Grid.Column>
+            </Grid.Row>
           </Grid>
         </Segment>
       </Router>

@@ -10,6 +10,10 @@ a:hover, a:active{
   color: #ffe21f;
 }
 
+.app .ui.inverted.list .item a:not(.ui):hover, .app .ui.inverted.list .item a:not(.ui):active {
+  color: #ffe21f !important;
+}
+
 .blurring.dimmed.dimmable > :not(.app):not(.modals) {
   filter: none;
 }
