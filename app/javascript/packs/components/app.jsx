@@ -347,7 +347,7 @@ class App extends React.Component {
                     </a>
                   </List.Item>
                   <List.Item>
-                    <a href='https://www.nycsubwayridership.nyc' target='_blank'>
+                    <a href='https://www.subwayridership.nyc' target='_blank'>
                       NYC Subway Ridership
                     </a>
                   </List.Item>
