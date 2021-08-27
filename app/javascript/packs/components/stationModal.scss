@@ -56,5 +56,21 @@
         max-width: 100%;
       }
     }
+
+    .more {
+      @media only screen and (max-width: 767px) {
+        display: none;
+      }
+    }
+
+    .show-more {
+      font-style: italic;
+      cursor: pointer;
+      height: 3em;
+
+      @media only screen and (min-width: 768px) {
+        display: none;
+      }
+    }
   }
 }

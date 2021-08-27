@@ -13,7 +13,10 @@ const API_URL_PREFIX = '/api/stops/';
 class StationModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      displayMoreNorth: false,
+      displayMoreSouth: false,
+    };
   }
 
   componentDidMount() {
@@ -49,6 +52,12 @@ class StationModal extends React.Component {
     const { history } = this.props;
     return history.push('/');
   };
+
+  handleOnClickMore = (e) => {
+    const direction = e.currentTarget.getAttribute('data-direction');
+    const key = 'displayMore' + direction[0].toUpperCase() + direction.substr(1);
+    this.setState({ [key]: true });
+  }
 
   renderAccessibilityAdvisories(selectedStation) {
     if (!selectedStation.accessibility || selectedStation.accessibility.advisories.length === 0) {
@@ -171,18 +180,19 @@ class StationModal extends React.Component {
             </Table.Row>
           </Table.Header>
           {
-            this.renderDepartureTableBody(trips, trains, stations, currentTime)
+            this.renderDepartureTableBody(direction, trips, trains, stations, currentTime)
           }
         </Table>
       </React.Fragment>
     );
   }
 
-  renderDepartureTableBody(trips, trains, stations, currentTime) {
+  renderDepartureTableBody(direction, trips, trains, stations, currentTime) {
+    const displayMore = this.state['displayMore' + direction[0].toUpperCase() + direction.substr(1)];
     return (
       <Table.Body>
         {
-          trips.map((trip) => {
+          trips.map((trip, index) => {
             const train = trains[trip.route_id];
             const delayed = trip.delayed_time > 300;
             const effectiveDelayedTime = Math.max(Math.min(trip.schedule_discrepancy, trip.delayed_time), 0);
@@ -196,8 +206,9 @@ class StationModal extends React.Component {
             if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
               scheduleDiscrepancyClass = 'late';
             }
+            const className = index > 3 && !displayMore ? 'more ' : '';
             return (
-              <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
+              <Table.Row key={trip.id} className={delayed ? className + 'delayed' : className}>
                 <Table.Cell>
                   <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`}>
                     <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
@@ -219,6 +230,14 @@ class StationModal extends React.Component {
               </Table.Row>
             )
           })
+        }
+        {
+          trips.length > 3 && !displayMore && 
+            <Table.Row key='more' className='show-more' data-direction={direction} onClick={this.handleOnClickMore}>
+              <Table.Cell colSpan={4} textAlign='center' selectable>
+                Show more...
+              </Table.Cell>
+            </Table.Row>
         }
       </Table.Body>
     );
