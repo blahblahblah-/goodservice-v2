@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Header, Popup, List, Divider, Checkbox } from "semantic-ui-react";
+import { Modal, Table, Header, Divider, Checkbox } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -47,7 +47,7 @@ class TripModal extends React.Component {
     this.setState({showPastStops: checked});
   }
 
-  renderTableBody() {
+  renderTableBody(delayed) {
     const { train, trains, selectedTrip, routing, stations } = this.props;
     const { trip, showPastStops } = this.state;
     const currentTime = Date.now() / 1000;
@@ -105,9 +105,6 @@ class TripModal extends React.Component {
             if (previousStopId) {
               const estimatedTravelTime = train.estimated_travel_times[`${previousStopId}-${stopId}`] || train.supplemented_travel_times[`${previousStopId}-${stopId}`] || train.scheduled_travel_times[`${previousStopId}-${stopId}`]
               currentEstimatedTime += estimatedTravelTime;
-              if (trip) {
-                currentArrivalTime = trip.stop_times[stopId];
-              }
             }
             let transfers = Object.assign({}, stations[stopId].routes);
             if (stations[stopId]?.transfers) {
@@ -117,9 +114,8 @@ class TripModal extends React.Component {
             }
             delete transfers[train.id];
             const timeUntilEstimatedTime = Math.round((currentEstimatedTime - currentTime) / 60);
-            const timeUntilArrivalTime = Math.round((currentArrivalTime - currentTime) / 60);
             const results = (
-              <Table.Row key={stopId}>
+              <Table.Row key={stopId} className={delayed ? 'delayed' : ''}>
                 <Table.Cell>
                   <Link to={`/stations/${stopId}`}>
                     { formatStation(stations[stopId].name) }
@@ -137,16 +133,10 @@ class TripModal extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell>
-                  { formatMinutes(timeUntilEstimatedTime, true) }
+                  { delayed ? '? ? ?' : formatMinutes(timeUntilEstimatedTime, true) }
                 </Table.Cell>
                 <Table.Cell>
-                  {new Date(currentEstimatedTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}
-                </Table.Cell>
-                <Table.Cell>
-                  { trip && formatMinutes(timeUntilArrivalTime, true) }
-                </Table.Cell>
-                <Table.Cell>
-                  { trip && new Date(currentArrivalTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}
+                  { delayed ? '? ? ?' : new Date(currentEstimatedTime * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'}) }
                 </Table.Cell>
               </Table.Row>
             );
@@ -195,21 +185,6 @@ class TripModal extends React.Component {
             <Divider inverted horizontal>
               <Header size='medium' inverted>
                 UPCOMING ARRIVAL TIMES
-                <Popup trigger={<sup>[?]</sup>}>
-                  <Popup.Header>Upcoming Arrival Times</Popup.Header>
-                  <Popup.Content>
-                    <List relaxed='very' divided>
-                      <List.Item>
-                        <List.Header>Projected</List.Header>
-                        Time projected until train arrives at the given stop, calculated from train's estimated position and recent trips.
-                      </List.Item>
-                      <List.Item>
-                        <List.Header>Estimated</List.Header>
-                        Reported time until train arrives at the given stop from the real-time feeds.
-                      </List.Item>
-                    </List>
-                  </Popup.Content>
-                </Popup>
               </Header>
             </Divider>
             <Table fixed inverted unstackable className='trip-table'>
@@ -217,20 +192,6 @@ class TripModal extends React.Component {
                 <Table.Row>
                   <Table.HeaderCell rowSpan={2} width={5}>
                     Station
-                  </Table.HeaderCell>
-                  <Table.HeaderCell colSpan={2}>
-                    Projected
-                  </Table.HeaderCell>
-                  <Table.HeaderCell colSpan={2}>
-                    Estimated
-                  </Table.HeaderCell>
-                </Table.Row>
-                <Table.Row>
-                  <Table.HeaderCell width={2}>
-                    ETA
-                  </Table.HeaderCell>
-                  <Table.HeaderCell width={2}>
-                    Arrival Time
                   </Table.HeaderCell>
                   <Table.HeaderCell width={2}>
                     ETA
@@ -241,7 +202,7 @@ class TripModal extends React.Component {
                 </Table.Row>
               </Table.Header>
               {
-                this.renderTableBody()
+                this.renderTableBody(delayed)
               }
             </Table>
             <Header inverted as='h5'>

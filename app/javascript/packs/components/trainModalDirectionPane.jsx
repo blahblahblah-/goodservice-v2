@@ -225,7 +225,7 @@ class TrainModalDirectionPane extends React.Component {
                     Maximum time between scheduled trains if trains ran on a typical schedule for the current time period.
                   </List.Item>
                   <List.Item>
-                    <List.Header>Projected</List.Header>
+                    <List.Header>Now</List.Header>
                     Estimated maximum time between trains that are currently running.
                   </List.Item>
                 </List>
@@ -240,7 +240,7 @@ class TrainModalDirectionPane extends React.Component {
           </Statistic>
           <Statistic>
             <Statistic.Value>{ maxEstimatedHeadway } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Projected</Statistic.Label>
+            <Statistic.Label>Now</Statistic.Label>
           </Statistic>
         </Statistic.Group>
         <Divider inverted horizontal>
@@ -259,7 +259,7 @@ class TrainModalDirectionPane extends React.Component {
                     Time scheduled for a train to travel its route from the current supplemented schedule, taking into account of service changes and diversions.
                   </List.Item>
                   <List.Item>
-                    <List.Header>Projected</List.Header>
+                    <List.Header>Now</List.Header>
                     Estimated time for a train to travel its current route, projected from recent trains that have traveled the route.
                   </List.Item>
                 </List>
@@ -278,7 +278,7 @@ class TrainModalDirectionPane extends React.Component {
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Projected</Statistic.Label>
+            <Statistic.Label>Now</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>
@@ -377,7 +377,7 @@ class TrainModalDirectionPane extends React.Component {
                     Time scheduled for a train to travel between the 2 selected stations according to the current supplemented schedule, taking into account of service changes and diversions.
                   </List.Item>
                   <List.Item>
-                    <List.Header>Projected</List.Header>
+                    <List.Header>Now</List.Header>
                     Estimated time for a train to travel between the 2 selected stations via its current route, projected from recent trains that have traveled the route.
                   </List.Item>
                 </List>
@@ -417,7 +417,7 @@ class TrainModalDirectionPane extends React.Component {
           </Statistic>
           <Statistic>
             <Statistic.Value>{ estimatedRuntime } <span className='minute'>min</span></Statistic.Value>
-            <Statistic.Label>Projected</Statistic.Label>
+            <Statistic.Label>Now</Statistic.Label>
           </Statistic>
         </Statistic.Group>
       </React.Fragment>
@@ -504,7 +504,7 @@ class TrainModalDirectionPane extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`) }
+                  { delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`)) }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }

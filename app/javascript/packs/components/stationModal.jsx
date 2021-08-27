@@ -156,25 +156,17 @@ class StationModal extends React.Component {
         <Table fixed inverted unstackable size='small' compact className='trip-table'>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell rowSpan='2' width={5}>
+              <Table.HeaderCell width={6}>
                 Train ID / Destination
               </Table.HeaderCell>
-              <Table.HeaderCell colSpan='2'>
-                Time Until Departure
+              <Table.HeaderCell>
+                Projected Time
               </Table.HeaderCell>
-              <Table.HeaderCell rowSpan='2' width={4}>
+              <Table.HeaderCell width={5}>
                 Current Location
               </Table.HeaderCell>
-              <Table.HeaderCell rowSpan='2'>
+              <Table.HeaderCell>
                 Schedule Adherence
-              </Table.HeaderCell>
-            </Table.Row>
-            <Table.Row>
-              <Table.HeaderCell>
-                Projected
-              </Table.HeaderCell>
-              <Table.HeaderCell>
-                Estimated
               </Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -199,7 +191,6 @@ class StationModal extends React.Component {
             const estimatedTimeUntilUpcomingStop = Math.round((trip.estimated_upcoming_stop_arrival_time - currentTime) / 60);
             const upcomingStopArrivalTime = Math.round((trip.upcoming_stop_arrival_time - currentTime) / 60);
             const estimatedTimeUntilThisStop = Math.round((trip.estimated_current_stop_arrival_time - currentTime) / 60);
-            const timeUntilThisStop = Math.round((trip.current_stop_arrival_time - currentTime) / 60);
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
             let scheduleDiscrepancyClass = 'early';
             if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
@@ -214,10 +205,7 @@ class StationModal extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(estimatedTimeUntilThisStop, true)}
-                </Table.Cell>
-                <Table.Cell title={new Date(trip.current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(timeUntilThisStop, true)}
+                  { delayed ? '? ? ?' : formatMinutes(estimatedTimeUntilThisStop, true)}
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
@@ -296,18 +284,14 @@ class StationModal extends React.Component {
               }
               <Divider inverted horizontal>
                 <Header size='medium' inverted>
-                  UPCOMING DEPARTURE TIMES
+                  UPCOMING TRAIN TIMES
                   <Popup trigger={<sup>[?]</sup>}>
-                    <Popup.Header>Upcoming Departure Times</Popup.Header>
+                    <Popup.Header>Upcoming Train Times</Popup.Header>
                     <Popup.Content>
                       <List relaxed='very' divided>
                         <List.Item>
-                          <List.Header>Projected Time Until Departure</List.Header>
-                          Time projected until train departs given station, calculated from train's estimated position and recent trips.
-                        </List.Item>
-                        <List.Item>
-                          <List.Header>Estimated Time Until Departure</List.Header>
-                          Reported time until train departs given station from the real-time feeds.
+                          <List.Header>Projected Time</List.Header>
+                          Time projected until train arrives (or departs a terminus) at a given station, calculated from train's estimated position and recent trips.
                         </List.Item>
                         <List.Item>
                           <List.Header>Schedule Adherence</List.Header>
