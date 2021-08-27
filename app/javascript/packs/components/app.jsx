@@ -324,7 +324,7 @@ class App extends React.Component {
                     </a>
                   </List.Item>
                   <List.Item>
-                    <a href='/slack' target='_blank'>
+                    <a href='/slack'>
                       Slack
                     </a>
                   </List.Item>
