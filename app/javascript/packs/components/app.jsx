@@ -307,7 +307,7 @@ class App extends React.Component {
               </Switch>
             }
         </Segment>
-        <Segment inverted vertical style={{padding: '1em 2em'}}>
+        <Segment inverted vertical style={{padding: '1em 2em'}} className='footer'>
           <Grid divided inverted stackable>
             <Grid.Row>
               <Grid.Column width={4}>
@@ -324,7 +324,7 @@ class App extends React.Component {
                     </a>
                   </List.Item>
                   <List.Item>
-                    <a href='https://www.goodservice.io/slack' target='_blank'>
+                    <a href='/slack' target='_blank'>
                       Slack
                     </a>
                   </List.Item>
