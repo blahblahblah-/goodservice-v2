@@ -157,20 +157,45 @@ class Api::AlexaController < Api::VirtualAssistantController
         title = text_array.first
         text = text_array[1..-1].join("\n")
         timestamp = Time.current.to_i
-        {
-          version: "1.0",
-          response: {
-            outputSpeech: {
-              type: "SSML",
-              ssml: "<speak>#{speech}</speak>",
-            },
-            card: {
-              type: "Simple",
-              title: title,
-              content: text
-            },
+
+        if stop_ids.size == 1
+          {
+            version: "1.0",
+            response: {
+              outputSpeech: {
+                type: "SSML",
+                ssml: "<speak>#{speech}</speak>",
+              },
+              card: {
+                type: "Simple",
+                title: title,
+                content: text
+              },
+            }
           }
-        }
+        else
+          {
+            version: "1.0",
+            response: {
+              outputSpeech: {
+                type: "SSML",
+                ssml: "<speak>#{speech}</speak>",
+              },
+              card: {
+                type: "Simple",
+                title: title,
+                content: text
+              },
+              reprompt: {
+                outputSpeech: {
+                  type: "PlainText",
+                  text: "Which station would you like to look up?"
+                },
+              },
+              shouldEndSession: false
+            }
+          }
+        end
       end
     end
   end
