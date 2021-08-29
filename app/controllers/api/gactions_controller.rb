@@ -28,17 +28,17 @@ class Api::GactionsController < Api::VirtualAssistantController
         id: params["session"]["id"],
       },
       prompt: {
-        "override": false,
-        "firstSimple": {
-          "speech": "<speak>#{output}</speak>",
-          "text": output_text,
+        override: false,
+        firstSimple: {
+          speech: "<speak>#{output}</speak>",
+          text: output_text,
         }
       },
       scene: {
-        "name": "TrainStatus",
-        "slots": {},
-        "next": {
-          "name": "actions.scene.END_CONVERSATION"
+        name: "TrainStatus",
+        slots: {},
+        next: {
+          name: "actions.scene.END_CONVERSATION"
         }
       }
     }
@@ -48,10 +48,13 @@ class Api::GactionsController < Api::VirtualAssistantController
     slot = params["intent"]["params"]["Station"] || params["intent"]["params"]["station"]
 
     unless slot
-      return fallback
+      unless (stop_ids = params["user"]["params"]["lastStationQueried"])
+        return fallback
+      end
+    else
+      stop_ids = slot["resolved"].split(',')
     end
 
-    stop_ids = slot["resolved"].split(',')
     output, output_text = stop_times_text(stop_ids)
 
     if stop_ids.size == 1
@@ -60,17 +63,22 @@ class Api::GactionsController < Api::VirtualAssistantController
           id: params["session"]["id"],
         },
         prompt: {
-          "override": false,
-          "firstSimple": {
-            "speech": "<speak>#{output}</speak>",
-            "text": output_text,
+          override: false,
+          firstSimple: {
+            speech: "<speak>#{output}</speak>",
+            text: output_text,
           }
         },
         scene: {
-          "name": "TrainStatus",
-          "slots": {},
-          "next": {
-            "name": "actions.scene.END_CONVERSATION"
+          name: "TrainStatus",
+          slots: {},
+          next: {
+            name: "actions.scene.END_CONVERSATION"
+          }
+        },
+        user: {
+          params: {
+            lastStationQueried: stop_ids.first
           }
         }
       }
@@ -80,24 +88,24 @@ class Api::GactionsController < Api::VirtualAssistantController
           id: params["session"]["id"],
         },
         prompt: {
-          "override": false,
-          "firstSimple": {
-            "speech": "<speak>#{output}</speak>",
-            "text": output_text,
+          override: false,
+          firstSimple: {
+            speech: "<speak>#{output}</speak>",
+            text: output_text,
           }
         },
         scene: {
-          "name": "TrainStatus",
-          "slots": {
-            "Station": {
-              "mode": "REQUIRED",
-              "status": "INVALID",
-              "updated": true,
-              "value": 1
+          name: "TrainStatus",
+          slots: {
+            Station: {
+              mode: "REQUIRED",
+              status: "INVALID",
+              updated: true,
+              value: 1
             }
           },
-          "next": {
-            "name": "AmbiguousTrainTimesPrompt"
+          next: {
+            name: "AmbiguousTrainTimesPrompt"
           }
         }
       }
@@ -112,16 +120,16 @@ class Api::GactionsController < Api::VirtualAssistantController
         id: params["session"]["id"],
       },
       prompt: {
-        "override": false,
-        "firstSimple": {
-          "speech": "<speak>#{output}</speak>",
+        override: false,
+        firstSimple: {
+          speech: "<speak>#{output}</speak>",
         }
       },
       scene: {
-        "name": "TrainStatus",
-        "slots": {},
-        "next": {
-          "name": "actions.scene.END_CONVERSATION"
+        name: "TrainStatus",
+        slots: {},
+        next: {
+          name: "actions.scene.END_CONVERSATION"
         }
       }
     }
@@ -133,10 +141,10 @@ class Api::GactionsController < Api::VirtualAssistantController
         id: params["session"]["id"],
       },
       scene: {
-        "name": "TrainStatus",
-        "slots": {},
-        "next": {
-          "name": "Welcome"
+        name: "TrainStatus",
+        slots: {},
+        next: {
+          name: "Welcome"
         }
       }
     }
