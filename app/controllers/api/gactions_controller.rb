@@ -8,7 +8,7 @@ class Api::GactionsController < Api::VirtualAssistantController
     when "LookupDelays"
       data = delays_response
     else
-      data = {}
+      data = fallback
     end
     render json: data
   end
@@ -17,7 +17,7 @@ class Api::GactionsController < Api::VirtualAssistantController
     slot = params["intent"]["params"]["Train"] || params["intent"]["params"]["train"]
 
     unless slot
-      return fallback
+      return fallback(next_scene: "TrainStatusPrompt")
     end
 
     route_id = slot["resolved"]
@@ -48,8 +48,8 @@ class Api::GactionsController < Api::VirtualAssistantController
     slot = params["intent"]["params"]["Station"] || params["intent"]["params"]["station"]
 
     unless slot
-      unless (stop_ids = params["user"]["params"]["lastStationQueried"])
-        return fallback
+      unless (stop_ids = [params["user"]["params"]["lastStationQueried"]])
+        return fallback(next_scene: "TrainTimesPrompt")
       end
     else
       stop_ids = slot["resolved"].split(',')
@@ -136,7 +136,7 @@ class Api::GactionsController < Api::VirtualAssistantController
     }
   end
 
-  def fallback
+  def fallback(next_scene: "Welcome")
     {
       session: {
         id: params["session"]["id"],
@@ -145,7 +145,7 @@ class Api::GactionsController < Api::VirtualAssistantController
         name: "TrainStatus",
         slots: {},
         next: {
-          name: "Welcome"
+          name: next_scene,
         }
       }
     }
