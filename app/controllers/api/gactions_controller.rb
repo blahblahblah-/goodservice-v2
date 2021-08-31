@@ -77,9 +77,10 @@ class Api::GactionsController < Api::VirtualAssistantController
           }
         },
         user: {
+          locale: params["user"]["locale"],
           params: {
-            lastStationQueried: stop_ids.first
-          }
+            lastStationQueried: stop_ids.first,
+          },
         }
       }
     else
