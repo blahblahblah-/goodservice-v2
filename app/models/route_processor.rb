@@ -147,7 +147,7 @@ class RouteProcessor
     end
 
     def determine_routings_for_direction(trips)
-      trips.map(&:upcoming_stops).reverse.inject([]) do |memo, stops_array|
+      trips.map(&:upcoming_stops).reverse.inject([]) { |memo, stops_array|
         if (shorter_array = memo.find { |array| stops_array.each_cons(array.size).any?(&array.method(:==)) })
           if stops_array.size > shorter_array.size
             memo.delete(shorter_array)
@@ -157,7 +157,7 @@ class RouteProcessor
           memo << stops_array
         end
         memo
-      end
+      }.uniq
     end
 
     def process_trips(trip_routes_by_direction, timestamp)
