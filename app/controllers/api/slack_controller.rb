@@ -228,7 +228,7 @@ class Api::SlackController < ApplicationController
     ]
 
     if route_data.present?
-      summary = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary.gsub(/<(.*?)>/, '\1') }.compact
+      summary = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
 
       if summary.present?
         result << {
@@ -238,7 +238,7 @@ class Api::SlackController < ApplicationController
           "type": "section",
           "text": {
             "type": "mrkdwn",
-            "text": summary.join("\n\n").gsub(/ - /, '–')
+            "text": summary.join("\n\n").gsub(/ - /, '–').gsub(/<(.*?)>/, '\1')
           }
         }
       end
