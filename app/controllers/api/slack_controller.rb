@@ -211,7 +211,7 @@ class Api::SlackController < ApplicationController
     route_id = route.internal_id
     scheduled = Scheduled::Trip.soon(Time.current.to_i, route_id).present?
     route_data_encoded = RedisStore.route_status(route_id)
-    route_data = route_data_encoded ? JSON.parse(route_data_encoded.gsub(/\(\(/, '').gsub(/\)\)/, '').gsub(/<(.*?)>/, '\1')) : {}
+    route_data = route_data_encoded ? JSON.parse(route_data_encoded.gsub(/\(\(/, '').gsub(/\)\)/, '')) : {}
     if !route_data['timestamp'] || route_data['timestamp'] <= (Time.current - 5.minutes).to_i
       route_data = {}
     end
@@ -228,7 +228,7 @@ class Api::SlackController < ApplicationController
     ]
 
     if route_data.present?
-      summary = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
+      summary = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary.gsub(/<(.*?)>/, '\1') }.compact
 
       if summary.present?
         result << {
