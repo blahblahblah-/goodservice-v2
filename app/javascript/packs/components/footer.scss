@@ -1,0 +1,7 @@
+.footer.ui.vertical.segment {
+  padding: 1em 2em;
+
+  .ui.inverted.list .item a:not(.ui):hover, .footer .ui.inverted.list .item a:not(.ui):active {
+    color: #ffe21f !important;
+  }
+}

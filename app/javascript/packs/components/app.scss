@@ -10,10 +10,6 @@ a:hover, a:active{
   color: #ffe21f;
 }
 
-.footer .ui.inverted.list .item a:not(.ui):hover, .footer .ui.inverted.list .item a:not(.ui):active {
-  color: #ffe21f !important;
-}
-
 .blurring.dimmed.dimmable > :not(.app):not(.modals) {
   filter: none;
 }
@@ -27,77 +23,15 @@ a:hover, a:active{
   padding: 1em 2em;
 }
 
-.ui.inverted.segment.stations-segment {
-  padding-left: 1em;
-  padding-right: 1em;
+.ui.basic.segment.content-segment {
+  padding-top: 0;
+  margin: 0 1em;
 
-  @media only screen and (min-width: 768px) {
-    padding-left: 2em;
-    padding-right: 2em;
-  }
-
-  .station-dropdown-grid {
-    .item {
-      clear: both;
-      min-height: 3em;
-
-      .station-name {
-        float: left;
-
-        h5 {
-          line-height: 2em;
-
-          .secondary-name {
-            color: #aaaaaa;
-            font-weight: 300!important;
-            margin-left: .4rem;
-            font-size: 0.9em;
-          }
-        }
-      }
-      .routes-served{
-        float: right;
-
-        .route {
-          margin-top: 0;
-        }
-
-        .cross {
-          height: 21px;
-          width: 21px;
-          margin: .25em;
-          margin-top: 0;
-        }
-      }
-    }
-  }
-}
-
-.ui.basic.segment.trains-segment {
-  background-color: #002D72;
-  padding: 2em;
-  margin-top: 0;
-
-  @media only screen and (max-width: 768px) {
-    padding-top: 1em;
-  }
-}
-
-.ui.grid.train-grid {
-  @media only screen and (max-width: 767px) {
-    display: none;
-  }
-}
-
-.ui.grid.mobile-train-grid {
-  @media only screen and (min-width: 768px) {
-    display: none;
-  }
-
-  margin-top: 0;
-
-  .train-status-row {
-    padding-bottom: 0;
+  .ui.inverted.bottom.attached.segment.active.tab {
+    background-color: #002D72;
+    padding: 2em;
+    margin-top: 0;
+    padding: 1em;
   }
 }
 

@@ -1,0 +1,17 @@
+.ui.grid.train-grid {
+  @media only screen and (max-width: 767px) {
+    display: none;
+  }
+}
+
+.ui.grid+.grid.mobile-train-grid {
+  @media only screen and (min-width: 768px) {
+    display: none;
+  }
+
+  margin-top: 0;
+
+  .train-status-row {
+    padding-bottom: 0;
+  }
+}

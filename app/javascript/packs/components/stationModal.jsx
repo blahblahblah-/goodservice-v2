@@ -50,7 +50,7 @@ class StationModal extends React.Component {
 
   handleOnClose = () => {
     const { history } = this.props;
-    return history.push('/');
+    return history.push('/stations');
   };
 
   handleOnClickMore = (e) => {
