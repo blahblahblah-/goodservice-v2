@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input, List, Header } from "semantic-ui-react";
+import { Input, List, Header, Icon } from "semantic-ui-react";
 import { Link } from 'react-router-dom';
 
 import TrainBullet from './trainBullet';
@@ -19,28 +19,31 @@ class StationList extends React.Component {
 
   handleQueryChange = (e, data) => {
     const query = data.value.replace(/[^0-9a-z]/gi, '').toUpperCase();
-
     this.setState({query: query})
-  }
+  };
 
   handleQueryClear = (e) => {
     e.target.parentElement.children[0].value = '';
     this.setState({query: ''});
-  }
+  };
 
   handleQueryKeyUp = (e) => {
     if (e.key === "Escape") {
       e.target.value = '';
       this.setState({query: ''});
     }
-  }
+  };
 
   renderListItem(station) {
-    const { trains } = this.props;
+    const { trains, favStations } = this.props;
     return (
       <List.Item as={Link} key={station.id} className='results-list-item' to={`/stations/${station.id}`}>
         <List.Content floated='left'>
           <Header as='h5'>
+            {
+              favStations.has(station.id) &&
+                <Icon name="pin" inverted color="grey" />
+            }
             { formatStation(station.name) }
             {
               station.secondary_name &&
@@ -74,7 +77,7 @@ class StationList extends React.Component {
   }
 
   render() {
-    const { stations } = this.props;
+    const { stations, favStations } = this.props;
     const { query } = this.state;
     let selectedStations;
     if (query.length < 1) {
@@ -92,7 +95,12 @@ class StationList extends React.Component {
         <Input icon={icon} placeholder='Search...' onChange={this.handleQueryChange} onKeyUp={this.handleQueryKeyUp} fluid className="station-search" />
         <List divided relaxed selection inverted className='results'>
           {
-            selectedStations.map((station) => {
+            selectedStations.filter((station) => favStations.has(station.id)).map((station) => {
+              return this.renderListItem(station);
+            })
+          }
+          {
+            selectedStations.filter((station) => !favStations.has(station.id)).map((station) => {
               return this.renderListItem(station);
             })
           }

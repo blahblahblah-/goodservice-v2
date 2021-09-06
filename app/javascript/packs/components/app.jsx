@@ -8,6 +8,7 @@ import {
   Link,
 } from 'react-router-dom';
 import { Helmet } from "react-helmet";
+import * as Cookies from 'es-cookie';
 
 import TrainGrid from './trainGrid';
 import StationList from './stationList';
@@ -26,10 +27,16 @@ const STOPS_API_URL = '/api/stops';
 class App extends React.Component {
   constructor(props) {
     super(props);
+    const favStationsStr = Cookies.get('favStations');
+    const favStations = favStationsStr?.split(",");
     this.state = {
       trains: {},
       loading: false,
+      favStations: new Set(favStations),
     };
+    if (favStationsStr) {
+      Cookies.set('favStations', favStationsStr, {expires: 365});
+    }
   }
 
   componentWillUnmount() {
@@ -52,9 +59,19 @@ class App extends React.Component {
       .then(data => this.setState({ stations: data.stops }));
   }
 
-  handleOnStationDropdownChange = (e, { name, value }) => {
-    return history.push(`/stations/${value}`);
-  };
+  handlePinStation = (stationId) => {
+    const { favStations } = this.state;
+    favStations.add(stationId);
+    this.setState({favStations: favStations});
+    Cookies.set('favStations', [...favStations].join(','), {expires: 365});
+  }
+
+  handleUnpinStation = (stationId) => {
+    const { favStations } = this.state;
+    favStations.delete(stationId);
+    this.setState({favStations: favStations});
+    Cookies.set('favStations', [...favStations].join(','), {expires: 365});
+  }
 
   renderLoading() {
     const { loading } = this.state;
@@ -86,14 +103,14 @@ class App extends React.Component {
   }
 
   renderStations() {
-    const { trains, stations } = this.state;
+    const { trains, stations, favStations } = this.state;
     return (
-      <StationList trains={trains} stations={stations} />
+      <StationList trains={trains} stations={stations} favStations={favStations} />
     );
   }
 
   renderStation(stationId) {
-    const { trains, stations } = this.state;
+    const { trains, stations, favStations } = this.state;
     const selectedStation = stations.find((s) => s.id === stationId);
     const stationsObj = {};
     stations.forEach((s) => {
@@ -101,7 +118,10 @@ class App extends React.Component {
     })
     return (
       <React.Fragment>
-        <StationModal open={true} stations={stationsObj} trains={trains} selectedStation={selectedStation} />
+        <StationModal open={true} stations={stationsObj} isFavStation={favStations.has(stationId)}
+          handlePinStation={this.handlePinStation} handleUnpinStation={this.handleUnpinStation}
+          trains={trains} selectedStation={selectedStation}
+        />
         {
           this.renderStations()
         }

@@ -59,6 +59,15 @@ class StationModal extends React.Component {
     this.setState({ [key]: true });
   }
 
+  handlePinToggle = () => {
+    const { isFavStation, selectedStation, handlePinStation, handleUnpinStation } = this.props;
+    if (isFavStation) {
+      handleUnpinStation(selectedStation.id);
+    } else {
+      handlePinStation(selectedStation.id);
+    }
+  };
+
   renderAccessibilityAdvisories(selectedStation) {
     if (!selectedStation.accessibility || selectedStation.accessibility.advisories.length === 0) {
       return;
@@ -244,7 +253,7 @@ class StationModal extends React.Component {
   }
 
   render() {
-    const { open, selectedStation, stations, trains } = this.props;
+    const { open, selectedStation, stations, trains, isFavStation } = this.props;
     const { station, timestamp } = this.state;
     const stationName = formatStation(selectedStation.name);
     const heading = selectedStation.secondary_name ? `${stationName} (${selectedStation.secondary_name})` : stationName;
@@ -285,6 +294,7 @@ class StationModal extends React.Component {
                       );
                     })
                   }
+                  <Icon name="pin" color={isFavStation ? "grey" : "black"} inverted link onClick={this.handlePinToggle} />
                   </div>
                 </Header.Content>
                 {
