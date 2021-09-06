@@ -265,6 +265,7 @@ class StationModal extends React.Component {
               <title>{title}</title>
               <meta property="og:title" content={title} />
               <meta name="twitter:title" content={title} />
+              <link rel="canonical" href={`https://www.goodservice.io/stations/${selectedStation.id}`} />
               <meta property="og:url" content={`https://www.goodservice.io/stations/${selectedStation.id}`} />
               <meta name="twitter:url" content={`https://www.goodservice.io/stations/${selectedStation.id}`} />
             </Helmet>

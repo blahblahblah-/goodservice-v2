@@ -190,6 +190,8 @@ class App extends React.Component {
             <meta property="og:title" content="goodservice.io" />
             <meta name="twitter:title" content="goodservice.io" />
             <link rel="canonical" href="https://www.goodservice.io" />
+            <meta property="og:url" content="https://www.goodservice.io" />
+            <meta name="twitter:url" content="https://www.goodservice.io" />
           </Helmet>
         </Segment>
         <Segment inverted vertical className='blogpost-segment'>
