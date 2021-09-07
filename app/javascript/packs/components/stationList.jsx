@@ -17,6 +17,10 @@ class StationList extends React.Component {
     };
   }
 
+  componentDidMount() {
+    this.queryInput.focus();
+  }
+
   handleQueryChange = (e, data) => {
     const query = data.value.replace(/[^0-9a-z]/gi, '').toUpperCase();
     this.setState({query: query})
@@ -92,7 +96,7 @@ class StationList extends React.Component {
 
     return (
       <div className='station-list'>
-        <Input icon={icon} placeholder='Search...' onChange={this.handleQueryChange} onKeyUp={this.handleQueryKeyUp} fluid className="station-search" />
+        <Input icon={icon} placeholder='Search...' onChange={this.handleQueryChange} onKeyUp={this.handleQueryKeyUp} ref={(input) => { this.queryInput = input; }}  fluid className="station-search" />
         <List divided relaxed selection inverted className='results'>
           {
             selectedStations.filter((station) => favStations.has(station.id)).map((station) => {
