@@ -1,7 +1,7 @@
 require 'nyct-subway.pb'
 
 class FeedProcessor
-  UPCOMING_TRIPS_TIME_ALLOWANCE = 60.minutes.to_i
+  UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes.to_i
   UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes.to_i
   SI_FEED = '-si'
   INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
