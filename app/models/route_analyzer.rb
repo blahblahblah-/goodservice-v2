@@ -564,7 +564,8 @@ class RouteAnalyzer
           stops: stops,
           delayed_time: trip.delayed_time,
           schedule_discrepancy: trip.schedule_discrepancy,
-          is_delayed: trip.delayed?
+          is_delayed: trip.delayed?,
+          last_stop_made: last_past_stop,
         }
       }]
     }
