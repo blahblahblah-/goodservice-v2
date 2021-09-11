@@ -31,6 +31,7 @@ class Api::VirtualAssistantController < ApplicationController
 
     status = route_data['status'] || (scheduled ? 'No Service' : 'Not Scheduled')
     strs = ["The current status of the #{route_name} is #{status}."]
+    summaries = []
 
     if route_data.present?
       summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
