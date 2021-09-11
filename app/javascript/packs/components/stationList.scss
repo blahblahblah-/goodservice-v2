@@ -1,8 +1,12 @@
 .station-list {
-  .results {
-    i.icon {
+  .results .results-list-item h5.ui.header{
+    i.icon.pin {
       display: inline;
       font-size: 1em;
+
+      &:only-child {
+        margin-right: 0.25rem;
+      }
     }
 
     .secondary-name {
