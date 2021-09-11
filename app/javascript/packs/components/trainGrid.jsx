@@ -63,11 +63,17 @@ class TrainGrid extends React.Component {
                   <Grid.Row columns={6} textAlign='center'>
                     {
                       groups[status].map(train => {
+                        const alternateName = train.alternate_name;
                         const visible = train.visible || train.status !== 'Not Scheduled';
+                        let displayAlternateName = alternateName && alternateName[0];
+                        let match;
+                        if (match = alternateName?.match(/^(?<number>[0-9]+)/)) {
+                          displayAlternateName = match.groups.number;
+                        }
                         return (
                           <Grid.Column key={train.name + train.alternate_name} style={{display: (visible ? 'block' : 'none')}}>
                             <Link to={`/trains/${train.id}`}>
-                              <TrainBullet name={train.name} alternateName={train.alternate_name && train.alternate_name[0]} color={train.color} size='small'
+                              <TrainBullet name={train.name} alternateName={displayAlternateName} color={train.color} size='small'
                                               textColor={train.text_color} style={{ float: 'left' }} />
                             </Link>
                           </Grid.Column>

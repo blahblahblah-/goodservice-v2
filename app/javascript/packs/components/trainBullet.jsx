@@ -26,19 +26,22 @@ class TrainBullet extends React.Component {
   }
 
   style() {
-    const { style, color, textColor } = this.props;
+    const { style, color, textColor, size, name, alternateName } = this.props;
+    let nameLength = name.length + (alternateName?.length || 0);
+    let styleHash = {
+      ...style,
+      backgroundColor: `${color}`
+    };
+
     if (textColor) {
-      return {
-        ...style,
-        backgroundColor: `${color}`,
-        color: `${textColor}`
-      }
-    } else {
-      return {
-        ...style,
-        backgroundColor: `${color}`
-      };
+      styleHash.color = `${textColor}`;
     }
+
+    if (size === 'small' && nameLength > 2) {
+      styleHash.letterSpacing = '-.05em';
+    }
+
+    return styleHash;
   }
 
   innerStyle() {
