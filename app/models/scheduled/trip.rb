@@ -5,7 +5,7 @@ class Scheduled::Trip < ActiveRecord::Base
 
   DAY_IN_MINUTES = 86400
 
-  def self.soon(current_timestamp, route_id, time_range: 30.minutes)
+  def self.soon(current_timestamp, route_id, time_range: 60.minutes)
     current_time = Time.zone.at(current_timestamp)
     from_time = current_time - current_time.beginning_of_day
     to_time = current_time - current_time.beginning_of_day + time_range.to_i
@@ -40,7 +40,7 @@ class Scheduled::Trip < ActiveRecord::Base
     ).joins(:schedule).merge(Scheduled::Schedule.today(date: current_time.to_date))
   end
 
-  def self.soon_grouped(current_timestamp, route_id, time_range: 30.minutes)
+  def self.soon_grouped(current_timestamp, route_id, time_range: 60.minutes)
     results = soon(current_timestamp, route_id, time_range: time_range)
 
     if route_id
