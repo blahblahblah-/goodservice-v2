@@ -104,8 +104,9 @@ class App extends React.Component {
 
   renderStations() {
     const { trains, stations, favStations } = this.state;
+
     return (
-      <StationList trains={trains} stations={stations} favStations={favStations} />
+      <StationList trains={trains} stations={stations} favStations={favStations} selectedStationId={this.selectedStationId} />
     );
   }
 
@@ -174,6 +175,7 @@ class App extends React.Component {
               { trainKeys.length > 0 && stations &&
                 <Switch>
                   <Route path='/stations/:id' render={(props) => {
+                    this.selectedStationId = props.match.params.id;
                     const stationIds = stations.map((s) => s.id);
                     if (props.match.params.id && stationIds.includes(props.match.params.id)) {
                       return this.renderStation(props.match.params.id);
@@ -182,6 +184,7 @@ class App extends React.Component {
                     }
                   }} />
                   <Route path='/stations' render={() => {
+                    this.selectedStationId = null;
                     return this.renderStations();
                   }} />
                   <Route render={() => <Redirect to="/stations" /> } />

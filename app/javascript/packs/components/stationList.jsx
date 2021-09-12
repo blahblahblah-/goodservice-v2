@@ -18,7 +18,11 @@ class StationList extends React.Component {
   }
 
   componentDidMount() {
-    this.queryInput.focus();
+    const { selectedStationId } = this.props;
+
+    if (!selectedStationId) {
+      this.queryInput.focus();
+    }
   }
 
   handleQueryChange = (e, data) => {
