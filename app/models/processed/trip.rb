@@ -4,7 +4,8 @@ class Processed::Trip
   :effective_delayed_time, :delayed_time, :delayed?,
   :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :schedule_discrepancy, :past_stops, to: :trip
 
-  attr_reader :trip, :previous_stop_arrival_time, :previous_stop, :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
+  attr_reader :trip, :previous_stop_arrival_time, :previous_stop, :calculated_upcoming_stop_arrival_time,
+    :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
 
   def initialize(trip, next_trip, routing)
     @trip = trip
