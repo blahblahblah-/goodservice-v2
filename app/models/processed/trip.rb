@@ -1,11 +1,10 @@
 class Processed::Trip
   DELAY_THRESHOLD = 5.minutes.to_i
-  delegate :id, :route_id, :stops_behind, :timestamp, :direction, :upcoming_stop, :upcoming_stops, :time_until_upcoming_stop,
+  delegate :id, :route_id, :stops_behind, :timestamp, :direction, :upcoming_stop, :time_until_upcoming_stop,
   :effective_delayed_time, :delayed_time, :delayed?,
   :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :schedule_discrepancy, :past_stops, to: :trip
 
-  attr_reader :trip, :previous_stop_arrival_time, :previous_stop,
-    :estimated_upcoming_stop_arrival_time, :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
+  attr_reader :trip, :previous_stop_arrival_time, :previous_stop, :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
 
   def initialize(trip, next_trip, routing)
     @trip = trip
@@ -20,7 +19,7 @@ class Processed::Trip
   end
 
   def delayed_time
-    [Time.current.to_i - estimated_upcoming_stop_arrival_time, 0].max
+    [Time.current.to_i - calculated_upcoming_stop_arrival_time, 0].max
   end
 
   def effective_delayed_time
@@ -31,6 +30,20 @@ class Processed::Trip
     effective_delayed_time >= DELAY_THRESHOLD
   end
 
+  def upcoming_stops(time_ref: timestamp)
+    if delayed?
+      stops.map(&:first) - past_stops.keys
+    end
+    stops.select { |_, v| v > time_ref }.map(&:first) - past_stops.keys
+  end
+
+  def estimated_upcoming_stop_arrival_time
+    if delayed?
+      [calculated_upcoming_stop_arrival_time, timestamp + 60].max
+    end
+    calculated_upcoming_stop_arrival_time
+  end
+
   private
 
   def determine_previous_stop_info!(routing)
@@ -39,12 +52,12 @@ class Processed::Trip
 
   def calculate_time_until_next_trip!(next_trip, routing)
     if previous_stop_arrival_time
-      @estimated_upcoming_stop_arrival_time = previous_stop_arrival_time + RouteProcessor.average_travel_time(previous_stop, upcoming_stop)
+      @calculated_upcoming_stop_arrival_time = previous_stop_arrival_time + RouteProcessor.average_travel_time(previous_stop, upcoming_stop)
     else
-      @estimated_upcoming_stop_arrival_time = timestamp + self.class.extrapolate_time_until_upcoming_stop(trip, routing, timestamp)
+      @calculated_upcoming_stop_arrival_time = timestamp + self.class.extrapolate_time_until_upcoming_stop(trip, routing, timestamp)
     end
 
-    estimated_time_until_upcoming_stop = estimated_upcoming_stop_arrival_time - timestamp
+    estimated_time_until_upcoming_stop = calculated_upcoming_stop_arrival_time - timestamp
 
     unless next_trip
       if routing.last == destination

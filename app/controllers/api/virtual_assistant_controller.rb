@@ -171,7 +171,10 @@ class Api::VirtualAssistantController < ApplicationController
 
           if trips.size == 1 || first_trip_destination != second_trip_destination
             eta = (trips.first[:arrival_time] / 60).round
-            if eta < 1
+            if trips.first[:is_delayed]
+              strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} is delayed."
+              text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: delayed."
+            elsif eta < 1
               strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} is now arriving."
               text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: due."
             else
@@ -184,7 +187,10 @@ class Api::VirtualAssistantController < ApplicationController
             first_eta = (trips.first[:arrival_time] / 60).round
             second_eta = (trips.second[:arrival_time] / 60).round
             if first_trip_destination != second_trip_destination
-              if second_eta < 1
+              if trips.second[:is_delayed]
+                strs << "Next #{pronounceable_route_name} train to #{second_trip_destination.normalized_name} is delayed."
+                text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: delayed."
+              elsif second_eta < 1
                 strs << "Next #{pronounceable_route_name} train to #{second_trip_destination.normalized_name} is now arriving."
                 text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: due."
               else
@@ -192,8 +198,14 @@ class Api::VirtualAssistantController < ApplicationController
                 text << "#{route_name} to #{second_trip_destination.stop_name.gsub(/ - /, '–')}: #{second_eta} #{"min".pluralize(second_eta)}."
               end
             else
-              if first_eta < 1
-                if second_eta < 1
+              if trips.first[:is_delayed]
+                strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} is delayed."
+                text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: delayed."
+              elsif first_eta < 1
+                if trips.second[:is_delayed]
+                  strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} is now arriving, following train is delayed."
+                  text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: due, delayed."
+                elsif second_eta < 1
                   strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} is now arriving."
                   text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: due."
                 else
@@ -201,8 +213,13 @@ class Api::VirtualAssistantController < ApplicationController
                   text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: due, #{second_eta} #{"min".pluralize(second_eta)}."
                 end
               else
-                strs << "Next #{pronounceable_route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
-                text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: #{first_eta} #{"min".pluralize(first_eta)}, #{second_eta} #{"min".pluralize(second_eta)}."
+                if trips.second[:is_delayed]
+                  strs << "Next #{pronounceable_route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)}, following train is delayed."
+                  text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: #{first_eta} #{"min".pluralize(first_eta)}, delayed."
+                else
+                  strs << "Next #{pronounceable_route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
+                  text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: #{first_eta} #{"min".pluralize(first_eta)}, #{second_eta} #{"min".pluralize(second_eta)}."
+                end
               end
             end
           end
