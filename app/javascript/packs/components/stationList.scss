@@ -1,26 +1,28 @@
 .station-list {
-  .results .results-list-item .ui.header{
-    i.icon.pin {
-      display: inline;
-      font-size: 1em;
-
-      &:only-child {
-        margin-right: 0.25rem;
-      }
-    }
-
-    .secondary-name {
-      color: #aaaaaa;
-      font-weight: 300!important;
-      margin-left: .4rem;
-      font-size: 0.9em;
-    }
-
+  .results .results-list-item {
     .cross {
       height: 21px;
       width: 21px;
       margin: .25em;
       margin-top: 0;
+    }
+
+    .ui.header {
+      i.icon.pin {
+        display: inline;
+        font-size: 1em;
+
+        &:only-child {
+          margin-right: 0.25rem;
+        }
+      }
+
+      .secondary-name {
+        color: #aaaaaa;
+        font-weight: 300!important;
+        margin-left: .4rem;
+        font-size: 0.9em;
+      }
     }
   }
 }
