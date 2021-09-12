@@ -214,7 +214,7 @@ class Api::VirtualAssistantController < ApplicationController
                 end
               else
                 if trips.second[:is_delayed]
-                  strs << "Next #{pronounceable_route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)}, following train is delayed."
+                  strs << "Next #{pronounceable_route_name} train to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)}, following train is delayed."
                   text << "#{route_name} to #{first_trip_destination.stop_name.gsub(/ - /, '–')}: #{first_eta} #{"min".pluralize(first_eta)}, delayed."
                 else
                   strs << "Next #{pronounceable_route_name} trains to #{first_trip_destination.normalized_name} arrive in #{first_eta} #{"minute".pluralize(first_eta)} and #{second_eta} #{"minute".pluralize(second_eta)}."
