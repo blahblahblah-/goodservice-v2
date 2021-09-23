@@ -45,9 +45,13 @@ class TrainBullet extends React.Component {
   }
 
   innerStyle() {
-    const { name, directions, color, textColor } = this.props;
+    const { name, directions, color, textColor, size, alternateName } = this.props;
+    let nameLength = name.length + (alternateName?.length || 0);
     if (!name.endsWith("X") && directions && directions.length === 1 && textColor && textColor.toUpperCase() !== '#FFFFFF') {
       return { WebkitTextStroke: `0.5px ${color}` }
+    }
+    if (size === 'small' && nameLength > 2) {
+      return { fontSize: '.9em' };
     }
   }
 
