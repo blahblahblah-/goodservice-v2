@@ -38,7 +38,7 @@ class TrainBullet extends React.Component {
     }
 
     if (size === 'small' && nameLength > 2) {
-      styleHash.letterSpacing = '-.05em';
+      styleHash.letterSpacing = '-.06em';
     }
 
     return styleHash;
