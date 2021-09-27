@@ -326,7 +326,7 @@ class RouteAnalyzer
     [1, 3].to_h do |direction|
       delayed_trips = actual_trips[direction]&.flat_map { |r_key, trips|
         routing = r_key == 'blended' ? common_routings[direction] : actual_routings[direction].find { |r| "#{r.first}-#{r.last}-#{r.size}" == r_key }
-        trips.each_with_index.map { |t, i|
+        results = trips.each_with_index.map { |t, i|
           next_trip = trips[i + 1]
           # There may not be any trips ahead of this trip
           next_trip_prev_stop = routing.last
@@ -340,6 +340,11 @@ class RouteAnalyzer
             delayed_time: t.effective_delayed_time
           }
         }.select { |t| t[:delayed_time] >= Processed::Trip::DELAY_THRESHOLD }
+        if results.uniq { |t| t[:end] }.size == 1 && results.first[:end] == routing.last
+          []
+        else
+          results
+        end
       }&.uniq { |t| t[:end] }
       [direction, delayed_trips]
     end
@@ -364,7 +369,7 @@ class RouteAnalyzer
 
   def self.max_delay(actual_trips)
     actual_trips.map { |direction, trips|
-      [direction, trips.values.flatten.map(&:effective_delayed_time).max]
+      [direction, trips.values.flatten.select{ |t| t.upcoming_stops.size > 1 }.map(&:effective_delayed_time).max]
     }.to_h
   end
 
