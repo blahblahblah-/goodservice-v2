@@ -27,7 +27,7 @@ class RouteProcessor
             r.each_cons(stops.length).any?(&stops.method(:==))
           }
           [r, r.map {|s|
-            trips_selected.select { |t| t.upcoming_stop == s }.sort_by { |t| t.previous_stop_arrival_time || -t.upcoming_stop_arrival_time }
+            trips_selected.select { |t| t.upcoming_stop == s }.sort_by { |t| (t.previous_stop_arrival_time && -t.previous_stop_arrival_time) || -t.upcoming_stop_arrival_time }
           }.flatten.compact]
         }.to_h]
       }.to_h
