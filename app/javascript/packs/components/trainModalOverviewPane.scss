@@ -1,4 +1,9 @@
 .ui.segment.train-modal-overview-pane {
+  @media only screen and (max-width: 767px) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .ui.stackable.grid>.row>.column.map-cell {
     @media only screen and (max-width: 767px) {
       display: none;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider, Popup, List } from "semantic-ui-react";
+import { Header, Segment, Statistic, Grid, Dropdown, Table, Divider, Popup, List, Label } from "semantic-ui-react";
 import { Link } from 'react-router-dom';
 
 import TrainMap from './trainMap';
@@ -89,6 +89,28 @@ class TrainModalDirectionPane extends React.Component {
     return 'No Service';
   }
 
+  renderDelays() {
+    const { train, direction } = this.props;
+    let out = [];
+    if (!train.delay_summaries) {
+      return out;
+    }
+    if (train.delay_summaries[direction]) {
+      out.push(<Header as='h4' inverted key='1'>{formatStation(train.delay_summaries[direction])}</Header>)
+    }
+    if (out.length) {
+      return (
+        <Segment inverted basic>
+          <Label attached='top' color='red'>DELAYS</Label>
+          {
+            out
+          }
+        </Segment>
+      );
+    }
+  }
+
+
   renderServiceChanges() {
     const { train, trains, direction } = this.props;
 
@@ -97,19 +119,37 @@ class TrainModalDirectionPane extends React.Component {
     }
 
     const summaries = ['both', direction].map((key) => train.service_change_summaries[key]).flat();
-    return replaceTrainBulletsInParagraphs(trains, summaries);
+    if (summaries.length) {
+      return (
+        <Segment inverted basic>
+          <Label attached='top' color='orange'>SERVICE CHANGES</Label>
+          {
+            replaceTrainBulletsInParagraphs(trains, summaries)
+          }
+        </Segment>
+      );
+    }
   }
 
-  renderSummary() {
+  renderServiceIrregularities() {
     const { train, direction } = this.props;
     let out = [];
-    if (!train.service_summaries) {
+    if (!train.service_irregularity_summaries) {
       return out;
     }
-    if (train.service_summaries[direction]) {
-      out.push(<Header as='h4' inverted key='1'>{formatStation(train.service_summaries[direction])}</Header>)
+    if (train.service_irregularity_summaries[direction]) {
+      out.push(<Header as='h4' inverted key='1'>{formatStation(train.service_irregularity_summaries[direction])}</Header>)
     }
-    return out;
+    if (out.length) {
+      return (
+        <Segment inverted basic>
+          <Label attached='top' color='yellow'>SERVICE IRREGULARITIES</Label>
+          {
+            out
+          }
+        </Segment>
+      );
+    }
   }
 
   calculateMaxHeadway(headwayObjs) {
@@ -672,10 +712,13 @@ class TrainModalDirectionPane extends React.Component {
                 </Statistic>
               </Statistic.Group>
               {
+                this.renderDelays()
+              }
+              {
                 this.renderServiceChanges()
               }
               {
-                this.renderSummary()
+                this.renderServiceIrregularities()
               }
               {
                 train.actual_routings && train.actual_routings[direction] && train.actual_routings[direction].length > 1 &&

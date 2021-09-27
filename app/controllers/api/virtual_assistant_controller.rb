@@ -34,7 +34,9 @@ class Api::VirtualAssistantController < ApplicationController
     summaries = []
 
     if route_data.present?
-      summaries = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
+      summaries = route_data['delay_summaries'].flat_map { |_, summary| summary}.compact +
+                    route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact +
+                    route_data['service_irregularity_summaries'].map { |_, summary| summary }.compact
       summaries.each do |summary|
         if route_name != "#{route_id} train"
           strs << summary.gsub("to/from", "to and from").gsub(/\//, ' ').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '<say-as interpret-as="characters">\1</say-as>').gsub(/\(\((.*?)\)\)/) do |stop_name|

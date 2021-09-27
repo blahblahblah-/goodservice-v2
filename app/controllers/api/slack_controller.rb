@@ -228,7 +228,9 @@ class Api::SlackController < ApplicationController
     ]
 
     if route_data.present?
-      summary = route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact + route_data['service_summaries'].map { |_, summary| summary }.compact
+      summary = route_data['delay_summaries'].flat_map { |_, summary| summary}.compact +
+                  route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact +
+                  route_data['service_irregularity_summaries'].map { |_, summary| summary }.compact
 
       if summary.present?
         result << {
