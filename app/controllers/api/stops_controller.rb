@@ -167,6 +167,11 @@ class Api::StopsController < ApplicationController
   end
 
   def transfers
-    @transfers ||= Scheduled::Transfer.where("from_stop_internal_id <> to_stop_internal_id").group_by(&:from_stop_internal_id)
+    time = Time.current - Time.current.beginning_of_day
+    @transfers ||= Scheduled::Transfer.where(
+      "from_stop_internal_id <> to_stop_internal_id and (access_time_from is null or (access_time_from <= ? and access_time_to >= ?))",
+      time,
+      time
+    ).group_by(&:from_stop_internal_id)
   end
 end

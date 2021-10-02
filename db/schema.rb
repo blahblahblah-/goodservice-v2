@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_29_005640) do
+ActiveRecord::Schema.define(version: 2021_10_02_064045) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -82,6 +82,8 @@ ActiveRecord::Schema.define(version: 2021_03_29_005640) do
     t.string "to_stop_internal_id", null: false
     t.integer "min_transfer_time", default: 0, null: false
     t.boolean "interchangeable_platforms", default: false, null: false
+    t.integer "access_time_from"
+    t.integer "access_time_to"
     t.index ["from_stop_internal_id"], name: "index_transfers_on_from_stop_internal_id"
   end
 
