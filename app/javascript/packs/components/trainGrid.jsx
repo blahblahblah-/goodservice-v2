@@ -58,7 +58,7 @@ class TrainGrid extends React.Component {
               return (
                 <React.Fragment key={status}>
                   <Grid.Row columns={1} className='train-status-row'>
-                    <Grid.Column><Header size='small' color={STATUSES[status]} inverted>{status}</Header></Grid.Column>
+                    <Grid.Column><Header size='small' color={STATUSES[status]} className='status' inverted>{status}</Header></Grid.Column>
                   </Grid.Row>
                   <Grid.Row columns={6} textAlign='center'>
                     {
