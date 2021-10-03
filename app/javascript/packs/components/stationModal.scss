@@ -29,9 +29,15 @@
     }
   }
 
-  .transfers .station-list-item {
-    .secondary-name {
-      line-height: 1.3em;
+  .transfers {
+    .station-list-item {
+      .secondary-name {
+        line-height: 1.3em;
+      }
+    }
+
+    .others{
+      cursor: default;
     }
   }
 

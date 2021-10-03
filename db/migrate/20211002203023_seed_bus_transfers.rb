@@ -76,7 +76,6 @@ class SeedBusTransfers < ActiveRecord::Migration[6.1]
     Scheduled::BusTransfer.create!(from_stop_internal_id: "710", bus_route: "Q70 SBS to LGA", airport_connection: true)
     Scheduled::BusTransfer.create!(from_stop_internal_id: "G14", bus_route: "Q70 SBS to LGA", airport_connection: true)
 
-    Scheduled::BusTransfer.create!(from_stop_internal_id: "S18", bus_route: "Q52 SBS", min_transfer_time: 180, access_time_from: 21600, access_time_to: 86399)
     Scheduled::BusTransfer.create!(from_stop_internal_id: "G11", bus_route: "Q52 SBS", min_transfer_time: 180, access_time_from: 21600, access_time_to: 86399)
     Scheduled::BusTransfer.create!(from_stop_internal_id: "J15", bus_route: "Q52 SBS", min_transfer_time: 180, access_time_from: 21600, access_time_to: 86399)
     Scheduled::BusTransfer.create!(from_stop_internal_id: "A61", bus_route: "Q52 SBS", min_transfer_time: 180, access_time_from: 21600, access_time_to: 86399)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_02_203023) do
+ActiveRecord::Schema.define(version: 2021_10_03_014943) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -29,6 +29,16 @@ ActiveRecord::Schema.define(version: 2021_10_02_203023) do
     t.string "schedule_service_id", null: false
     t.date "date", null: false
     t.integer "exception_type", null: false
+  end
+
+  create_table "connections", force: :cascade do |t|
+    t.string "from_stop_internal_id", null: false
+    t.string "name", null: false
+    t.string "mode"
+    t.integer "min_transfer_time", default: 0, null: false
+    t.integer "access_time_from"
+    t.integer "access_time_to"
+    t.index ["from_stop_internal_id"], name: "index_connections_on_from_stop_internal_id"
   end
 
   create_table "delayed_jobs", force: :cascade do |t|

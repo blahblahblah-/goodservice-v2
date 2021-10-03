@@ -138,15 +138,25 @@ class StationModal extends React.Component {
             })
           }
           {
-            selectedStation.bus_transfers && selectedStation.bus_transfers.length &&
-              <List.Item key="others">
+            ((selectedStation.bus_transfers && selectedStation.bus_transfers.length) || (selectedStation.connections && selectedStation.connections.length)) &&
+              <List.Item key="others" className="others">
                 <List.Content floated='left'>
                   {
-                    selectedStation.bus_transfers.map((b) => {
+                    selectedStation.bus_transfers?.map((b) => {
                       return (
                         <Label key={b.route} color={b.sbs ? 'blue' : 'grey'} size='small'>
                           <Icon name={b.airport_connection ? 'plane' : 'bus'} />
                           {b.route}
+                        </Label>
+                      );
+                    })
+                  }
+                  {
+                    selectedStation.connections?.map((c) => {
+                      return (
+                        <Label key={c.name} color='black' size='small'>
+                          <Icon name={c.mode} />
+                          {c.name}
                         </Label>
                       );
                     })

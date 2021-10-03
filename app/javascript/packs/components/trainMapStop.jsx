@@ -274,6 +274,16 @@ class TrainMapStop extends React.Component {
                   );
                 })
               }
+              {
+                station.connections?.map((b) => {
+                  return (
+                    <Label key={b.name} color='black' size='small'>
+                      <Icon name={b.mode} />
+                      {b.name}
+                    </Label>
+                  );
+                })
+              }
             </div>
           }
         </div>

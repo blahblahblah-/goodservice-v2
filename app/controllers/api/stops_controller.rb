@@ -59,6 +59,12 @@ class Api::StopsController < ApplicationController
                 sbs: t.is_sbs?,
               }
             },
+            connections: connections[s.internal_id]&.map{ |t|
+              {
+                name: t.name,
+                mode: t.mode,
+              }
+            },
             accessibility: accessible_directions.present? ? accessibility : nil,
           }
         },
@@ -185,6 +191,15 @@ class Api::StopsController < ApplicationController
   def bus_transfers
     time = Time.current - Time.current.beginning_of_day
     @bus_transfers ||= Scheduled::BusTransfer.where(
+      "access_time_from is null or (access_time_from <= ? and access_time_to >= ?)",
+      time,
+      time
+    ).group_by(&:from_stop_internal_id)
+  end
+
+  def connections
+    time = Time.current - Time.current.beginning_of_day
+    @connections ||= Scheduled::Connection.where(
       "access_time_from is null or (access_time_from <= ? and access_time_to >= ?)",
       time,
       time
