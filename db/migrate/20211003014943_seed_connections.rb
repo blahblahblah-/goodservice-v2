@@ -20,15 +20,15 @@ class SeedConnections < ActiveRecord::Migration[6.1]
 
     Scheduled::Connection.create!(from_stop_internal_id: "A46", name: "LIRR", min_transfer_time: 300, mode: "train")
 
-    Scheduled::Connection.create!(from_stop_internal_id: "631", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
-    Scheduled::Connection.create!(from_stop_internal_id: "723", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
-    Scheduled::Connection.create!(from_stop_internal_id: "901", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "631", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "723", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "901", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
 
-    Scheduled::Connection.create!(from_stop_internal_id: "621", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "621", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
 
-    Scheduled::Connection.create!(from_stop_internal_id: "205", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "205", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
 
-    Scheduled::Connection.create!(from_stop_internal_id: "106", name: "Metro North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
+    Scheduled::Connection.create!(from_stop_internal_id: "106", name: "Metro-North", mode: "train", min_transfer_time: 300, access_time_from: 19800, access_time_to: 86399)
 
     Scheduled::Connection.create!(from_stop_internal_id: "A28", name: "NJ Transit", mode: "train", min_transfer_time: 300, access_time_from: 18000, access_time_to: 86399)    
     Scheduled::Connection.create!(from_stop_internal_id: "128", name: "NJ Transit", mode: "train", min_transfer_time: 300, access_time_from: 18000, access_time_to: 86399)    
