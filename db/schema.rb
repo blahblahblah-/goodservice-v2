@@ -10,10 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_02_064045) do
+ActiveRecord::Schema.define(version: 2021_10_02_203023) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "bus_transfers", force: :cascade do |t|
+    t.string "from_stop_internal_id", null: false
+    t.string "bus_route", null: false
+    t.integer "min_transfer_time", default: 0, null: false
+    t.integer "access_time_from"
+    t.integer "access_time_to"
+    t.boolean "airport_connection", default: false, null: false
+    t.index ["from_stop_internal_id"], name: "index_bus_transfers_on_from_stop_internal_id"
+  end
 
   create_table "calendar_exceptions", force: :cascade do |t|
     t.string "schedule_service_id", null: false

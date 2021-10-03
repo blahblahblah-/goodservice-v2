@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header } from 'semantic-ui-react';
+import { Header, Label, Icon } from 'semantic-ui-react';
 import { Link } from "react-router-dom";
 
 import TrainBullet from './trainBullet.jsx';
@@ -262,6 +262,16 @@ class TrainMapStop extends React.Component {
                     <TrainBullet link={true} id={routeId} key={train.name} name={train.name} color={train.color}
                       textColor={train.text_color} size='small' directions={directions} />
                   )
+                })
+              }
+              {
+                station.bus_transfers?.map((b) => {
+                  return (
+                    <Label key={b.route} color={b.sbs ? 'blue' : 'grey'} size='small'>
+                      <Icon name={b.airport_connection ? 'plane' : 'bus'} />
+                      {b.route}
+                    </Label>
+                  );
                 })
               }
             </div>
