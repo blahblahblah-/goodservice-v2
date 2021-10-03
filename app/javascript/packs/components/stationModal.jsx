@@ -90,7 +90,7 @@ class StationModal extends React.Component {
   }
 
   renderTransfers(selectedStation, trains, stations) {
-    if (!selectedStation.transfers && !selectedStation.bus_transfers) {
+    if (!selectedStation.transfers && !selectedStation.bus_transfers && !selectedStation.connections) {
       return;
     }
     return (
