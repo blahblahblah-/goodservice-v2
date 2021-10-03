@@ -8,6 +8,8 @@ import { statusColor, formatStation, formatMinutes } from './utils';
 import { accessibilityIcon } from './accessibility.jsx';
 import './stationModal.scss';
 
+import Cross from 'images/cross-15.svg'
+
 const API_URL_PREFIX = '/api/stops/';
 
 class StationModal extends React.Component {
@@ -131,6 +133,10 @@ class StationModal extends React.Component {
                             textColor={train.text_color} size='small' key={train.id} directions={directions} />
                         )
                       })
+                    }
+                    {
+                      Object.keys(station.routes).length === 0 &&
+                      <img src={Cross} className='cross' />
                     }
                   </List.Content>
                 </List.Item>
