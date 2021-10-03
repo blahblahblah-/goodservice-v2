@@ -255,7 +255,7 @@ class TrainMapStop extends React.Component {
           { station &&
             <div className='transfers'>
               {
-                transfers && Object.keys(transfers).sort().map((routeId) => {
+                transfers && Object.keys(transfers).sort((a, b) => trains[a].name < trains[b].name ? -1 : 1).map((routeId) => {
                   const directions = transfers[routeId];
                   const train = trains[routeId];
                   return (
