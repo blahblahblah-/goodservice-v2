@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup, Icon } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup, Icon, Label } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -88,7 +88,7 @@ class StationModal extends React.Component {
   }
 
   renderTransfers(selectedStation, trains, stations) {
-    if (!selectedStation.transfers) {
+    if (!selectedStation.transfers && !selectedStation.bus_transfers) {
       return;
     }
     return (
@@ -100,7 +100,7 @@ class StationModal extends React.Component {
         </Divider>
         <List divided relaxed selection inverted className='transfers'>
           {
-            selectedStation.transfers.map((stationId) => {
+            selectedStation.transfers?.map((stationId) => {
               const station = stations[stationId];
               return(
                 <List.Item as={Link} key={stationId} className='station-list-item' to={`/stations/${stationId}`}>
@@ -136,6 +136,23 @@ class StationModal extends React.Component {
                 </List.Item>
               )
             })
+          }
+          {
+            selectedStation.bus_transfers && selectedStation.bus_transfers.length &&
+              <List.Item key="others">
+                <List.Content floated='left'>
+                  {
+                    selectedStation.bus_transfers.map((b) => {
+                      return (
+                        <Label key={b.route} color={b.sbs ? 'blue' : 'grey'} size='small'>
+                          <Icon name={b.airport_connection ? 'plane' : 'bus'} />
+                          {b.route}
+                        </Label>
+                      );
+                    })
+                  }
+                </List.Content>
+              </List.Item>
           }
         </List>
       </React.Fragment>
