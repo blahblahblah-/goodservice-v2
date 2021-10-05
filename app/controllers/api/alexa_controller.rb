@@ -25,11 +25,9 @@ class Api::AlexaController < Api::VirtualAssistantController
       data[:sessionAttributes] = {
         outputSpeech: data[:response][:outputSpeech]
       }
-    end
-    if data[:response][:reprompt]
-      data[:sessionAttributes] = {
-        reprompt: data[:response][:reprompt]
-      }
+      if data[:response][:reprompt]
+        data[:sessionAttributes][:reprompt] = data[:response][:reprompt]
+      end
     end
 
     render json: data
