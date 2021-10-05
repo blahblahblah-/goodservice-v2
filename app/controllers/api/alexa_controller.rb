@@ -12,11 +12,19 @@ class Api::AlexaController < Api::VirtualAssistantController
         data = route_status_response
       when "AMAZON.CancelIntent", "AMAZON.NavigateHomeIntent", "AMAZON.StopIntent"
         data = quit_response
+      when "AMAZON.RepeatIntent"
+        data = repeat_response
       else
         data = help_response
       end
     else
       data = help_response
+    end
+
+    if data[:response][:outputSpeech]
+      data[:sessionAttributes] = {
+        outputSpeech: data[:response][:outputSpeech]
+      }
     end
 
     render json: data
@@ -271,6 +279,15 @@ class Api::AlexaController < Api::VirtualAssistantController
             "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue? "\
             "Or, ask good service, what trains are delayed?"
         }
+      }
+    }
+  end
+
+  def repeat_response
+    {
+      version: "1.0",
+      response: {
+        outputSpeech: params["alexa"]["session"]["attributes"]["outputSpeech"]
       }
     }
   end
