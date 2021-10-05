@@ -26,6 +26,11 @@ class Api::AlexaController < Api::VirtualAssistantController
         outputSpeech: data[:response][:outputSpeech]
       }
     end
+    if data[:response][:reprompt]
+      data[:sessionAttributes] = {
+        reprompt: data[:response][:reprompt]
+      }
+    end
 
     render json: data
   rescue => e
@@ -119,16 +124,26 @@ class Api::AlexaController < Api::VirtualAssistantController
                 title: title,
                 content: text
               },
+              reprompt: {
+                outputSpeech: {
+                  type: "PlainText",
+                  text: "Would you like to lookup train times for another station?"
+                },
+              },
+              shouldEndSession: false,
             },
           }
         else
           {
             version: "1.0",
             response: {
-              outputSpeech: {
-                type: "PlainText",
-                text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: ask good service, when are the next trains arriving at bedford avenue?"
-              }
+              reprompt: {
+                outputSpeech: {
+                  type: "PlainText",
+                  text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
+                }
+              },
+              shouldEndSession: false,
             }
           }
         end
@@ -136,10 +151,13 @@ class Api::AlexaController < Api::VirtualAssistantController
         {
           version: "1.0",
           response: {
-            outputSpeech: {
-              type: "PlainText",
-              text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: ask good service, when are the next trains arriving at bedford avenue?"
-            }
+            reprompt: {
+              outputSpeech: {
+                type: "PlainText",
+                text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
+              }
+            },
+            shouldEndSession: false,
           }
         }
       end
@@ -154,8 +172,15 @@ class Api::AlexaController < Api::VirtualAssistantController
           response: {
             outputSpeech: {
               type: "PlainText",
-              text: "Sorry, there are no stations named #{value}. Please try again."
-            }
+              text: "Sorry, there are no stations named #{value}."
+            },
+            reprompt: {
+              outputSpeech: {
+                type: "PlainText",
+                text: "Please try again. Which station would you like to lookup train times for?"
+              },
+            },
+            shouldEndSession: false,
           }
         }
       else
@@ -179,7 +204,14 @@ class Api::AlexaController < Api::VirtualAssistantController
                 title: title,
                 content: text
               },
-            }
+              reprompt: {
+                outputSpeech: {
+                  type: "PlainText",
+                  text: "Would you like to lookup train times for another station?"
+                },
+              },
+              shouldEndSession: false,
+            },
           }
         else
           {
@@ -200,7 +232,7 @@ class Api::AlexaController < Api::VirtualAssistantController
                   text: "Which station would you like to look up?"
                 },
               },
-              shouldEndSession: false
+              shouldEndSession: false,
             }
           }
         end
@@ -215,7 +247,14 @@ class Api::AlexaController < Api::VirtualAssistantController
         outputSpeech: {
           type: "PlainText",
           text: delays_text
-        }
+        },
+        reprompt: {
+          outputSpeech: {
+            type: "PlainText",
+            text: "Would you like to lookup anything else?"
+          },
+        },
+        shouldEndSession: false,
       }
     }
   end
@@ -256,6 +295,13 @@ class Api::AlexaController < Api::VirtualAssistantController
           title: title,
           content: text
         },
+        reprompt: {
+          outputSpeech: {
+            type: "PlainText",
+            text: "Would you like to lookup the status of another train?"
+          },
+        },
+        shouldEndSession: false,
       }
     }
   end
@@ -278,7 +324,14 @@ class Api::AlexaController < Api::VirtualAssistantController
           text: "You can use good service to check the status of a new york city subway train, or to look up upcoming departure times for a particular station. "\
             "For example, you can say: Ask good service, what is the status of the A train? Or, ask good service, when are the next trains arriving at Bedford Avenue? "\
             "Or, ask good service, what trains are delayed?"
-        }
+        },
+        reprompt: {
+          outputSpeech: {
+            type: "PlainText",
+            text: "What would you like to know?"
+          },
+        },
+        shouldEndSession: false,
       }
     }
   end
@@ -288,7 +341,9 @@ class Api::AlexaController < Api::VirtualAssistantController
       version: "1.0",
       response: {
         outputSpeech: params["alexa"]["session"]["attributes"]["outputSpeech"]
-      }
+      },
+      reprompt: params["alexa"]["session"]["attributes"]["reprompt"],
+      shouldEndSession: params["alexa"]["session"]["attributes"]["reprompt"].nil?,
     }
   end
 end
