@@ -117,18 +117,12 @@ class Api::AlexaController < Api::VirtualAssistantController
             response: {
               outputSpeech: {
                 type: "SSML",
-                text: "<speak>#{speech}</speak>",
+                text: "<speak>#{speech} Would you like to lookup train times for another station?</speak>",
               },
               card: {
                 type: "Simple",
                 title: title,
                 content: text
-              },
-              reprompt: {
-                outputSpeech: {
-                  type: "PlainText",
-                  text: "Would you like to lookup train times for another station?"
-                },
               },
               shouldEndSession: false,
             },
@@ -137,11 +131,9 @@ class Api::AlexaController < Api::VirtualAssistantController
           {
             version: "1.0",
             response: {
-              reprompt: {
-                outputSpeech: {
-                  type: "PlainText",
-                  text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
-                }
+              outputSpeech: {
+                type: "PlainText",
+                text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
               },
               shouldEndSession: false,
             }
@@ -151,11 +143,9 @@ class Api::AlexaController < Api::VirtualAssistantController
         {
           version: "1.0",
           response: {
-            reprompt: {
-              outputSpeech: {
-                type: "PlainText",
-                text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
-              }
+            outputSpeech: {
+              type: "PlainText",
+              text: "Please specify which station you would like to lookup upcoming train arrival times. For example, you can say: when are the next trains arriving at bedford avenue?"
             },
             shouldEndSession: false,
           }
@@ -172,13 +162,7 @@ class Api::AlexaController < Api::VirtualAssistantController
           response: {
             outputSpeech: {
               type: "PlainText",
-              text: "Sorry, there are no stations named #{value}."
-            },
-            reprompt: {
-              outputSpeech: {
-                type: "PlainText",
-                text: "Please try again. Which station would you like to lookup train times for?"
-              },
+              text: "Sorry, there are no stations named #{value}. Please try again. Which station would you like to lookup train times for?"
             },
             shouldEndSession: false,
           }
@@ -197,18 +181,12 @@ class Api::AlexaController < Api::VirtualAssistantController
             response: {
               outputSpeech: {
                 type: "SSML",
-                ssml: "<speak>#{speech}</speak>",
+                ssml: "<speak>#{speech} Would you like to lookup train times for another station?</speak>",
               },
               card: {
                 type: "Simple",
                 title: title,
                 content: text
-              },
-              reprompt: {
-                outputSpeech: {
-                  type: "PlainText",
-                  text: "Would you like to lookup train times for another station?"
-                },
               },
               shouldEndSession: false,
             },
@@ -246,13 +224,7 @@ class Api::AlexaController < Api::VirtualAssistantController
       response: {
         outputSpeech: {
           type: "PlainText",
-          text: delays_text
-        },
-        reprompt: {
-          outputSpeech: {
-            type: "PlainText",
-            text: "Would you like to lookup anything else?"
-          },
+          text: "#{delays_text} Would you like to lookup anything else?"
         },
         shouldEndSession: false,
       }
@@ -288,18 +260,12 @@ class Api::AlexaController < Api::VirtualAssistantController
       response: {
         outputSpeech: {
           type: "SSML",
-          ssml: "<speak>#{speech}</speak>"
+          ssml: "<speak>#{speech} Would you like to lookup the status of another train?</speak>"
         },
         card: {
           type: "Simple",
           title: title,
           content: text
-        },
-        reprompt: {
-          outputSpeech: {
-            type: "PlainText",
-            text: "Would you like to lookup the status of another train?"
-          },
         },
         shouldEndSession: false,
       }
@@ -343,7 +309,7 @@ class Api::AlexaController < Api::VirtualAssistantController
         outputSpeech: params["alexa"]["session"]["attributes"]["outputSpeech"]
       },
       reprompt: params["alexa"]["session"]["attributes"]["reprompt"],
-      shouldEndSession: params["alexa"]["session"]["attributes"]["reprompt"].nil?,
+      shouldEndSession: false,
     }
   end
 end
