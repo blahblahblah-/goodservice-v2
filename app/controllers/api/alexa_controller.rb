@@ -106,80 +106,79 @@ class Api::AlexaController < Api::VirtualAssistantController
     can_fulfill = "NO"
     slots = {}
     case params["alexa"]["request"]["intent"]["name"]
-      when "LookupDelays"
-        can_fulfill = "YES"
-      when "LookupTrainTimes"
-        if params["alexa"]["request"]["intent"]["slots"].present?
-          slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
-            if k == 'station'
-              if v.value.split(',').size > 1
-                [k, {
+    when "LookupDelays"
+      can_fulfill = "YES"
+    when "LookupTrainTimes"
+      if params["alexa"]["request"]["intent"]["slots"].present?
+        slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
+          if k == 'station'
+            if v.value.split(',').size > 1
+              [k, {
                   canUnderstand: "YES",
                   canFulfill: "YES,"
-                }]
-              else
-                if Scheduled::Stop.find_by(internal_id: v.value).present?
-                  [k, {
+              }]
+            else
+              if Scheduled::Stop.find_by(internal_id: v.value).present?
+                [k, {
                     canUnderstand: "YES",
                     canFulfill: "YES,"
-                  }]
-                else
-                  [k, {
+                }]
+              else
+                [k, {
                     canUnderstand: "NO",
                     canFulfill: "NO,"
-                  }]
-                end
+                }]
               end
-            else
-              [k, {
-                canUnderstand: "NO",
-                canFulfill: "NO,"
-              }]
             end
-          }.to_h
-          if slots['station'].present?
-            can_fulfill = slots['station'][:canFulfill]
           else
-            can_fulfill = "MAYBE"
+            [k, {
+              canUnderstand: "NO",
+              canFulfill: "NO,"
+            }]
           end
+        }.to_h
+        if slots['station'].present?
+          can_fulfill = slots['station'][:canFulfill]
         else
           can_fulfill = "MAYBE"
         end
-      when "LookupTrainStatus"
-        if params["alexa"]["request"]["intent"]["slots"].present?
-          slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
-            if k == 'train'
-              if Scheduled::Route.find_by(internal_id: v.value).present?
-                [k, {
-                  canUnderstand: "YES",
-                  canFulfill: "YES,"
-                }]
-              else
-                [k, {
-                  canUnderstand: "NO",
-                  canFulfill: "NO,"
-                }]
-              end
+      else
+        can_fulfill = "MAYBE"
+      end
+    when "LookupTrainStatus"
+      if params["alexa"]["request"]["intent"]["slots"].present?
+        slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
+          if k == 'train'
+            if Scheduled::Route.find_by(internal_id: v.value).present?
+              [k, {
+                canUnderstand: "YES",
+                canFulfill: "YES,"
+              }]
             else
               [k, {
                 canUnderstand: "NO",
                 canFulfill: "NO,"
               }]
             end
-          }.to_h
-          if slots['train'].present?
-            can_fulfill = slots['train'][:canFulfill]
           else
-            can_fulfill = "NO"
+            [k, {
+              canUnderstand: "NO",
+              canFulfill: "NO,"
+            }]
           end
+        }.to_h
+        if slots['train'].present?
+          can_fulfill = slots['train'][:canFulfill]
         else
           can_fulfill = "NO"
         end
+      else
+        can_fulfill = "NO"
       end
     end
     {
       version: "1.0",
-      response:{
+      response: {
         canFulfillIntent: {
           canFulfill: can_fulfill,
           slots: slots
