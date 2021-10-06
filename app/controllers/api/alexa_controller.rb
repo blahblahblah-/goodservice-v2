@@ -14,16 +14,14 @@ class Api::AlexaController < Api::VirtualAssistantController
         data = quit_response
       when "AMAZON.RepeatIntent"
         data = repeat_response
-      when "SessionEndedRequest"
-        data = {}
       else
         data = help_response
       end
     else
-      data = help_response
+      data = {}
     end
 
-    if data[:response][:outputSpeech]
+    if data.fetch(:response, {})[:outputSpeech]
       data[:sessionAttributes] = {
         outputSpeech: data[:response][:outputSpeech]
       }
