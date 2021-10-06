@@ -272,7 +272,7 @@ class Api::AlexaController < Api::VirtualAssistantController
     end
   end
 
-  def single_stop_stoptimes_response(stop_id)
+  def single_stop_stoptimes_response(stop_id, user_id)
     speech, text = stop_times_text(stop_ids, user_id: user_id)
     text_array = text.split("\n")
     title = text_array.first
