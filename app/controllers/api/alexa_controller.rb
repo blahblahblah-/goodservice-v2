@@ -17,6 +17,10 @@ class Api::AlexaController < Api::VirtualAssistantController
       else
         data = help_response
       end
+    elsif params["alexa"]["request"]["type"] == "LaunchRequest"
+      data = help_response
+    elsif params["alexa"]["request"]["type"] == "CanFulfillIntentRequest"
+      data = can_fulfill_response
     else
       data = {}
     end
@@ -98,6 +102,92 @@ class Api::AlexaController < Api::VirtualAssistantController
     URI.parse(uri_str)
   end
 
+  def can_fulfill_response
+    can_fulfill = "NO"
+    slots = {}
+    case params["alexa"]["request"]["intent"]["name"]
+      when "LookupDelays"
+        can_fulfill = "YES"
+      when "LookupTrainTimes"
+        if params["alexa"]["request"]["intent"]["slots"].present?
+          slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
+            if k == 'station'
+              if v.value.split(',').size > 1
+                [k, {
+                  canUnderstand: "YES",
+                  canFulfill: "YES,"
+                }]
+              else
+                if Scheduled::Stop.find_by(internal_id: v.value).present?
+                  [k, {
+                    canUnderstand: "YES",
+                    canFulfill: "YES,"
+                  }]
+                else
+                  [k, {
+                    canUnderstand: "NO",
+                    canFulfill: "NO,"
+                  }]
+                end
+              end
+            else
+              [k, {
+                canUnderstand: "NO",
+                canFulfill: "NO,"
+              }]
+            end
+          }.to_h
+          if slots['station'].present?
+            can_fulfill = slots['station'][:canFulfill]
+          else
+            can_fulfill = "MAYBE"
+          end
+        else
+          can_fulfill = "MAYBE"
+        end
+      when "LookupTrainStatus"
+        if params["alexa"]["request"]["intent"]["slots"].present?
+          slots = params["alexa"]["request"]["intent"]["slots"].map { |k, v|
+            if k == 'train'
+              if Scheduled::Route.find_by(internal_id: v.value).present?
+                [k, {
+                  canUnderstand: "YES",
+                  canFulfill: "YES,"
+                }]
+              else
+                [k, {
+                  canUnderstand: "NO",
+                  canFulfill: "NO,"
+                }]
+              end
+            else
+              [k, {
+                canUnderstand: "NO",
+                canFulfill: "NO,"
+              }]
+            end
+          }.to_h
+          if slots['train'].present?
+            can_fulfill = slots['train'][:canFulfill]
+          else
+            can_fulfill = "NO"
+          end
+        else
+          can_fulfill = "NO"
+        end
+      end
+    end
+    {
+      version: "1.0",
+      response:{
+        canFulfillIntent: {
+          canFulfill: can_fulfill,
+          slots: slots
+        }
+      }
+    }
+  end
+
   def stop_times_response
     full_user_id = params["alexa"]["session"]["user"] && params["alexa"]["session"]["user"]["userId"]
     user_id = full_user_id && full_user_id.split(".").last
@@ -106,25 +196,7 @@ class Api::AlexaController < Api::VirtualAssistantController
       if user_id
         stop_id = RedisStore.alexa_most_recent_stop(user_id)
         if stop_id
-          speech, text = upcoming_arrival_times_response(stop_id, user_id: user_id)
-          text_array = text.split("\n")
-          title = text_array.first
-          text = text_array[1..-1].join("\n")
-          {
-            version: "1.0",
-            response: {
-              outputSpeech: {
-                type: "SSML",
-                text: "<speak>#{speech} Would you like to lookup train times for another station?</speak>",
-              },
-              card: {
-                type: "Simple",
-                title: title,
-                content: text
-              },
-              shouldEndSession: false,
-            },
-          }
+          single_stop_stoptimes_response(stop_id, user_id)
         else
           {
             version: "1.0",
@@ -167,29 +239,14 @@ class Api::AlexaController < Api::VirtualAssistantController
         }
       else
         stop_ids = params["alexa"]["request"]["intent"]["slots"]["station"]["resolutions"]["resolutionsPerAuthority"].first["values"].first["value"]["id"].split(",")
-        speech, text = stop_times_text(stop_ids, user_id: user_id)
-        text_array = text.split("\n")
-        title = text_array.first
-        text = text_array[1..-1].join("\n")
-        timestamp = Time.current.to_i
 
         if stop_ids.size == 1
-          {
-            version: "1.0",
-            response: {
-              outputSpeech: {
-                type: "SSML",
-                ssml: "<speak>#{speech} Would you like to lookup train times for another station?</speak>",
-              },
-              card: {
-                type: "Simple",
-                title: title,
-                content: text
-              },
-              shouldEndSession: false,
-            },
-          }
+          single_stop_stoptimes_response(stop_ids.first, user_id)
         else
+          speech, text = stop_times_text(stop_ids, user_id: user_id)
+          text_array = text.split("\n")
+          title = text_array.first
+          text = text_array[1..-1].join("\n")
           {
             version: "1.0",
             response: {
@@ -214,6 +271,28 @@ class Api::AlexaController < Api::VirtualAssistantController
         end
       end
     end
+  end
+
+  def single_stop_stoptimes_response(stop_id)
+    speech, text = stop_times_text(stop_ids, user_id: user_id)
+    text_array = text.split("\n")
+    title = text_array.first
+    text = text_array[1..-1].join("\n")
+    {
+      version: "1.0",
+      response: {
+        outputSpeech: {
+          type: "SSML",
+          ssml: "<speak>#{speech} Would you like to lookup train times for another station?</speak>",
+        },
+        card: {
+          type: "Simple",
+          title: title,
+          content: text
+        },
+        shouldEndSession: false,
+      },
+    }
   end
 
   def delays_response
