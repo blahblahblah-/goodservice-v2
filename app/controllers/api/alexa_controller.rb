@@ -14,6 +14,8 @@ class Api::AlexaController < Api::VirtualAssistantController
         data = quit_response
       when "AMAZON.RepeatIntent"
         data = repeat_response
+      when "SessionEndedRequest"
+        data = {}
       else
         data = help_response
       end
