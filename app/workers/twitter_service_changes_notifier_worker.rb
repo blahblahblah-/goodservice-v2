@@ -4,10 +4,6 @@ class TwitterServiceChangesNotifierWorker
   sidekiq_options retry: 1, queue: 'default'
 
   SERVICE_CHANGE_NOTIFICATION_THRESHOLD = (ENV['SERVICE_CHANGE_NOTIFICATION_THRESHOLD'] || 30.minutes).to_i
-  ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h { |str|
-    array = str.split(":")
-    [array.first, array.second]
-  }
   ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ENABLE_ROUTE_CLIENTS']) : true
 
   def perform
@@ -102,7 +98,8 @@ class TwitterServiceChangesNotifierWorker
         end
 
         puts "Tweeting: #{text}"
-        prev_tweet = twitter_route_client(route_id).update(text, in_reply_to_status: prev_tweet)
+        client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
+        prev_tweet = twitter_route_client(client_route_id).update(text, in_reply_to_status: prev_tweet)
     
         updated = true
       end
