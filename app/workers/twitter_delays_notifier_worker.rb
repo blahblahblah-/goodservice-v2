@@ -1,16 +1,12 @@
 class TwitterDelaysNotifierWorker
   include Sidekiq::Worker
+  include TwitterHelper
   sidekiq_options retry: 1, queue: 'critical'
 
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
   DELAY_NOTIFICATION_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
   DELAY_CLEARED_TIMEOUT_MINS = (ENV['DELAY_CLEARED_TIMEOUT_MINS'] || 10).to_i
   REANNOUNCE_DELAY_TIME = (ENV['DELAY_NOTIFICATION_REANNOUNCE_TIME'] || 15.minutes).to_i
-  ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h { |str|
-    array = str.split(":")
-    [array.first, array.second]
-  }
-  ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ENABLE_ROUTE_CLIENTS']) : true
 
   def perform
     return unless twitter_client
@@ -204,27 +200,6 @@ class TwitterDelaysNotifierWorker
     }.join('/')
   end
 
-  def route_names(route_ids)
-    route_ids.map { |r|
-      route = Scheduled::Route.find_by(internal_id: r)
-      if route.alternate_name
-        "#{route.name} - #{route.alternate_name}"
-      else
-        route.name
-      end
-    }.sort.join(', ')
-  end
-
-  def tweet_url(tweet_id, route_id)
-    if route_id == 'all'
-      twitter_account = ENV['TWITTER_USERNAME'] || "goodservicetest"
-      "https://twitter.com/#{twitter_account}/status/#{tweet_id}"
-    else
-      twitter_account_name_prefix = ENV['TWITTER_USERNAME_ROUTE_CLIENT_PREFIX'] || "goodservice_"
-      "https://twitter.com/#{twitter_account_name_prefix}#{route_id}/status/#{tweet_id}"
-    end
-  end
-
   def tweet(delay_notification, text, required_update, force_update_on_main_feed)
     (["all"] + delay_notification.routes).map { |r| ROUTE_CLIENT_MAPPING[r] || r }.uniq.each do |route_id|
       begin
@@ -248,26 +223,6 @@ class TwitterDelaysNotifierWorker
       rescue StandardError => e
         puts "Error tweeting: #{e.message}"
       end
-    end
-  end
-
-  def twitter_client
-    return unless ENV["TWITTER_CONSUMER_KEY"]
-    @twitter_client ||= Twitter::REST::Client.new do |config|
-      config.consumer_key        = ENV["TWITTER_CONSUMER_KEY"]
-      config.consumer_secret     = ENV["TWITTER_CONSUMER_SECRET"]
-      config.access_token        = ENV["TWITTER_ACCESS_TOKEN"]
-      config.access_token_secret = ENV["TWITTER_ACCESS_TOKEN_SECRET"]
-    end
-  end
-
-  def twitter_route_client(route_id)
-    return unless ENABLE_ROUTE_CLIENTS && ENV["TWITTER_CONSUMER_KEY"] && ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
-    Twitter::REST::Client.new do |config|
-      config.consumer_key        = ENV["TWITTER_CONSUMER_KEY"]
-      config.consumer_secret     = ENV["TWITTER_CONSUMER_SECRET"]
-      config.access_token        = ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN"]
-      config.access_token_secret = ENV["TWITTER_CLIENT_#{route_id}_ACCESS_TOKEN_SECRET"]
     end
   end
 end

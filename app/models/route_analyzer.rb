@@ -428,7 +428,7 @@ class RouteAnalyzer
           end
         end
         if end_of_route.present? && direction != :both
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + " #{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.join('/')}-bound trains are running"
+          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.join('/')}-bound trains are running"
         end
 
         if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
@@ -513,7 +513,7 @@ class RouteAnalyzer
         if direction == :both
           sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " skipping #{skipped_stops_text}."
         else
-          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + "#{local_to_express.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.join('/')}-bound trains are skipping  #{skipped_stops_text}."
+          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + "#{local_to_express.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.join('/')}-bound trains are skipping #{skipped_stops_text}."
         end
         notices << sentence
       end

@@ -217,6 +217,43 @@ class RedisStore
       REDIS_CLIENT.get("delay-notifications")
     end
 
+    # Service Change Notifications
+    def update_service_change_notification(route_id, data)
+      REDIS_CLIENT.hset("service-change-notifications", route_id, data)
+    end
+
+    def current_service_change_notifications
+      REDIS_CLIENT.hgetall("service-change-notifications")
+    end
+
+    def clear_service_change_notification(route_id)
+      REDIS_CLIENT.hdel("service-change-notifications", route_id)
+    end
+
+    def update_upcoming_service_change_notification(route_id, data)
+      REDIS_CLIENT.set("upcoming-service-change-notification-#{route_id}", data, ex: 3600)
+    end
+
+    def clear_upcoming_service_change_notification(route_id)
+      REDIS_CLIENT.del("upcoming-service-change-notification-#{route_id}")
+    end
+
+    def upcoming_service_change_notification(route_id)
+      data = REDIS_CLIENT.get("upcoming-service-change-notification-#{route_id}")
+    end
+
+    def update_upcoming_service_change_notification_timestamp(route_id)
+      REDIS_CLIENT.set("upcoming-service-change-notification-#{route_id}-timestamp", Time.current.to_i, ex: 3600)
+    end
+
+    def clear_upcoming_service_change_notification_timestamp(route_id)
+      REDIS_CLIENT.del("upcoming-service-change-notification-#{route_id}-timestamp")
+    end
+
+    def upcoming_service_change_notification_timestamp(route_id)
+      REDIS_CLIENT.get("upcoming-service-change-notification-#{route_id}-timestamp")
+    end
+
     # Routings
     def current_routings
       REDIS_CLIENT.get("current-routings")

@@ -7,7 +7,7 @@ class ServiceChanges::ServiceChange
     self.affects_some_trains = false
     self.origin = origin
     self.routing = routing
-    self.destinations = [routing&.last].compact
+    self.destinations = [routing&.last].compact.sort
   end
 
   def first_station
