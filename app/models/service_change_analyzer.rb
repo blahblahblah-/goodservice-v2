@@ -156,7 +156,7 @@ class ServiceChangeAnalyzer
         flatten_changes = d.flatten
         changes = flatten_changes.select.with_index { |c1, i|
           if amended_change = flatten_changes[0...i].find { |c2| c1.eql?(c2) }
-            amended_change.destinations = [amended_change.destinations + c1.destinations].flatten.compact.uniq
+            amended_change.destinations = [amended_change.destinations + c1.destinations].flatten.compact.uniq.sort
             false
           else
             true

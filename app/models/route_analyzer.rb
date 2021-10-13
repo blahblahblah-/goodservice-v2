@@ -391,7 +391,7 @@ class RouteAnalyzer
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations, stop_name_formatter)
     service_changes_by_directions.map { |direction, service_changes|
       next [direction, []] unless service_changes
-      destination_names = destination_stations[direction]&.join('/')
+      destination_names = destination_stations[direction]&.sort&.join('/')
 
       service_changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
 
