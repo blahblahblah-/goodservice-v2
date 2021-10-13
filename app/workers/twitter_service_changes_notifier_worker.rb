@@ -78,7 +78,7 @@ class TwitterServiceChangesNotifierWorker
   def tweet(route_id, service_changes_array)
     route_name = route_names([route_id])
     results = service_changes_array.map do |str|
-      str.gsub(/\(\(/, '').gsub(/\)\)/, '').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '\1').sub("bound trains", "bound #{route_name} trains").gsub(/ - /, "–")
+      str.gsub(/ - /, "–").gsub(/\(\(/, '').gsub(/\)\)/, '').gsub(/<#{route_id}>/, route_name).gsub(/<(.*?)>/, '\1').sub("bound trains", "bound #{route_name} trains")
     end
 
     tweet_texts = results.flat_map do |str|
