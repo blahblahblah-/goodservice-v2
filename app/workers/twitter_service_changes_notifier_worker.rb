@@ -98,7 +98,7 @@ class TwitterServiceChangesNotifierWorker
         text = tweet
 
         if tweet_texts.size > 1
-          text = "#{tweet} #{i}/#{tweet_texts.size}"
+          text = "#{tweet} #{i + 1}/#{tweet_texts.size}"
         end
 
         puts "Tweeting: #{text}"
