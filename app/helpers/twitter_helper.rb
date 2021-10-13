@@ -1,5 +1,5 @@
 module TwitterHelper
-  TWITTER_MAX_CHARS = 280 - 6
+  TWITTER_MAX_CHARS = 280 - 10
   ROUTE_CLIENT_MAPPING = (ENV['TWITTER_ROUTE_CLIENT_MAPPING'] || '').split(",").to_h { |str|
     array = str.split(":")
     [array.first, array.second]
