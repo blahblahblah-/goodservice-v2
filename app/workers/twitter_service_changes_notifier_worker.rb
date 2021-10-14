@@ -90,18 +90,22 @@ class TwitterServiceChangesNotifierWorker
     prev_tweet = nil
 
     begin
-      tweet_texts.each_with_index do |tweet, i|
-        text = tweet
+      puts "Tweeting: #{text}"
+      client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
+      [twitter_route_client(client_route_id), twitter_client].each do |client|
+        next unless client
+        tweet_texts.each_with_index do |tweet, i|
+          text = tweet
 
-        if tweet_texts.size > 1
-          text = "#{tweet} (#{i + 1}/#{tweet_texts.size})"
+          if tweet_texts.size > 1
+            text = "#{tweet} (#{i + 1}/#{tweet_texts.size})"
+          end
+
+          client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
+          prev_tweet = client.update(text, in_reply_to_status: prev_tweet)
+
+          updated = true
         end
-
-        puts "Tweeting: #{text}"
-        client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
-        prev_tweet = twitter_route_client(client_route_id).update(text, in_reply_to_status: prev_tweet)
-    
-        updated = true
       end
     rescue StandardError => e
       puts "Error tweeting: #{e.message}"
