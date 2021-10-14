@@ -70,7 +70,7 @@ The React front end is fed by an API that Rails serves. The routes are specified
 
 ### Twitter
 
-The `TwitterDelaysNotifierWorker` job to used to check if there are currently delays. If so, notifications are sent on Twitter. Make sure the env variables `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET`, `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET` are populated.
+The `TwitterDelaysNotifierWorker` job to used to check if there are currently delays and `TwitterServiceChangesNotifierWorker` is used to check for service changes. If so, notifications are sent on Twitter. Make sure the env variables `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET`, `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET` are populated.
 
 ### Alexa
 
