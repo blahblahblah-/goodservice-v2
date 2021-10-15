@@ -88,6 +88,7 @@ class TwitterServiceChangesNotifierWorker
     puts "Tweeting service changes: #{tweet_texts}"
     updated = false
     prev_tweet = nil
+    incomplete = false
 
     begin
       client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
@@ -105,14 +106,19 @@ class TwitterServiceChangesNotifierWorker
           client_route_id = ROUTE_CLIENT_MAPPING[route_id] || route_id
           prev_tweet = client.update(text, in_reply_to_status: prev_tweet)
 
+          if text != prev_tweet.text
+            puts "Tweets don't match: #{text} vs. #{prev_tweet.text}"
+            incomplete = true
+            break
+          end
           updated = true
         end
+        break if incomplete
       end
     rescue StandardError => e
       puts "Error tweeting: #{e.message}"
     end
 
     updated
-    true
   end
 end
