@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_03_215534) do
+ActiveRecord::Schema.define(version: 2021_10_15_052833) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 2021_10_03_215534) do
     t.integer "access_time_from"
     t.integer "access_time_to"
     t.boolean "airport_connection", default: false, null: false
+    t.index ["from_stop_internal_id", "bus_route"], name: "index_bus_transfers_on_from_stop_internal_id_and_bus_route", unique: true
     t.index ["from_stop_internal_id"], name: "index_bus_transfers_on_from_stop_internal_id"
   end
 
@@ -38,6 +39,7 @@ ActiveRecord::Schema.define(version: 2021_10_03_215534) do
     t.integer "min_transfer_time", default: 0, null: false
     t.integer "access_time_from"
     t.integer "access_time_to"
+    t.index ["from_stop_internal_id", "name"], name: "index_connections_on_from_stop_internal_id_and_name", unique: true
     t.index ["from_stop_internal_id"], name: "index_connections_on_from_stop_internal_id"
   end
 
@@ -118,7 +120,9 @@ ActiveRecord::Schema.define(version: 2021_10_03_215534) do
     t.index ["schedule_service_id"], name: "index_trips_on_schedule_service_id"
   end
 
+  add_foreign_key "bus_transfers", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
   add_foreign_key "calendar_exceptions", "schedules", column: "schedule_service_id", primary_key: "service_id"
+  add_foreign_key "connections", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
   add_foreign_key "stop_times", "stops", column: "stop_internal_id", primary_key: "internal_id"
   add_foreign_key "stop_times", "trips", column: "trip_internal_id", primary_key: "internal_id"
   add_foreign_key "transfers", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
