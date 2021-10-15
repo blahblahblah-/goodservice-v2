@@ -207,7 +207,6 @@ class TwitterDelaysNotifierWorker
         if delay_notification.last_tweet_ids[route_id]
           tweet_text = "#{text} #{tweet_url(delay_notification.last_tweet_ids[route_id], route_id)}"
         end
-        puts "Tweeting #{tweet_text} for #{route_id}"
         client = route_id == "all" ? twitter_client : twitter_route_client(route_id)
         if route_id != "all" && !required_update && delay_notification.last_tweet_times[route_id]
           next if delay_notification.last_tweet_times[route_id].to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
@@ -215,6 +214,7 @@ class TwitterDelaysNotifierWorker
         if route_id == "all" && !force_update_on_main_feed
           next if delay_notification.last_tweet_times[route_id].to_i > Time.current.to_i - REANNOUNCE_DELAY_TIME
         end
+        puts "Tweeting #{tweet_text} for #{route_id}"
         result = client.update!(tweet_text)
         if result
           delay_notification.last_tweet_ids[route_id] = result.id
