@@ -46,7 +46,7 @@ class TwitterServiceChangesNotifierWorker
         next unless service_changes
       end
       service_changes_array = ["both", "north", "south"].flat_map { |direction| service_changes[direction] }.compact
-      next if service_changes_array.any? { |t| t.start_with?("Some ") }
+      service_changes_array.select! { |t| !t.start_with?("Some ") }
 
       if service_changes_array.blank?
         RedisStore.clear_upcoming_service_change_notification(route_id)
