@@ -5,6 +5,7 @@ class TwitterServiceChangesNotifierWorker
 
   SERVICE_CHANGE_NOTIFICATION_THRESHOLD = (ENV['SERVICE_CHANGE_NOTIFICATION_THRESHOLD'] || 30.minutes).to_i
   ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ENABLE_ROUTE_CLIENTS']) : true
+  SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
 
   def perform
     return unless ENABLE_ROUTE_CLIENTS
@@ -26,12 +27,24 @@ class TwitterServiceChangesNotifierWorker
     end
 
     current_notifications = RedisStore.current_service_change_notifications
+    scheduled_routes = Scheduled::Trip.soon(Time.current.to_i, nil).pluck(:route_internal_id).to_set
 
     route_ids.each do |route_id|
+      next if SKIPPED_ROUTES.include?(route_id)
       route_status = route_status_futures[route_id].value
-      next unless route_status
-      service_changes = JSON.parse(route_status)["service_change_summaries"]
-      next unless service_changes
+      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route_id))
+      scheduled = scheduled_routes.include?(route_id)
+      if !route_status && feed_timestamp && feed_timestamp.to_i >= (Time.current - 5.minutes).to_i && scheduled
+        service_changes = {
+          "both" => [
+            "<#{route_id}> trains are not running."
+          ]
+        }
+      else
+        next unless route_status
+        service_changes = JSON.parse(route_status)["service_change_summaries"]
+        next unless service_changes
+      end
       service_changes_array = ["both", "north", "south"].flat_map { |direction| service_changes[direction] }.compact
       next if service_changes_array.any? { |t| t.start_with?("Some ") }
 

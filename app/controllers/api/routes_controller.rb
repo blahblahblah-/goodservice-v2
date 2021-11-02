@@ -15,13 +15,23 @@ class Api::RoutesController < ApplicationController
             timestamps << route_data['timestamp']
           end
           scheduled = scheduled_routes.include?(route.internal_id)
+          default_status = "No Service"
+          service_change_summaries = {}
+          feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
+
+          if !scheduled
+            default_status = "Not Scheduled"
+          elsif feed_timestamp && feed_timestamp.to_i < (Time.current - 5.minutes).to_i
+            default_status = "No Data"
+          end
+
           [route.internal_id, {
             id: route.internal_id,
             name: route.name,
             color: route.color && "##{route.color}",
             text_color: route.text_color && "##{route.text_color}",
             alternate_name: route.alternate_name,
-            status: scheduled ? 'No Service' : 'Not Scheduled',
+            status: default_status,
             visible: route.visible?,
             scheduled: scheduled,
           }.merge(route_data).except('timestamp')]
@@ -52,15 +62,31 @@ class Api::RoutesController < ApplicationController
           route_data[:estimated_travel_times] = estimated_travel_times(route_data['actual_routings'], pairs, route_data['timestamp'])
         end
       end
+
+      default_status = "No Service"
+      service_change_summaries = {}
+      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
+      if !scheduled
+        default_status = "Not Scheduled"
+      elsif feed_timestamp && feed_timestamp.to_i < (Time.current - 5.minutes).to_i
+        default_status = "No Data"
+      else
+        service_change_summaries = {
+          both: [
+            "<#{route.internal_id}> trains are not running."
+          ]
+        }
+      end
       {
         id: route.internal_id,
         name: route.name,
         color: route.color && "##{route.color}",
         text_color: route.text_color && "##{route.text_color}",
         alternate_name: route.alternate_name,
-        status: scheduled ? 'No Service' : 'Not Scheduled',
+        status: default_status,
         visible: route.visible?,
         scheduled: scheduled,
+        service_change_summaries: service_change_summaries,
         timestamp: Time.current.to_i,
       }.merge(route_data)
     end

@@ -80,7 +80,7 @@ class TrainModalDirectionPane extends React.Component {
 
   directionStatus() {
     const { train, direction } = this.props;
-    if (['No Service', 'Not Scheduled'].includes(train.status)) {
+    if (['No Service', 'Not Scheduled', 'No Data'].includes(train.status)) {
       return train.status;
     }
     if (train.direction_statuses && train.direction_statuses[direction]) {
@@ -118,7 +118,7 @@ class TrainModalDirectionPane extends React.Component {
       return;
     }
 
-    const summaries = ['both', direction].map((key) => train.service_change_summaries[key]).flat();
+    const summaries = ['both', direction].map((key) => train.service_change_summaries[key]).flat().filter(n => n);
     if (summaries.length) {
       return (
         <Segment inverted basic>

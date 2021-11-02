@@ -15,7 +15,8 @@ const STATUSES = {
   'Slow': 'yellow',
   'Not Good': 'yellow',
   'Good Service': 'green',
-  'Not Scheduled': 'black'
+  'Not Scheduled': 'black',
+  'No Data': 'black',
 };
 
 

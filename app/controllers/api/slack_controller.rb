@@ -216,34 +216,52 @@ class Api::SlackController < ApplicationController
       route_data = {}
     end
 
+    default_status = "No Service"
+    feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
+    if !scheduled
+      default_status = "Not Scheduled"
+    elsif feed_timestamp && feed_timestamp.to_i < (Time.current - 5.minutes).to_i
+      default_status = "No Data"
+    else
+      service_change_summaries = {
+        both: [
+          "<#{route.internal_id}> trains are not running."
+        ]
+      }
+    end
+
     result = [
       {
         "type": "section",
         "text": {
           "type": "mrkdwn",
           "text": "*#{route.name}#{route.name == 'S' ? " - " + route.alternate_name : ""} train*\n"\
-                  "_Status_: *#{route_data['status'] || (scheduled ? 'No Service' : 'Not Scheduled')}*"
+                  "_Status_: *#{route_data['status'] || default_status}*"
         }
       }
     ]
+
+    summary = []
 
     if route_data.present?
       summary = route_data['delay_summaries'].flat_map { |_, summary| summary}.compact +
                   route_data['service_change_summaries'].flat_map { |_, summary| summary}.compact +
                   route_data['service_irregularity_summaries'].map { |_, summary| summary }.compact
+    else
+      summary = service_change_summaries.flat_map { |_, summary| summary}.compact
+    end
 
-      if summary.present?
-        result << {
-          "type": "divider"
+    if summary.present?
+      result << {
+        "type": "divider"
+      }
+      result << {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": summary.join("\n\n").gsub(/ - /, '–').gsub(/<(.*?)>/, '\1')
         }
-        result << {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": summary.join("\n\n").gsub(/ - /, '–').gsub(/<(.*?)>/, '\1')
-          }
-        }
-      end
+      }
     end
 
     result << {

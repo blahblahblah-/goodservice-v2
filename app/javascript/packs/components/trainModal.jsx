@@ -66,7 +66,7 @@ class TrainModal extends React.Component {
 
   noService(direction) {
     const { train } = this.state;
-    if (['No Service', 'Not Scheduled'].includes(train.status)) {
+    if (['No Service', 'Not Scheduled', 'No Data'].includes(train.status)) {
       return true;
     }
     if (!train.direction_statuses || !train.direction_statuses[direction] || ['No Service', 'Not Scheduled'].includes(train.direction_statuses[direction])) {
