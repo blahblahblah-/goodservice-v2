@@ -83,10 +83,10 @@ class TrainModalOverviewPane extends React.Component {
       <Segment basic className='train-modal-overview-pane'>
         <Grid textAlign='center' stackable>
           <Grid.Row>
-            <Grid.Column width={4} className='map-cell'>
+            <Grid.Column className='map-cell' computer={4} tablet={6} mobile={6}>
               <TrainMap trains={trains} train={train} stations={stations} routings={train.actual_routings} scheduledRoutings={train.scheduled_routings} />
             </Grid.Column>
-            <Grid.Column width={12} className='status-cell'>
+            <Grid.Column className='status-cell' computer={12} tablet={10} mobile={10}>
               <Statistic.Group widths={1} color={ statusColor(train.status) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{train.status}</Statistic.Value>

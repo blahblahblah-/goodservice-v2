@@ -138,12 +138,12 @@ class TrainModal extends React.Component {
               <Modal.Header>
                 <Grid>
                   <Grid.Row>
-                    <Grid.Column width={4} textAlign='center'>
+                    <Grid.Column textAlign='center' computer={4} tablet={6} mobile={6} className='train-name-cell'>
                       <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' />
                       <p>{train.alternate_name}</p>
                     </Grid.Column>
-                    <Grid.Column verticalAlign='middle' width={12}>
+                    <Grid.Column verticalAlign='middle' computer={12} tablet={10} mobile={10} className='train-direction-nav-cell'>
                       <Menu widths={3} inverted className='header-menu' stackable>
                         <Menu.Item name='overview' as={NavLink} exact to={`/trains/${train.id}`} >
                           Overview

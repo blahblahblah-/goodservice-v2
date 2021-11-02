@@ -695,13 +695,13 @@ class TrainModalDirectionPane extends React.Component {
       <Segment basic className='train-modal-direction-pane'>
         <Grid textAlign='center' stackable>
           <Grid.Row>
-            <Grid.Column width={4} className='map-cell'>
+            <Grid.Column className='map-cell' computer={4} tablet={6} mobile={6}>
             {
               train.actual_routings && train.actual_routings[direction] &&
                 <TrainMap trains={trains} train={train} stations={stations} routings={{ south: routingToMap, north: [] }} scheduledRoutings={train.scheduled_routings} showTravelTime direction={direction} trips={tripsForMap} />
             }
             </Grid.Column>
-            <Grid.Column width={12} className='trip-table-cell'>
+            <Grid.Column className='trip-table-cell' computer={12} tablet={10} mobile={10}>
               <Statistic.Group widths={1} color={ statusColor(this.directionStatus()) } size='small' inverted>
                 <Statistic>
                   <Statistic.Value>{ this.directionStatus() }</Statistic.Value>
