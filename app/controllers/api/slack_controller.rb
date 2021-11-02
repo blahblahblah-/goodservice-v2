@@ -217,6 +217,7 @@ class Api::SlackController < ApplicationController
     end
 
     default_status = "No Service"
+    service_change_summaries = {}
     feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
     if !scheduled
       default_status = "Not Scheduled"
