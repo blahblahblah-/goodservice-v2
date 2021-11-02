@@ -479,7 +479,7 @@ class RouteAnalyzer
               "between #{stop_name_formatter.stop_name(rt.first)} and #{stop_name_formatter.stop_name(rt.last)}"
             end
           end
-        }.to_sentence(two_words_connector: ", and ")
+        }.sort.to_sentence(two_words_connector: ", and ")
         notices << sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}."
       end
 
