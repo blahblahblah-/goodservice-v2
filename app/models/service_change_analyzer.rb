@@ -28,7 +28,7 @@ class ServiceChangeAnalyzer
           actual.each do |actual_routing|
             routing_changes = []
             ongoing_service_change = nil
-            scheduled_routing = scheduled&.min_by { |sr| (actual_routing - sr).size + (sr - actual_routing).size }
+            scheduled_routing = scheduled&.min_by { |sr| [(actual_routing - sr).size, (sr - actual_routing).size] }
 
             if !scheduled_routing
               changes << [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing)]
