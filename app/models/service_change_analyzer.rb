@@ -263,7 +263,7 @@ class ServiceChangeAnalyzer
         end
         break if route_pairs.compact.size == 2
       end
-      reroute_service_change.related_routes = route_pairs.map {|r| r[0].uniq } if route_pairs.compact.size == 2
+      reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq if route_pairs.compact.size == 2
     end
 
     def truncate_service_change_overlaps_with_different_routing?(service_change, routings)
