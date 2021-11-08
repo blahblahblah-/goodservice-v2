@@ -68,7 +68,6 @@ csv.each do |row|
   next if s.internal_id == 'H19'
   next if s.internal_id == 'N12'
   s.stop_name = row['stop_name']
-  s.parent_stop_id = row['parent_station'].presence
   s.save!
   puts "#{s.internal_id} saved"
 end
