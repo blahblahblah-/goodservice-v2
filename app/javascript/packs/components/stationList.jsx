@@ -108,9 +108,37 @@ class StationList extends React.Component {
             })
           }
           {
-            selectedStations.filter((station) => !favStations.has(station.id)).map((station) => {
-              return this.renderListItem(station);
-            })
+            query.length < 1 &&
+              selectedStations.filter((station) => !favStations.has(station.id)).map((station) => {
+                return this.renderListItem(station);
+              })
+          }
+          {
+            query.length > 0 &&
+              selectedStations.filter((station) => !favStations.has(station.id)).sort((a, b) => {
+                const queryText = query.toUpperCase();
+                const nameA = a.name.replace(/[^0-9a-z]/gi, '').toUpperCase();
+                const nameB = b.name.replace(/[^0-9a-z]/gi, '').toUpperCase();
+
+                if (nameA.includes(queryText) && !nameB.includes(queryText)) {
+                  return -1
+                }
+                if (!nameA.includes(queryText) && nameB.includes(queryText)) {
+                  return 1;
+                }
+
+                if (nameA < nameB) {
+                  return -1;
+                }
+                if (nameA > nameB) {
+                  return 1;
+                }
+
+                return 0;
+
+              }).map((station) => {
+                return this.renderListItem(station);
+              })
           }
         </List>
       </div>
