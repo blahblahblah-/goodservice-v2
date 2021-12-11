@@ -8,7 +8,7 @@ class Trip
     @id = id
     @timestamp = timestamp
     stop_time_hash = trip_update.stop_time_update.to_h {|update|
-      [update.stop_id[0..2], (update.departure || update.arrival).time]
+      [update.stop_id[0..2], update.departure&.time && update.departure.time > 0 ? update.departure.time : update.arrival&.time]
     }
     @stops = stop_time_hash
     @schedule = stop_time_hash
