@@ -276,7 +276,8 @@ class RouteAnalyzer
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
       max_scheduled_headway = determine_headway_to_use(scheduled_headways_by_routes[direction[:scheduled_direction]])&.max
       next [direction[:route_direction], nil] unless max_scheduled_headway
-      processed_trips = actual_trips[direction[:route_direction]].first.last
+      processed_trips = actual_trips[direction[:route_direction]].first&.last
+      next [direction[:route_direction], nil] unless processed_trips
       routing = actual_routings[direction[:route_direction]].first
 
       if actual_trips[direction[:route_direction]].size > 1
