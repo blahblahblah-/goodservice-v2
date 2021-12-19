@@ -1,6 +1,9 @@
 {
   "name": "goodservice-v2",
   "private": true,
+  "engines": {
+    "node": "14.x"
+  },
   "dependencies": {
     "@babel/preset-react": "^7.12.10",
     "@rails/actioncable": "^6.0.0",
@@ -24,8 +27,5 @@
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.12.12",
     "webpack-dev-server": "^3.11.2"
-  },
-  "engines": {
-    "node": "14.x"
-  },
+  }
 }
