@@ -34,6 +34,10 @@ class TwitterServiceChangesNotifierWorker
       route_status = route_status_futures[route_id].value
       feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route_id))
       scheduled = scheduled_routes.include?(route_id)
+
+      current_notification_str = current_notifications[route_id]
+      current_notification_array = current_notification_str && Marshal.load(current_notification_str)
+
       if !route_status && feed_timestamp && feed_timestamp.to_i >= (Time.current - 5.minutes).to_i && scheduled
         service_changes = {
           "both" => [
@@ -41,10 +45,22 @@ class TwitterServiceChangesNotifierWorker
           ]
         }
       else
-        next unless route_status
+        unless route_status
+          RedisStore.clear_upcoming_service_change_notification(route_id)
+          RedisStore.clear_service_change_notification(route_id)
+          next
+        end
         service_changes = JSON.parse(route_status)["service_change_summaries"]
-        next unless service_changes
+        unless service_changes
+          if current_notification_array.present?
+            tweet(route_id, ["<#{route_id}> trains have resumed regularly scheduled routing."])
+          end
+          RedisStore.clear_upcoming_service_change_notification(route_id)
+          RedisStore.clear_service_change_notification(route_id)
+          next
+        end
       end
+
       service_changes_array = ["both", "north", "south"].flat_map { |direction| service_changes[direction] }.compact
       service_changes_array.select! { |t| !t.start_with?("Some ") }
 
@@ -57,9 +73,6 @@ class TwitterServiceChangesNotifierWorker
       upcoming_notification = upcoming_service_change_notification_futures[route_id].value
       upcoming_notification_array = upcoming_notification && Marshal.load(upcoming_notification)
       upcoming_notification_timestamp = upcoming_service_change_notification_timestamp_futures[route_id].value&.to_i
-
-      current_notification_str = current_notifications[route_id]
-      current_notification_array = current_notification_str && Marshal.load(current_notification_str)
 
       if service_changes_array == current_notification_array
         RedisStore.clear_upcoming_service_change_notification(route_id)
