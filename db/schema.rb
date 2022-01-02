@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_15_052833) do
+ActiveRecord::Schema.define(version: 2022_01_02_081218) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -96,6 +96,8 @@ ActiveRecord::Schema.define(version: 2021_10_15_052833) do
     t.string "internal_id", null: false
     t.string "stop_name", null: false
     t.string "secondary_name"
+    t.decimal "latitude"
+    t.decimal "longitude"
     t.index ["internal_id"], name: "index_stops_on_internal_id", unique: true
   end
 
