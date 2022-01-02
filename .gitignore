@@ -6,6 +6,7 @@
 
 # Custom
 /import/*.txt
+/import/*.csv
 
 # Ignore bundler config.
 /.bundle

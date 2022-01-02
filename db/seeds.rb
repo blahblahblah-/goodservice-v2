@@ -363,3 +363,14 @@ Scheduled::Connection.create!(from_stop_internal_id: "A07", name: "GWB Bus Stati
 Scheduled::Connection.create!(from_stop_internal_id: "S31", name: "SI Ferry", mode: "ship", min_transfer_time: 300)
 Scheduled::BusTransfer.create!(from_stop_internal_id: "J12", bus_route: "Q10 to JFK", min_transfer_time: 300, airport_connection: true)
 Scheduled::Connection.create!(from_stop_internal_id: "418", name: "PATH", mode: "subway", min_transfer_time: 300)
+
+csv_text = File.read(Rails.root.join('import', 'Stations.csv'))
+csv = CSV.parse(csv_text, headers: true)
+csv.each do |row|
+  stop_id = row['GTFS Stop ID']
+  stop = Scheduled::Stop.find_by!(internal_id: stop_id)
+  stop.latitude = row['GTFS Latitude']
+  stop.longitude = row['GTFS Longitude']
+  s.save!
+  puts "Geolocation for #{stop_id} saved"
+end
