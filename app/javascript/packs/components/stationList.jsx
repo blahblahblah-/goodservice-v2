@@ -1,6 +1,7 @@
 import React from 'react';
 import { Input, List, Header, Icon } from "semantic-ui-react";
 import { Link } from 'react-router-dom';
+import * as turf from '../vendor/turf.js';
 
 import TrainBullet from './trainBullet';
 import { formatStation } from './utils';
@@ -12,16 +13,31 @@ import './stationList.scss';
 class StationList extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       query: '',
+      nearbyStations: [],
     };
   }
 
   componentDidMount() {
-    const { selectedStationId } = this.props;
+    const { selectedStationId, stations } = this.props;
 
     if (!selectedStationId) {
       this.queryInput.focus();
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(e => {
+        const options = {units: 'miles'};
+        const geolocation = [e.coords.longitude, e.coords.latitude];
+        const nearbyStations = stations.map((s) => {
+          const stationLocation = turf.helpers.point([s.longitude, s.latitude]);
+          s.distance = turf.distance(geolocation, stationLocation, options);
+          return s;
+        }).filter((s) => s.distance <= 1.0).sort((a, b) => a.distance - b.distance).slice(0, 5).map((s) => s.id);
+        this.setState({ nearbyStations: nearbyStations});
+      });
     }
   }
 
@@ -44,6 +60,7 @@ class StationList extends React.Component {
 
   renderListItem(station) {
     const { trains, favStations } = this.props;
+    const { nearbyStations } = this.state;
     return (
       <List.Item as={Link} key={station.id} className='results-list-item' to={`/stations/${station.id}`}>
         <List.Content floated='left'>
@@ -51,6 +68,10 @@ class StationList extends React.Component {
             {
               favStations.has(station.id) &&
                 <Icon name="pin" inverted color="grey" />
+            }
+            {
+              nearbyStations.includes(station.id) &&
+                <Icon name="location arrow" inverted color="grey" />
             }
             { formatStation(station.name) }
             {
@@ -86,7 +107,7 @@ class StationList extends React.Component {
 
   render() {
     const { stations, favStations } = this.props;
-    const { query } = this.state;
+    const { query, nearbyStations } = this.state;
     let selectedStations;
     if (query.length < 1) {
       selectedStations = stations;
@@ -108,14 +129,19 @@ class StationList extends React.Component {
             })
           }
           {
+            nearbyStations.filter((stationId) => !favStations.has(stationId)).map((stationId) => selectedStations.find((s) => s.id === stationId)).map((station) => {
+              return this.renderListItem(station);
+            })
+          }
+          {
             query.length < 1 &&
-              selectedStations.filter((station) => !favStations.has(station.id)).map((station) => {
+              selectedStations.filter((station) => !favStations.has(station.id) && !nearbyStations.includes(station.id)).map((station) => {
                 return this.renderListItem(station);
               })
           }
           {
             query.length > 0 &&
-              selectedStations.filter((station) => !favStations.has(station.id)).sort((a, b) => {
+              selectedStations.filter((station) => !favStations.has(station.id) && !nearbyStations.includes(station.id)).sort((a, b) => {
                 const queryText = query.toUpperCase();
                 const nameA = a.name.replace(/[^0-9a-z]/gi, '').toUpperCase();
                 const nameB = b.name.replace(/[^0-9a-z]/gi, '').toUpperCase();

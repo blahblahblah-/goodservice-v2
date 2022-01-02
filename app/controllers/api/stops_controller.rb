@@ -50,6 +50,8 @@ class Api::StopsController < ApplicationController
             id: s.internal_id,
             name: s.stop_name,
             secondary_name: s.secondary_name,
+            latitude: s.latitude.to_f,
+            longitude: s.longitude.to_f,
             routes: route_directions,
             transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id },
             bus_transfers: bus_transfers[s.internal_id]&.map{ |t|
