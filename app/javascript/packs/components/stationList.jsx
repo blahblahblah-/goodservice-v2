@@ -129,7 +129,7 @@ class StationList extends React.Component {
             })
           }
           {
-            nearbyStations.filter((stationId) => !favStations.has(stationId)).map((stationId) => selectedStations.find((s) => s.id === stationId)).map((station) => {
+            nearbyStations.filter((stationId) => !favStations.has(stationId)).map((stationId) => selectedStations.find((s) => s.id === stationId)).filter((station) => station).map((station) => {
               return this.renderListItem(station);
             })
           }
