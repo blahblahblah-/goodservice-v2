@@ -48,6 +48,7 @@ class Api::TripsController < ApplicationController
       trip_id: trip.id,
       stop_times: trip.stops,
       past_stops: trip.past_stops,
+      is_assigned: trip.is_assigned,
       timestamp: trip.timestamp
     }
 

@@ -530,21 +530,28 @@ class TrainModalDirectionPane extends React.Component {
             if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
               scheduleDiscrepancyClass = 'late';
             }
+            let className = '';
+            if (delayed) {
+              className += 'delayed ';
+            }
+            if (!trip.is_assigned) {
+              className += 'unassigned ';
+            }
             return (
-              <Table.Row key={trip.id} className={delayed ? 'delayed' : ''}>
+              <Table.Row key={trip.id} className={className}>
                 <Table.Cell>
                   <Link to={`/trains/${train.id}/${directionKey}/${trip.id}`}>
                     {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
+                  { trip.is_assigned ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 && trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`)) }
+                  { trip.is_assigned ? '' : '~' }{ delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`)) }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }

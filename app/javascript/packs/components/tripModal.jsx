@@ -149,8 +149,9 @@ class TripModal extends React.Component {
   }
 
   render() {
-    const { selectedTrip, train, stations } = this.props;
+    const { selectedTrip, train, stations, direction } = this.props;
     const { trip, showPastStops } = this.state;
+    const directionKey = direction[0].toUpperCase();
     const destinationStationName = formatStation(stations[selectedTrip.destination_stop].name);
     const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     const delayed = selectedTrip.delayed_time > 300;
@@ -163,8 +164,8 @@ class TripModal extends React.Component {
           <title>{title}</title>
           <meta property="og:title" content={title} />
           <meta name="twitter:title" content={title} />
-          <meta property="og:url" content={`https://www.goodservice.io/trains/${train.id}`} />
-          <meta name="twitter:url" content={`https://www.goodservice.io/trains/${train.id}`} />
+          <meta property="og:url" content={`https://www.goodservice.io/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
+          <meta name="twitter:url" content={`https://www.goodservice.io/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
         </Helmet>
         <Modal.Header className='modal-header'>
           <TrainBullet name={train.name} color={train.color}
@@ -172,6 +173,7 @@ class TripModal extends React.Component {
           <div className='trip-header-info'>
             Trip: {selectedTrip.id} <br />
             To: { destinationStationName }<br />
+            { selectedTrip.is_assigned ? "Assigned" : "Not assigned"}<br />
             { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
             {
               delayed &&

@@ -1,8 +1,8 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops
-  attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest
+  attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest, :is_assigned
 
-  def initialize(route_id, direction, id, timestamp, trip_update)
+  def initialize(route_id, direction, id, timestamp, trip_update, is_assigned)
     @route_id = route_id
     @direction = direction
     @id = id
@@ -14,6 +14,7 @@ class Trip
     @schedule = stop_time_hash
     @past_stops = {}
     @latest = true
+    @is_assigned = is_assigned
   end
 
   def similar(trip)
