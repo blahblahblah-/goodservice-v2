@@ -177,6 +177,7 @@ class Api::StopsController < ApplicationController
       delayed_time: trip.delayed_time,
       schedule_discrepancy: trip.schedule_discrepancy,
       is_delayed: trip.delayed?,
+      is_assigned: trip.is_assigned,
       timestamp: trip.timestamp,
     }
   end

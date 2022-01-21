@@ -545,13 +545,13 @@ class TrainModalDirectionPane extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { trip.is_assigned ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 && trip.is_assigned ? 'until' : 'at'}&nbsp;
+                  { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
-                  { trip.is_assigned ? '' : '~' }{ delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`)) }
+                  { trip.is_assigned || delayed ? '' : '~' }{ delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} until last stop`)) }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
                   { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }

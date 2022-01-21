@@ -248,9 +248,15 @@ class StationModal extends React.Component {
             if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
               scheduleDiscrepancyClass = 'late';
             }
-            const className = index > 3 && !displayMore ? 'more ' : '';
+            let className = index > 3 && !displayMore ? 'more ' : '';
+            if (delayed) {
+              className += 'delayed ';
+            }
+            if (!trip.is_assigned) {
+              className += 'unassigned ';
+            }
             return (
-              <Table.Row key={trip.id} className={delayed ? className + 'delayed' : className}>
+              <Table.Row key={trip.id} className={className}>
                 <Table.Cell>
                   <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`}>
                     <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
@@ -258,10 +264,10 @@ class StationModal extends React.Component {
                   </Link>
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { delayed ? '? ? ?' : formatMinutes(estimatedTimeUntilThisStop, true)}
+                  { trip.is_assigned || delayed ? '' : '~' }{ delayed ? '? ? ?' : formatMinutes(estimatedTimeUntilThisStop, trip.is_assigned)}
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { formatMinutes(estimatedTimeUntilUpcomingStop, true) } { estimatedTimeUntilUpcomingStop > 0 ? 'until' : 'at'}&nbsp;
+                  { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop || !trip.is_assigned > 0 ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
