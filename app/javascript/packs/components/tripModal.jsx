@@ -173,7 +173,7 @@ class TripModal extends React.Component {
           <div className='trip-header-info'>
             Trip: {selectedTrip.id} <br />
             To: { destinationStationName }<br />
-            { selectedTrip.is_assigned ? "Assigned" : "Not assigned"}<br />
+            { selectedTrip.is_assigned ? "Train assigned to trip" : "Train not yet assigned to trip"}<br />
             { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
             {
               delayed &&
