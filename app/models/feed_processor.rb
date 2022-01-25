@@ -96,7 +96,7 @@ class FeedProcessor
           end
         end
 
-        marshaled_trips = Marshal.dump(trips)
+        marshaled_trips = Marshal.dump(trips.select { |t| t.past_stops.empty? || t.is_assigned })
         RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
         RouteProcessorWorker.perform_async(route_id, timestamp)
       end
@@ -205,6 +205,7 @@ class FeedProcessor
 
     def process_stops(trip)
       if trip.previous_trip &&
+        trip.is_assigned &&
         (trip.previous_trip.previous_stop_schedule_discrepancy >= SCHEDULE_DISCREPANCY_THRESHOLD ||
             trip.schedule_discrepancy - trip.previous_trip.previous_stop_schedule_discrepancy <= (SCHEDULE_DISCREPANCY_THRESHOLD * -1)
         )
