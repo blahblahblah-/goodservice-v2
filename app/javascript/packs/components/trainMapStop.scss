@@ -105,6 +105,10 @@
       border-radius: 50%;
       left: -4px;
       top: -7px;
+
+      &.delayed {
+        animation: blink 1s infinite;
+      }
     }
 
     .trip-before {
@@ -115,6 +119,16 @@
       background-color: rgba(0,0,0,.4);
       left: -4px;
       top: -34px;
+
+      &.delayed {
+        animation: blink 1s infinite;
+      }
+    }
+
+    @keyframes blink {
+      50% {
+        background-color: rgba(255, 0, 0, 1);
+      }
     }
 
     .branch-corner {

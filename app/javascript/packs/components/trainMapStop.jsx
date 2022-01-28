@@ -17,12 +17,13 @@ class TrainMapStop extends React.Component {
     const time = Date.now() / 1000;
     const stopsBefore = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) > 60);
     const stopsAt = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) <= 60);
+    const anyTripDelayed = trips && trips.filter((t) => t.is_delayed).length > 0;
     const tripContainer = [];
 
     if (stopsBefore && stopsBefore.length > 0) {
       tripContainer.push(
         <Link to={`/trains/${train.id}/${directionKey}/${stopsBefore[0].id}`} key={stopsBefore[0].id}>
-          <div className='trip-before' key='trip-before'></div>
+          <div className={anyTripDelayed ? 'delayed trip-before' : 'trip-before'} key='trip-before'></div>
         </Link>
       );
     }
@@ -30,7 +31,7 @@ class TrainMapStop extends React.Component {
     if (stopsAt && stopsAt.length > 0) {
       tripContainer.push(
         <Link to={`/trains/${train.id}/${directionKey}/${stopsAt[0].id}`} key={stopsAt[0].id}>
-          <div className='trip-at' key='trip-at'></div>
+          <div className={anyTripDelayed ? 'delayed trip-at' : 'trip-at'} key='trip-at'></div>
         </Link>
       );
     }
