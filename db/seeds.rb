@@ -371,6 +371,6 @@ csv.each do |row|
   stop = Scheduled::Stop.find_by!(internal_id: stop_id)
   stop.latitude = row['GTFS Latitude']
   stop.longitude = row['GTFS Longitude']
-  s.save!
+  stop.save!
   puts "Geolocation for #{stop_id} saved"
 end
