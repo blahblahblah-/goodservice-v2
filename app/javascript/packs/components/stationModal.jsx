@@ -267,7 +267,7 @@ class StationModal extends React.Component {
                   { trip.is_assigned || delayed ? '' : '~' }{ delayed ? '? ? ?' : formatMinutes(estimatedTimeUntilThisStop, trip.is_assigned)}
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
-                  { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop || !trip.is_assigned > 0 ? 'until' : 'at'}&nbsp;
+                  { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
                     { formatStation(stations[trip.upcoming_stop].name) }
                   </Link>
