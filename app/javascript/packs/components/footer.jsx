@@ -48,6 +48,11 @@ class Footer extends React.Component {
                   </a>
                 </List.Item>
                 <List.Item>
+                  <a href='https://www.subwaydle.com' target='_blank'>
+                    Subwaydle - Daily Subway Puzzle Game
+                  </a>
+                </List.Item>
+                <List.Item>
                   <a href='https://www.subwayridership.nyc' target='_blank'>
                     NYC Subway Ridership
                   </a>
