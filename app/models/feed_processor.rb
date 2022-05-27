@@ -284,9 +284,9 @@ class FeedProcessor
     end
 
     def remove_bad_data!(trip_update, timestamp)
-      first_stop = trip_update.stop_time_update.sort_by { |update| update.departure&.time && update.departure.time > 0 ? update.departure.time : update.arrival&.time }.first
+      first_stop = trip_update.stop_time_update.select { |update| (update.departure&.time || update.arrival&.time || 0) > 0 }.sort_by { |update| update.departure&.time && update.departure.time > 0 ? update.departure.time : update.arrival&.time }.first
       first_stop_index = trip_update.stop_time_update.index(first_stop)
-      trip_update.stop_time_update.filter! { |update| trip_update.stop_time_update.index(update) >= first_stop_index || (update.departure || update.arrival).time < (first_stop.departure || first_stop.arrival).time }
+      trip_update.stop_time_update.filter! { |update| (update.departure&.time || update.arrival&.time || 0) > 0 && trip_update.stop_time_update.index(update) >= first_stop_index || (update.departure || update.arrival).time < (first_stop.departure || first_stop.arrival).time }
     end
 
     def valid_stops
