@@ -124,7 +124,12 @@ class StationList extends React.Component {
         <Input icon={icon} placeholder='Search...' onChange={this.handleQueryChange} onKeyUp={this.handleQueryKeyUp} ref={(input) => { this.queryInput = input; }}  fluid className="station-search" />
         <List divided relaxed selection inverted className='results'>
           {
-            selectedStations.filter((station) => favStations.has(station.id)).map((station) => {
+            nearbyStations.filter((stationId) => favStations.has(stationId)).map((stationId) => selectedStations.find((s) => s.id === stationId)).filter((station) => station).map((station) => {
+              return this.renderListItem(station);
+            })
+          }
+          {
+            selectedStations.filter((station) => favStations.has(station.id) && !nearbyStations.includes(station.id)).map((station) => {
               return this.renderListItem(station);
             })
           }
