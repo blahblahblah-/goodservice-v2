@@ -263,7 +263,38 @@ class ServiceChangeAnalyzer
         end
         break if route_pairs.compact.size == 2
       end
-      reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq if route_pairs.compact.size == 2
+
+      if route_pairs.compact.size == 2
+        reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq
+        return
+      end
+
+      [current, evergreen_routings].each do |routing_set|
+        (0...stations.size - 2).each_with_index do |i|
+          (i...stations.size - 1).each_with_index do |j|
+            first_station_sequence = stations[0..i]
+            second_station_sequence = stations[i..j]
+            third_station_sequence = stations[j..stations.size]
+
+            route_pairs = [first_station_sequence, second_station_sequence, third_station_sequence].map do |station_sequence|
+              route_pair = routing_set.find do |route_id, direction|
+                route_id[0] != current_route_id[0] && direction.any? do |_, routings|
+                  routings.any? {|r| r.each_cons(station_sequence.length).any?(&station_sequence.method(:==))}
+                end
+              end
+              route_pair
+            end
+            break if route_pairs.compact.size == 3
+          end
+          break if route_pairs.compact.size == 3
+        end
+        break if route_pairs.compact.size == 3
+      end
+
+      if route_pairs.compact.size == 3
+        reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq
+        return
+      end
     end
 
     def truncate_service_change_overlaps_with_different_routing?(service_change, routings)
