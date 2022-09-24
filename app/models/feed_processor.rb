@@ -96,7 +96,7 @@ class FeedProcessor
           end
         end
 
-        marshaled_trips = Marshal.dump(trips.select { |t| t.past_stops.empty? || t.is_assigned })
+        marshaled_trips = Marshal.dump(trips)
         RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
         RouteProcessorWorker.perform_async(route_id, timestamp)
       end
