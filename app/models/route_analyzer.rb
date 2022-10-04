@@ -1,7 +1,7 @@
 class RouteAnalyzer
   SLOW_SECTION_STATIONS_RANGE = 3..7
 
-  def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes)
+  def self.analyze_route(route_id, processed_trips, actual_routings, common_routings, timestamp, scheduled_trips, scheduled_routings, recent_scheduled_routings, scheduled_headways_by_routes, tracks)
     stop_name_formatter = StopNameFormatter.new(actual_routings, scheduled_routings)
     travel_times_data = RedisStore.travel_times
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
@@ -37,6 +37,7 @@ class RouteAnalyzer
       slow_sections: convert_to_readable_directions(slow_sections),
       long_headway_sections: convert_to_readable_directions(long_headway_sections),
       delayed_sections: convert_to_readable_directions(delayed_sections),
+      tracks: convert_to_readable_directions(tracks),
       trips: convert_to_readable_directions(format_trips_with_upcoming_stop_times(processed_trips, travel_times)),
       timestamp: timestamp,
     }.to_json
@@ -62,6 +63,7 @@ class RouteAnalyzer
       actual_routings: convert_to_readable_directions(actual_routings),
       common_routings: convert_to_readable_directions(common_routings),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
+      tracks: convert_to_readable_directions(tracks),
       trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
       timestamp: timestamp,
     }.to_json
@@ -584,6 +586,7 @@ class RouteAnalyzer
         {
           id: trip.id,
           stops: stops,
+          tracks: trip.tracks,
           delayed_time: trip.delayed_time,
           schedule_discrepancy: trip.schedule_discrepancy,
           is_delayed: trip.delayed?,

@@ -32,6 +32,20 @@ class RouteProcessor
         }.to_h]
       }.to_h
 
+      tracks = trips_by_routes.map { |direction, routes|
+        [direction, routes.flat_map { |_, trips|
+          trips.flat_map { |t|
+            t.tracks.map { |stop_id, track|
+              [stop_id, track]
+            }
+          }
+        }.uniq.inject({}) { |res, (stop_id, track)|
+          res[stop_id] ||= []
+          res[stop_id].push(track)
+          res
+        }]
+      }.to_h
+
       processed_trips = process_trips(trips_by_routes, timestamp)
 
       # Reload to load all stops
@@ -55,7 +69,8 @@ class RouteProcessor
         scheduled_trips,
         scheduled_routings,
         recent_scheduled_routings,
-        scheduled_headways_by_routes
+        scheduled_headways_by_routes,
+        tracks,
       )
     end
 

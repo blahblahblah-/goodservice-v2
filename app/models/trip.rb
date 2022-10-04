@@ -1,5 +1,5 @@
 class Trip
-  attr_reader :route_id, :direction, :timestamp, :stops
+  attr_reader :route_id, :direction, :timestamp, :stops, :tracks
   attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest, :is_assigned
 
   def initialize(route_id, direction, id, timestamp, trip_update, is_assigned)
@@ -14,6 +14,11 @@ class Trip
     }
     @stops = stop_time_hash
     @schedule = stop_time_hash
+    @tracks = trip_update.stop_time_update.filter { |update|
+      (update.departure&.time || update.arrival&.time || 0) > 0
+    }.to_h {|update|
+      [update.stop_id[0..2], update.nyct_stop_time_update.actual_track.presence || update.nyct_stop_time_update.scheduled_track ]
+    }
     @past_stops = {}
     @latest = true
     @is_assigned = is_assigned
