@@ -207,9 +207,9 @@ class RouteProcessor
 
       trips_in_order = common_sub_route.map { |s| trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.upcoming_stop_arrival_time }}.flatten.compact
       processed_trips = trips_in_order.each_cons(2).map{ |a_trip, b_trip|
-        Processed::Trip.new(a_trip, b_trip, common_sub_route)
+        Processed::Trip.new(a_trip, b_trip, common_sub_route, timestamp)
       }
-      processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route) if trips_in_order.present?
+      processed_trips << Processed::Trip.new(trips_in_order.last, nil, common_sub_route, timestamp) if trips_in_order.present?
     end
 
     def determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
