@@ -1,2 +1,2 @@
-web: bundle exec rails s
+web: unset PORT && bundle exec rails s
 worker: bundle exec sidekiq -q critical -q default -q low -c 5
