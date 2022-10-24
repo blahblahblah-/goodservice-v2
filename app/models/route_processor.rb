@@ -179,9 +179,9 @@ class RouteProcessor
       trip_routes_by_direction.map { |direction, trips_by_routes|
         processed_trips_by_routes = trips_by_routes.map { |r, trips|
           processed_trips = trips.each_cons(2).map { |a_trip, b_trip|
-            Processed::Trip.new(a_trip, b_trip, r)
+            Processed::Trip.new(a_trip, b_trip, r, timestamp)
           }
-          processed_trips << Processed::Trip.new(trips.last, nil, r)
+          processed_trips << Processed::Trip.new(trips.last, nil, r, timestamp)
           ["#{r.first}-#{r.last}-#{r.size}", processed_trips]
         }.to_h
 

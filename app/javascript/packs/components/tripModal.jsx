@@ -33,7 +33,7 @@ class TripModal extends React.Component {
 
     fetch(`${API_URL_PREFIX}${train.id}/trips/${selectedTrip.id.replace('..', '-').replace('.', '-')}`)
       .then(response => response.json())
-      .then(data => this.setState({ trip: data, timestamp: data.timestamp}))
+      .then(data => this.setState({ trip: data, timestamp: data.timestamp, lastFetched: Date.now() / 1000}))
   }
 
   handleOnClose = () => {
@@ -49,14 +49,16 @@ class TripModal extends React.Component {
 
   renderTableBody(delayed) {
     const { train, trains, selectedTrip, routing, stations } = this.props;
-    const { trip, showPastStops } = this.state;
+    const { trip, showPastStops, lastFetched } = this.state;
     const currentTime = Date.now() / 1000;
     const i = routing.indexOf(selectedTrip.upcoming_stop);
     const j = routing.indexOf(selectedTrip.destination_stop) + 1;
     const remainingStops = routing.slice(i, j);
     let previousStopId = null;
     let currentEstimatedTime = selectedTrip.estimated_upcoming_stop_arrival_time;
-    let currentArrivalTime = selectedTrip.upcoming_stop_arrival_time;
+    if (currentEstimatedTime < lastFetched) {
+      currentEstimatedTime = lastFetched;
+    }
     return (
       <Table.Body>
         {

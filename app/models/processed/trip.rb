@@ -7,7 +7,7 @@ class Processed::Trip
   attr_reader :trip, :previous_stop_arrival_time, :previous_stop, :calculated_upcoming_stop_arrival_time,
     :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
 
-  def initialize(trip, next_trip, routing)
+  def initialize(trip, next_trip, routing, feed_timestamp)
     @trip = trip
 
     if trip.previous_stop
@@ -16,7 +16,7 @@ class Processed::Trip
     else
       determine_previous_stop_info!(routing)
     end
-    calculate_time_until_next_trip!(next_trip, routing)
+    calculate_time_until_next_trip!(next_trip, routing, feed_timestamp)
   end
 
   def delayed_time
@@ -51,12 +51,14 @@ class Processed::Trip
     @previous_stop, @previous_stop_arrival_time = self.class.determine_previous_stop_and_arrival_time(trip)
   end
 
-  def calculate_time_until_next_trip!(next_trip, routing)
+  def calculate_time_until_next_trip!(next_trip, routing, feed_timestamp)
     if previous_stop_arrival_time
       @calculated_upcoming_stop_arrival_time = previous_stop_arrival_time + RouteProcessor.average_travel_time(previous_stop, upcoming_stop)
     else
       @calculated_upcoming_stop_arrival_time = timestamp + self.class.extrapolate_time_until_upcoming_stop(trip, routing, timestamp)
     end
+
+    @calculated_upcoming_stop_arrival_time = feed_timestamp if calculated_upcoming_stop_arrival_time < feed_timestamp
 
     estimated_time_until_upcoming_stop = calculated_upcoming_stop_arrival_time - timestamp
 

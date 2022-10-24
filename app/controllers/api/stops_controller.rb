@@ -157,6 +157,7 @@ class Api::StopsController < ApplicationController
     upcoming_stops = trip.upcoming_stops
     i = upcoming_stops.index(stop_id)
     estimated_current_stop_arrival_time = trip.estimated_upcoming_stop_arrival_time
+    estimated_current_stop_arrival_time = Time.current.to_i if estimated_current_stop_arrival_time < Time.current.to_i
     if i > 0
       estimated_current_stop_arrival_time += upcoming_stops[0..i].each_cons(2).map { |a_stop, b_stop|
         travel_times["#{a_stop}-#{b_stop}"] || RedisStore.supplemented_scheduled_travel_time(a_stop, b_stop) || RedisStore.scheduled_travel_time(a_stop, b_stop) || 0
