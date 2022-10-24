@@ -200,6 +200,9 @@ class FeedProcessor
       trip.upcoming_stops.each do |stop_id|
         RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp)
       end
+      trip.tracks.each do |stop_id, track|
+        RedisStore.add_route_to_route_stop_track(trip.route_id, stop_id, track, timestamp)
+      end
       RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip)
       RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp)
     end

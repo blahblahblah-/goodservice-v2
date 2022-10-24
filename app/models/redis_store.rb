@@ -124,6 +124,20 @@ class RedisStore
       REDIS_CLIENT.zrangebyscore("routes-stop:#{stop_id}:#{direction}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
+    # Route stop tracks
+    def add_route_to_route_stop_track(route_id, stop_id, track, timestamp)
+      REDIS_CLIENT.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, route_id)
+      REDIS_CLIENT.zadd("routes-stop-tracks:#{stop_id}", timestamp, track)
+    end
+
+    def routes_stop_at_track(stop_id, track, timestamp)
+      REDIS_CLIENT.zrangebyscore("routes-stop-track:#{stop_id}:#{track}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
+    end
+
+    def routes_stop_tracks(stop_id, timestamp)
+      REDIS_CLIENT.zrangebyscore("routes-stop-tracks:#{stop_id}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
+    end
+
     # Travel times
     def add_travel_time(stops_str, travel_time, trip_id, timestamp)
       REDIS_CLIENT.zadd("travel-time:actual:#{stops_str}", timestamp, "#{trip_id}-#{travel_time}")

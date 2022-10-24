@@ -68,6 +68,9 @@ class Api::StopsController < ApplicationController
               }
             },
             accessibility: accessible_directions.present? ? accessibility : nil,
+            tracks: RedisStore.routes_stop_tracks(s.internal_id, Time.current.to_i).map { |track_id|
+              [track_id, RedisStore.routes_stop_at_track(s.internal_id, track_id, Time.current.to_i).sort]
+            }.to_h
           }
         },
         timestamp: Time.current.to_i,
