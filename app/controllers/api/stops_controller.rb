@@ -7,13 +7,20 @@ class Api::StopsController < ApplicationController
     data = Rails.cache.fetch("stops", expires_in: 10.seconds) do
       stops = Scheduled::Stop.all
       futures = {}
+      tracks_futures = {}
       accessible_stops_future = nil
       elevator_advisories_future = nil
+      tracks = RedisStore.stop_tracks.group_by { |stop_id_track| stop_id_track.split(':').first }.to_h { |stop_id, tracks|
+        [stop_id, tracks.map { |t| t.split(':').second }]
+      }
       REDIS_CLIENT.pipelined do
         futures = stops.to_h { |stop|
           [stop.internal_id, [1, 3].to_h { |direction|
             [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
           }]
+        }
+        tracks_futures = tracks.to_h { |stop_id, tracks|
+          [stop_id, tracks.to_h { |t| [t, RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i)] }]
         }
         accessible_stops_future = RedisStore.accessible_stops_list
         elevator_advisories_future = RedisStore.elevator_advisories
@@ -68,9 +75,9 @@ class Api::StopsController < ApplicationController
               }
             },
             accessibility: accessible_directions.present? ? accessibility : nil,
-            tracks: RedisStore.routes_stop_tracks(s.internal_id, Time.current.to_i).map { |track_id|
-              [track_id, RedisStore.routes_stop_at_track(s.internal_id, track_id, Time.current.to_i).sort]
-            }.to_h
+            tracks: tracks_futures[s.internal_id].to_h { |track_id, t_future|
+              [track_id, t_future.value]
+            }
           }
         },
         timestamp: Time.current.to_i,

@@ -127,15 +127,15 @@ class RedisStore
     # Route stop tracks
     def add_route_to_route_stop_track(route_id, stop_id, track, timestamp)
       REDIS_CLIENT.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, route_id)
-      REDIS_CLIENT.zadd("routes-stop-tracks:#{stop_id}", timestamp, track)
+      REDIS_CLIENT.sadd("stop-tracks", "#{stop_id}:#{track}")
     end
 
     def routes_stop_at_track(stop_id, track, timestamp)
       REDIS_CLIENT.zrangebyscore("routes-stop-track:#{stop_id}:#{track}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
-    def routes_stop_tracks(stop_id, timestamp)
-      REDIS_CLIENT.zrangebyscore("routes-stop-tracks:#{stop_id}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
+    def stop_tracks
+      REDIS_CLIENT.smembers("stop-tracks")
     end
 
     # Travel times
