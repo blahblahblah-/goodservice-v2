@@ -125,8 +125,8 @@ class RedisStore
     end
 
     # Route stop tracks
-    def add_route_to_route_stop_track(route_id, stop_id, track, timestamp)
-      REDIS_CLIENT.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, route_id)
+    def add_route_to_route_stop_track(route_id, direction, stop_id, track, timestamp)
+      REDIS_CLIENT.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, "#{route_id}:#{direction}")
       REDIS_CLIENT.sadd("stop-tracks", "#{stop_id}:#{track}")
     end
 

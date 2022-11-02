@@ -76,7 +76,7 @@ class Api::StopsController < ApplicationController
             },
             accessibility: accessible_directions.present? ? accessibility : nil,
             tracks: tracks_futures[s.internal_id].to_h { |track_id, t_future|
-              [track_id, t_future.value]
+              [track_id, t_future.value.filter { |r| r.split(':').size > 1 }.group_by { |r| r.split(':').first }.to_h { |k, v| [k, v.map{ |r| r.split(':').second == '3' ? :south : :north }.uniq]}]
             }
           }
         },
