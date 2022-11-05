@@ -11,7 +11,7 @@ class Api::StopsController < ApplicationController
       accessible_stops_future = nil
       elevator_advisories_future = nil
       tracks = RedisStore.stop_tracks.group_by { |stop_id_track| stop_id_track.split(':').first }.to_h { |stop_id, tracks|
-        [stop_id, tracks.map { |t| t.split(':').second }]
+        [stop_id, tracks.map { |t| t.split(':').second }.filter { |t| t.present? }]
       }
       REDIS_CLIENT.pipelined do
         futures = stops.to_h { |stop|
