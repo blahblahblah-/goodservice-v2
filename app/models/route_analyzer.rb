@@ -7,7 +7,7 @@ class RouteAnalyzer
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
     service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings.to_h { |direction, routings|
       [direction, routings.filter { |r|
-        processed_trips[direction]["#{r.first}-#{r.last}-#{r.size}"]&.any? { |t| t.is_assigned }
+        processed_trips[direction]["#{r.first}-#{r.last}-#{r.size}"]&.any? { |t| t.is_assigned } || routings.size == 1
       }]
     }, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
