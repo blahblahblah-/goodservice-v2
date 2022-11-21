@@ -176,8 +176,11 @@ class ServiceChangeAnalyzer
         if other_direction = condensed_changes[0].find { |c2|
             c1.class != ServiceChanges::SplitRoutingServiceChange &&
             c1.class == c2.class &&
-            (c1.first_station == c2.last_station || interchangeable_transfers[c1.first_station]&.any?{ |t| t.from_stop_internal_id == c2.last_station }) &&
-            (c1.last_station == c2.first_station || interchangeable_transfers[c1.last_station]&.any?{ |t| t.from_stop_internal_id == c2.first_station })
+            (
+              (c1.is_a?(ServiceChanges::ReroutingServiceChange) && c1.routing.first == c2.routing.last && c1.routing.last == c2.routing.first) ||
+              (c1.first_station == c2.last_station || interchangeable_transfers[c1.first_station]&.any?{ |t| t.from_stop_internal_id == c2.last_station }) &&
+              (c1.last_station == c2.first_station || interchangeable_transfers[c1.last_station]&.any?{ |t| t.from_stop_internal_id == c2.first_station })
+            )
           }
           condensed_changes[0].delete(other_direction)
           both << c1
