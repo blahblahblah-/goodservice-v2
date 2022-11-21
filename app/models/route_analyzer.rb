@@ -5,7 +5,11 @@ class RouteAnalyzer
     stop_name_formatter = StopNameFormatter.new(actual_routings, scheduled_routings)
     travel_times_data = RedisStore.travel_times
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
-    service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
+    service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings.to_h { |direction, routings|
+      [direction, routings.filter { |r|
+        processed_trips[direction]["#{r.first}-#{r.last}-#{r.size}"]&.any? { |t| t.is_assigned }
+      }]
+    }, scheduled_routings, recent_scheduled_routings, timestamp)
     max_delayed_time = max_delay(processed_trips)
     slow_sections = identify_slow_sections(actual_routings, travel_times, timestamp)
     long_headway_sections = identify_long_headway_sections(scheduled_headways_by_routes, actual_routings, common_routings, processed_trips, travel_times)
