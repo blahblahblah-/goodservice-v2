@@ -32,7 +32,7 @@ class RouteProcessor
         }.to_h]
       }.to_h
 
-      tracks = trips_by_routes.map { |direction, routes|
+      tracks = trips_by_routes.to_h { |direction, routes|
         [direction, routes.flat_map { |_, trips|
           trips.flat_map { |t|
             t.tracks.map { |stop_id, track|
@@ -44,7 +44,25 @@ class RouteProcessor
           res[stop_id].push(track)
           res
         }]
-      }.to_h
+      }
+
+      routes_with_shared_tracks_futures = {}
+
+      REDIS_CLIENT.pipelined do
+        routes_with_shared_tracks_futures = tracks.to_h { |direction, stops|
+          [direction, stops.to_h { |stop_id, tracks|
+            [stop_id, tracks.map { |t| RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i) }]
+          }]
+        }
+      end
+
+      routes_with_shared_tracks = routes_with_shared_tracks_futures.to_h { |direction, stops|
+        [direction, stops.to_h { |stop_id, routes_futures|
+          [stop_id, routes_futures.flat_map { |rf| rf.value }.uniq.group_by { |rv| rv.split(':').first }.to_h { |route_id, rvs| [route_id, rvs.map { |rv| rv.split(':').second == '3' ? :south : :north}]}.filter { |r, _| r != route_id }]
+        }.filter { |_, routes|
+          routes.present?
+        }]
+      }
 
       processed_trips = process_trips(trips_by_routes, timestamp)
 
@@ -70,7 +88,7 @@ class RouteProcessor
         scheduled_routings,
         recent_scheduled_routings,
         scheduled_headways_by_routes,
-        tracks,
+        routes_with_shared_tracks,
       )
     end
 
