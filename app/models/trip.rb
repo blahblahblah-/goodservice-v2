@@ -138,4 +138,8 @@ class Trip
     return 0 unless previous_stop
     previous_stop_arrival_time - scheduled_previous_stop_arrival_time
   end
+
+  def is_phantom?
+    !is_assigned && previous_stop.present?
+  end
 end
