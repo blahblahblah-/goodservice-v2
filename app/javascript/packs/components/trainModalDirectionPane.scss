@@ -51,6 +51,12 @@
       }
       vertical-align: bottom;
     }
+
+    .concurrent-trains {
+      @media only screen and (max-width: 767px) {
+        display: block;
+      }
+    }
   }
 
   .ui.stackable.grid>.row>.column.trip-table-cell {
