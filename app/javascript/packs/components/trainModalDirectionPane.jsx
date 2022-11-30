@@ -598,8 +598,9 @@ class TrainModalDirectionPane extends React.Component {
                         <TrainBullet name={selectedTrain.name} color={selectedTrain.color} textColor={selectedTrain.text_color} style={{display: "inline-block"}} key={selectedTrain.id} size='small' />
                       }
                       { trip.id.replace(/_/g, '\u200B_') }
-                    </span> to { formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
+                    </span> to { formatStation(stations[trip.destination_stop].name)}
                   </Link>
+                  {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
