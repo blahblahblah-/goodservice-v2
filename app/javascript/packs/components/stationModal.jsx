@@ -208,7 +208,7 @@ class StationModal extends React.Component {
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell width={6}>
-                Train ID / Destination
+                Trip ID / Destination
               </Table.HeaderCell>
               <Table.HeaderCell>
                 Projected Time

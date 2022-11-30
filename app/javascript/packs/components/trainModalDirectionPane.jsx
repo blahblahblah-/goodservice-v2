@@ -690,7 +690,7 @@ class TrainModalDirectionPane extends React.Component {
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell width={5}>
-              Train ID / Destination
+              Trip ID / Destination
             </Table.HeaderCell>
             <Table.HeaderCell width={5}>
               Current Location
@@ -764,7 +764,7 @@ class TrainModalDirectionPane extends React.Component {
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell width={5}>
-              Train ID / Destination
+              Trip ID / Destination
             </Table.HeaderCell>
             <Table.HeaderCell width={5}>
               Current Location
