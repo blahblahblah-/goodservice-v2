@@ -5,6 +5,7 @@ class Processed::Trip
   :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :tracks, :schedule_discrepancy, :past_stops, to: :trip
 
   attr_reader :trip, :previous_stop_arrival_time, :previous_stop, :calculated_upcoming_stop_arrival_time,
+    :effective_calculated_upcoming_stop_arrival_time,
     :estimated_time_behind_next_train, :time_behind_next_train, :estimated_time_until_destination
 
   def initialize(trip, next_trip, routing, feed_timestamp)
@@ -40,9 +41,9 @@ class Processed::Trip
 
   def estimated_upcoming_stop_arrival_time
     if delayed?
-      [calculated_upcoming_stop_arrival_time, timestamp + 60].max
+      [effective_calculated_upcoming_stop_arrival_time, timestamp + 60].max
     end
-    calculated_upcoming_stop_arrival_time
+    effective_calculated_upcoming_stop_arrival_time
   end
 
   private
@@ -58,9 +59,10 @@ class Processed::Trip
       @calculated_upcoming_stop_arrival_time = timestamp + self.class.extrapolate_time_until_upcoming_stop(trip, routing, timestamp)
     end
 
-    @calculated_upcoming_stop_arrival_time = feed_timestamp if calculated_upcoming_stop_arrival_time < feed_timestamp
+    @effective_calculated_upcoming_stop_arrival_time = calculated_upcoming_stop_arrival_time
+    @effective_calculated_upcoming_stop_arrival_time = feed_timestamp if calculated_upcoming_stop_arrival_time < feed_timestamp
 
-    estimated_time_until_upcoming_stop = calculated_upcoming_stop_arrival_time - timestamp
+    estimated_time_until_upcoming_stop = effective_calculated_upcoming_stop_arrival_time - timestamp
 
     unless next_trip
       if routing.last == destination
