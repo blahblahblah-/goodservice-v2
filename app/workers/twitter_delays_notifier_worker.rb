@@ -118,12 +118,12 @@ class TwitterDelaysNotifierWorker
     end
 
     previously_updated = false
-    matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
+    matching_delay = prev_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops, tracks) }
     if matching_delay
       prev_delays.delete(matching_delay)
-    elsif matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
+    elsif matching_delay = delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops, tracks) }
       delays.delete(matching_delay)
-    elsif matching_delay = updated_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops) }
+    elsif matching_delay = updated_delays.find { |d| d.direction == actual_direction && d.match_routing?(routing, stops, tracks) }
       updated_delays.delete(matching_delay)
       previously_updated = true
     end
