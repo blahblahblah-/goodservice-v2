@@ -1,7 +1,7 @@
 class DelayNotification
-  attr_accessor :routes, :direction, :stops, :affected_sections, :destinations, :last_tweet_ids, :last_tweet_times, :mins_since_observed
+  attr_accessor :routes, :direction, :stops, :affected_sections, :destinations, :last_tweet_ids, :last_tweet_times, :mins_since_observed, :tracks
 
-  def initialize(route, direction, stops, routing, destinations)
+  def initialize(route, direction, stops, routing, destinations, tracks = {})
     affected_section_indices = stops.map {|s| routing.index(s) }
     affected_section = routing[affected_section_indices.min..affected_section_indices.max]
 
@@ -13,14 +13,16 @@ class DelayNotification
     @mins_since_observed = 0
     @last_tweet_ids = {}
     @last_tweet_times = {}
+    @tracks = tracks.slice(stops)
   end
 
-  def append!(route, new_stops, routing, new_destinations)
+  def append!(route, new_stops, routing, new_destinations, new_tracks)
     @routes = (routes + [route]).uniq.sort
     @destinations = (destinations + new_destinations).uniq
     matched_section = affected_sections.find { |section|
       routing.include?(section.first) && routing.include?(section.last)
     }
+    @tracks = tracks.merge(new_tracks.slice(*new_stops))
 
     p "Routes: #{routes}"
     p "Existing sections: #{affected_sections}"
@@ -39,9 +41,9 @@ class DelayNotification
     p "Updated affected sections: #{affected_sections}"
   end
 
-  def match_routing?(routing, potential_matched_stops)
-    return false unless routing.each_cons(stops.size).any? { |arr| arr == stops }
-    return true if stops.any? { |s| potential_matched_stops.include?(s) }
+  def match_routing?(routing, potential_matched_stops, potential_stop_tracks)
+    return false unless routing.each_cons(stops.size).any? { |arr| arr == stops && arr.all? { |s| tracks[s] == potential_stop_tracks[s] } }
+    return true if stops.any? { |s| potential_matched_stops.include?(s) && (!tracks.present? || potential_stop_tracks[s] == tracks[s]) }
 
     stop_indices = [stops.first, stops.last].map {|s| routing.index(s) }
     potential_stop_indices = [potential_matched_stops.first, potential_matched_stops.last].map {|s| routing.index(s) }

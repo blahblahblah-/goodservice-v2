@@ -50,7 +50,8 @@ class TwitterDelaysNotifierWorker
           j = routing.index(stops.last)
           next if i == j && i == routing.size - 1
           routing_subset = routing[i..j]
-          upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, routing_subset, routing, destinations)
+          tracks = delayed_trips.first.tracks
+          upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, routing_subset, routing, destinations, tracks)
         else
           routing_keys = trips_by_routings.keys.sort { |a, b|
             if a == 'blended'
@@ -78,7 +79,8 @@ class TwitterDelaysNotifierWorker
             j = routing.index(stops.last)
             next if i == j && i == routing.size - 1
             routing_subset = routing[i..j]
-            upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, routing_subset, routing, destinations)
+            tracks = delayed_trips.first.tracks
+            upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, routing_subset, routing, destinations, tracks)
           end
         end
       end
@@ -109,7 +111,7 @@ class TwitterDelaysNotifierWorker
     Marshal.load(marshaled_notifications)
   end
 
-  def upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, stops, routing, destinations)
+  def upsert_delay_notification(prev_delays, delays, updated_delays, max_delay, route_id, direction, stops, routing, destinations, tracks)
     actual_direction = direction
     if route_id == 'M' && stops.any? { |s| Api::StopsController::M_TRAIN_SHUFFLE_STOPS.include?(s) }
       actual_direction = direction == "north" ? "south" : "north"
@@ -128,7 +130,7 @@ class TwitterDelaysNotifierWorker
 
     if matching_delay
       route_exists_for_delay = matching_delay.routes.include?(route_id)
-      matching_delay.append!(route_id, stops, routing, destinations)
+      matching_delay.append!(route_id, stops, routing, destinations, tracks)
       delay_to_add = matching_delay
       if (!route_exists_for_delay && delay_to_add.last_tweet_ids.present?) || previously_updated
         updated_delays << delay_to_add 
@@ -137,7 +139,7 @@ class TwitterDelaysNotifierWorker
       end
     else
       return if max_delay < DELAY_NOTIFICATION_THRESHOLD
-      delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations)
+      delay_to_add = DelayNotification.new(route_id, actual_direction, stops, routing, destinations, tracks)
       updated_delays << delay_to_add
     end
   end
