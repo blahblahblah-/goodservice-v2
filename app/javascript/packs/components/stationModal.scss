@@ -67,12 +67,37 @@
 
     .station-name {
       @media only screen and (max-width: 767px) {
-        display: inline-block;
+        display: -webkit-box;
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 100%;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
       }
       vertical-align: bottom;
+    }
+
+    .trip-id-link {
+      @media only screen and (max-width: 767px) {
+        display: -webkit-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+
+      .trip-id {
+        @media only screen and (max-width: 767px) {
+          display: -webkit-inline-box;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          vertical-align: bottom;
+        }
+      }
     }
 
     .more {

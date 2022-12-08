@@ -258,10 +258,13 @@ class StationModal extends React.Component {
             return (
               <Table.Row key={trip.id} className={className}>
                 <Table.Cell>
-                  <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`}>
-                    <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
-                    {trip.id} to {formatStation(stations[trip.destination_stop].name)} {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
+                  <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`} className='trip-id-link'>
+                    <span className="trip-id">
+                      <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
+                      {trip.id.replace(/_/g, '\u200B_') }
+                    </span> to {formatStation(stations[trip.destination_stop].name)}
                   </Link>
+                  {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_current_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { trip.is_assigned || delayed ? '' : '~' }{ delayed ? '? ? ?' : formatMinutes(estimatedTimeUntilThisStop, trip.is_assigned)}
@@ -269,7 +272,7 @@ class StationModal extends React.Component {
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
-                    { formatStation(stations[trip.upcoming_stop].name) }
+                    { formatStation(stations[trip.upcoming_stop].name.replace(/\//g, '/\u200B')) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
