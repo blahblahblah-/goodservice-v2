@@ -97,6 +97,14 @@
           -webkit-box-orient: vertical;
           vertical-align: bottom;
         }
+        @media only screen and (min-width: 768px) {
+          display: inline;
+        }
+      }
+      .trip-destination {
+        @media only screen and (min-width: 768px) {
+          display: inline;
+        }
       }
     }
 

@@ -211,7 +211,7 @@ class StationModal extends React.Component {
                 Trip ID / Destination
               </Table.HeaderCell>
               <Table.HeaderCell>
-                Projected Time
+                ETA
               </Table.HeaderCell>
               <Table.HeaderCell width={5}>
                 Current Location
@@ -259,10 +259,13 @@ class StationModal extends React.Component {
               <Table.Row key={trip.id} className={className}>
                 <Table.Cell>
                   <Link to={`/trains/${trip.route_id}/${trip.direction[0].toUpperCase()}/${trip.id}`} className='trip-id-link'>
-                    <span className="trip-id">
+                    <div className="trip-id">
                       <TrainBullet id={trip.route_id} name={train.name} color={train.color} textColor={train.text_color} size='small' />
-                      {trip.id.replace(/_/g, '\u200B_') }
-                    </span> to {formatStation(stations[trip.destination_stop].name)}
+                      {trip.id.replace(/_/g, '\u200B_') }&nbsp;
+                    </div>
+                    <div className="trip-destination">
+                      to {formatStation(stations[trip.destination_stop].name.replace(/\//g, '/\u200B').replace(/–/g, '–\u200B'))}
+                    </div>
                   </Link>
                   {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                 </Table.Cell>
@@ -272,7 +275,7 @@ class StationModal extends React.Component {
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
-                    { formatStation(stations[trip.upcoming_stop].name.replace(/\//g, '/\u200B')) }
+                    { formatStation(stations[trip.upcoming_stop].name.replace(/\//g, '/\u200B').replace(/–/g, '–\u200B')) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
@@ -362,7 +365,7 @@ class StationModal extends React.Component {
                     <Popup.Content>
                       <List relaxed='very' divided>
                         <List.Item>
-                          <List.Header>Projected Time</List.Header>
+                          <List.Header>ETA</List.Header>
                           Time projected until train arrives (or departs a terminus) at a given station, calculated from train's estimated position and recent trips.
                         </List.Item>
                         <List.Item>

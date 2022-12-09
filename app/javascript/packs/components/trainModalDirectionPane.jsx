@@ -593,19 +593,22 @@ class TrainModalDirectionPane extends React.Component {
               <Table.Row key={trip.id} className={className}>
                 <Table.Cell>
                   <Link to={`/trains/${trip.route_id || train.id}/${trip.direction ? trip.direction[0].toUpperCase() : directionKey}/${trip.id}`} className='trip-id-link'>
-                    <span className="trip-id">
+                    <div className="trip-id">
                       { selectedTrain &&
                         <TrainBullet name={selectedTrain.name} color={selectedTrain.color} textColor={selectedTrain.text_color} style={{display: "inline-block"}} key={selectedTrain.id} size='small' />
                       }
-                      { trip.id.replace(/_/g, '\u200B_') }
-                    </span> to { formatStation(stations[trip.destination_stop].name)}
+                      { trip.id.replace(/_/g, '\u200B_') }&nbsp;
+                    </div>
+                    <div className="trip-destination">
+                      to { formatStation(stations[trip.destination_stop].name.replace(/\//g, '/\u200B').replace(/–/g, '–\u200B'))}
+                    </div>
                   </Link>
                   {delayInfo && <Header as='h5' className='delayed-text' inverted color='red'>{delayInfo}</Header> }
                 </Table.Cell>
                 <Table.Cell title={new Date(trip.estimated_upcoming_stop_arrival_time * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'})}>
                   { trip.is_assigned || delayed ? '' : '~' }{ formatMinutes(estimatedTimeUntilUpcomingStop, trip.is_assigned) } { estimatedTimeUntilUpcomingStop > 0 || !trip.is_assigned ? 'until' : 'at'}&nbsp;
                   <Link to={`/stations/${trip.upcoming_stop}`} className='station-name'>
-                    { formatStation(stations[trip.upcoming_stop].name.replace(/\//g, '/\u200B')) }
+                    { formatStation(stations[trip.upcoming_stop].name.replace(/\//g, '/\u200B').replace(/–/g, '–\u200B')) }
                   </Link>
                 </Table.Cell>
                 <Table.Cell className={!trip.route_id && estimatedTimeBehindNextTrain > maxScheduledHeadway ? 'long-headway' : ''}>
@@ -614,9 +617,14 @@ class TrainModalDirectionPane extends React.Component {
                       { trip.is_assigned || delayed ? '' : '~' }{ delayed ? '? ? ?' : (estimatedTimeBehindNextTrain !== null && (trip.estimated_time_behind_next_train !== null ? formatMinutes(estimatedTimeBehindNextTrain, false) : `${formatMinutes(estimatedTimeBehindNextTrain, false)} to end`)) }
                     </>
                   }
+                  { trip.route_id &&
+                    <>
+                      --
+                    </>
+                  }
                 </Table.Cell>
                 <Table.Cell className={scheduleDiscrepancyClass}>
-                  { !trip.route_id && scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
+                  { scheduleDiscrepancy !== null && formatMinutes(scheduleDiscrepancy, false, true) }
                 </Table.Cell>
               </Table.Row>
             )
@@ -689,7 +697,7 @@ class TrainModalDirectionPane extends React.Component {
       <Table fixed inverted unstackable size='small' compact className='trip-table' columns={4}>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell width={5}>
+            <Table.HeaderCell width={6}>
               Trip ID / Destination
             </Table.HeaderCell>
             <Table.HeaderCell width={5}>
@@ -763,7 +771,7 @@ class TrainModalDirectionPane extends React.Component {
     return (<Table fixed inverted unstackable size='small' compact className='trip-table' columns={4}>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell width={5}>
+            <Table.HeaderCell width={6}>
               Trip ID / Destination
             </Table.HeaderCell>
             <Table.HeaderCell width={5}>
