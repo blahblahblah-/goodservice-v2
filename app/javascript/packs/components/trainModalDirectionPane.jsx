@@ -578,7 +578,7 @@ class TrainModalDirectionPane extends React.Component {
             const estimatedTimeBehindNextTrain = estimatedTimeBehindNextTrainSeconds && Math.round(Math.max(estimatedTimeBehindNextTrainSeconds, 0) / 60);
             const scheduleDiscrepancy = trip.schedule_discrepancy !== null ? Math.round(trip.schedule_discrepancy / 60) : 0;
             let scheduleDiscrepancyClass = 'early';
-            if (!trip.route_id && Math.round(trip.schedule_discrepancy / 60) >= 1) {
+            if (Math.round(trip.schedule_discrepancy / 60) >= 1) {
               scheduleDiscrepancyClass = 'late';
             }
             let className = '';
