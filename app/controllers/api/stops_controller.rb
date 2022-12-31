@@ -1,5 +1,6 @@
 class Api::StopsController < ApplicationController
-  M_TRAIN_SHUFFLE_STOPS = ["M21", "M20", "M19", "M18", "M16", "M14", "M13", "M12", "M11"];
+  M_TRAIN_SHUFFLE_STOPS = ["M21", "M20", "M19", "M18", "M16", "M14", "M13", "M12", "M11"]
+  HOYT_SCHERMERHORN_STOP = "A42"
   ADA_OVERRIDES = ENV['ADA_OVERRIDES']&.split(',') || []
   ADA_ADDITIONAL_STOPS = ENV['ADA_ADDITIONAL_STOPS']&.split(',') || []
 
@@ -140,7 +141,7 @@ class Api::StopsController < ApplicationController
   end
 
   def self.determine_direction(direction, stop_id, route_id)
-    return direction unless M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+    return direction unless M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M' || stop_id == HOYT_SCHERMERHORN_STOP && route_id == 'G'
     direction == 3 ? 1 : 3
   end
 
