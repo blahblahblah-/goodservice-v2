@@ -67,7 +67,8 @@ class RouteAnalyzer
       common_routings: convert_to_readable_directions(common_routings),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       routes_with_shared_tracks: convert_to_readable_directions(routes_with_shared_tracks),
-      trips: convert_to_readable_directions(format_processed_trips(processed_trips)),
+      trips: convert_to_readable_directions(format_processed_trips(processed_trips, route_id)),
+      trips_including_other_routes_on_shared_tracks: convert_to_readable_directions(format_processed_trips(append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks), route_id)),
       timestamp: timestamp,
     }.to_json
 
@@ -545,28 +546,82 @@ class RouteAnalyzer
     }.to_h
   end
 
-  def self.format_processed_trips(processed_trips)
+  def self.append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks)
+    additional_routes = routes_with_shared_tracks.flat_map { |_, stops_map| stops_map.flat_map { |_, route_map| route_map.map { |key, _| key}}}.uniq
+    additional_processed_trip_futures = {}
+    REDIS_CLIENT.pipelined do
+      additional_processed_trip_futures = additional_routes.map { |r| RedisStore.processed_trips(r) }
+    end
+    additional_processed_trip_maps = additional_processed_trip_futures.flat_map { |future| future.value && Marshal.load(future.value)}.filter { |m| m.present? }
+    additional_processed_trips = additional_processed_trip_maps.flat_map { |m| m.values.flat_map { |n| n.values.flatten }}.uniq(&:id)
+    processed_trips.to_h { |direction, trips_by_routes|
+      [direction, trips_by_routes.to_h { |routing_key, processed_trips|
+        if routing_key == 'blended'
+          tracks = processed_trips.map(&:tracks).inject(Hash.new { |h, k| h[k] = [] }) { |merged_map, tracks|
+            tracks.each { |stop_id, track_id|
+              merged_map[stop_id].push(track_id)
+            }
+            merged_map
+          }
+          routing = common_routings[direction]
+          all_trips = processed_trips.concat(additional_processed_trips.filter { |t| tracks[t.upcoming_stop].include?(t.tracks[t.upcoming_stop]) })
+          [routing_key, routing.map { |s|
+            all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.estimated_upcoming_stop_arrival_time }
+          }.flatten.compact]
+        else
+          ref_trip = processed_trips.max_by { |t| t.tracks.keys.size }
+          tracks = ref_trip.tracks
+          routing = ref_trip.stops.sort_by { |_, v| v }.map { |k, _| k }
+          all_trips = processed_trips.concat(additional_processed_trips.filter { |t| tracks[t.upcoming_stop].present? && tracks[t.upcoming_stop] == t.tracks[t.upcoming_stop] })
+          [routing_key, routing.map { |s|
+            all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.estimated_upcoming_stop_arrival_time }
+          }.flatten.compact]
+        end
+      }]
+    }
+  end
+
+  def self.format_processed_trips(processed_trips, route_id)
     processed_trips.to_h { |direction, trips_by_routes|
       [direction, trips_by_routes.to_h { |routing, processed_trips|
         [routing, processed_trips.map { |trip|
           estimated_upcoming_stop_arrival_time = (trip.timestamp > trip.estimated_upcoming_stop_arrival_time) ? trip.upcoming_stop_arrival_time : trip.estimated_upcoming_stop_arrival_time
-          {
-            id: trip.id,
-            previous_stop: trip.previous_stop,
-            previous_stop_arrival_time: trip.previous_stop_arrival_time,
-            upcoming_stop: trip.upcoming_stop,
-            upcoming_stop_arrival_time: trip.upcoming_stop_arrival_time,
-            estimated_upcoming_stop_arrival_time: estimated_upcoming_stop_arrival_time,
-            time_behind_next_train: trip.time_behind_next_train,
-            estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
-            estimated_time_until_destination: trip.estimated_time_until_destination,
-            destination_stop: trip.destination,
-            delayed_time: trip.delayed_time,
-            schedule_discrepancy: trip.schedule_discrepancy,
-            is_delayed: trip.delayed?,
-            is_assigned: trip.is_assigned,
-            timestamp: trip.timestamp,
-          }
+          if route_id != trip.route_id
+            {
+              id: trip.id,
+              route_id: trip.route_id,
+              previous_stop: trip.previous_stop,
+              previous_stop_arrival_time: trip.previous_stop_arrival_time,
+              upcoming_stop: trip.upcoming_stop,
+              upcoming_stop_arrival_time: trip.upcoming_stop_arrival_time,
+              estimated_upcoming_stop_arrival_time: estimated_upcoming_stop_arrival_time,
+              destination_stop: trip.destination,
+              delayed_time: trip.delayed_time,
+              schedule_discrepancy: trip.schedule_discrepancy,
+              is_delayed: trip.delayed?,
+              is_assigned: trip.is_assigned,
+              timestamp: trip.timestamp,
+            }
+          else
+            {
+              id: trip.id,
+              route_id: trip.route_id,
+              previous_stop: trip.previous_stop,
+              previous_stop_arrival_time: trip.previous_stop_arrival_time,
+              upcoming_stop: trip.upcoming_stop,
+              upcoming_stop_arrival_time: trip.upcoming_stop_arrival_time,
+              estimated_upcoming_stop_arrival_time: estimated_upcoming_stop_arrival_time,
+              time_behind_next_train: trip.time_behind_next_train,
+              estimated_time_behind_next_train: trip.estimated_time_behind_next_train,
+              estimated_time_until_destination: trip.estimated_time_until_destination,
+              destination_stop: trip.destination,
+              delayed_time: trip.delayed_time,
+              schedule_discrepancy: trip.schedule_discrepancy,
+              is_delayed: trip.delayed?,
+              is_assigned: trip.is_assigned,
+              timestamp: trip.timestamp,
+            }
+          end
         }]
       }]
     }

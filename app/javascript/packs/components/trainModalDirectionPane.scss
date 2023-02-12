@@ -25,6 +25,24 @@
     }
   }
 
+  .additional-trips-toggle {
+    .toggle-label {
+      color: #ccc !important;
+    }
+
+    &.ui.toggle.checkbox input:focus:checked~label.toggle-label {
+      color: #ccc !important;
+    }
+
+    .ui.toggle.checkbox input:focus:checked~.box, .ui.toggle.checkbox input:focus:checked~label {
+      color: #ccc !important;
+    }
+
+    .ui.toggle.checkbox .box:before, .ui.toggle.checkbox label.toggle-label:before, .ui.toggle.checkbox input:focus~.box:before, .ui.toggle.checkbox input:focus~label.toggle-label:before, .ui.toggle.checkbox .box:hover::before, .ui.toggle.checkbox label.toggle-label:hover::before {
+      background: rgba(255,255,255,.05)
+    }
+  }
+
   .trip-table {
     .delayed, .late {
       color: #ff695e;
