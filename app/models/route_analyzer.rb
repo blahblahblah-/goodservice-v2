@@ -24,6 +24,7 @@ class RouteAnalyzer
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     irregularity_summaries = service_irregularity_summaries(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
     delay_summaries = delay_summaries(max_delayed_time, delayed_sections, destination_station_names, processed_trips, stop_name_formatter)
+    additional_trips = append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks)
 
     summary = {
       status: status,
@@ -42,6 +43,7 @@ class RouteAnalyzer
       long_headway_sections: convert_to_readable_directions(long_headway_sections),
       delayed_sections: convert_to_readable_directions(delayed_sections),
       trips: convert_to_readable_directions(format_trips_with_upcoming_stop_times(processed_trips, travel_times)),
+      additional_trips_on_shared_tracks: additional_trips_to_array(additional_trips, route_id),
       timestamp: timestamp,
     }.to_json
 
@@ -68,7 +70,7 @@ class RouteAnalyzer
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       routes_with_shared_tracks: convert_to_readable_directions(routes_with_shared_tracks),
       trips: convert_to_readable_directions(format_processed_trips(processed_trips, route_id)),
-      trips_including_other_routes_on_shared_tracks: convert_to_readable_directions(format_processed_trips(append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks), route_id)),
+      trips_including_other_routes_on_shared_tracks: convert_to_readable_directions(format_processed_trips(additional_trips, route_id)),
       timestamp: timestamp,
     }.to_json
 
@@ -579,6 +581,14 @@ class RouteAnalyzer
         end
       }]
     }
+  end
+
+  def self.additional_trips_to_array(additional_trips, route_id)
+    additional_trips.flat_map { |_, trips_by_direction|
+      trips_by_direction.flat_map { |_, trips_by_routing|
+        trips_by_routing.reject { |t| t.route_id == route_id }.map(&:id)
+      }
+    }.uniq
   end
 
   def self.format_processed_trips(processed_trips, route_id)
