@@ -566,7 +566,7 @@ class RouteAnalyzer
             merged_map
           }
           routing = common_routings[direction]
-          all_trips = processed_trips.concat(additional_processed_trips.filter { |t| tracks[t.upcoming_stop].include?(t.tracks[t.upcoming_stop]) })
+          all_trips = processed_trips + additional_processed_trips.filter { |t| tracks[t.upcoming_stop].include?(t.tracks[t.upcoming_stop]) }
           [routing_key, routing.map { |s|
             all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.estimated_upcoming_stop_arrival_time }
           }.flatten.compact]
@@ -574,7 +574,7 @@ class RouteAnalyzer
           ref_trip = processed_trips.max_by { |t| t.tracks.keys.size }
           tracks = ref_trip.tracks
           routing = ref_trip.stops.sort_by { |_, v| v }.map { |k, _| k }
-          all_trips = processed_trips.concat(additional_processed_trips.filter { |t| tracks[t.upcoming_stop].present? && tracks[t.upcoming_stop] == t.tracks[t.upcoming_stop] })
+          all_trips = processed_trips + additional_processed_trips.filter { |t| tracks[t.upcoming_stop].present? && tracks[t.upcoming_stop] == t.tracks[t.upcoming_stop] }
           [routing_key, routing.map { |s|
             all_trips.select { |t| t.upcoming_stop == s }.sort_by { |t| -t.estimated_upcoming_stop_arrival_time }
           }.flatten.compact]
