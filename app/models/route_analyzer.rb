@@ -42,6 +42,7 @@ class RouteAnalyzer
       slow_sections: convert_to_readable_directions(slow_sections),
       long_headway_sections: convert_to_readable_directions(long_headway_sections),
       delayed_sections: convert_to_readable_directions(delayed_sections),
+      routes_with_shared_tracks_summary: summarize_routes_with_shared_tracks(routes_with_shared_tracks),
       trips: convert_to_readable_directions(format_trips_with_upcoming_stop_times(processed_trips, travel_times)),
       additional_trips_on_shared_tracks: additional_trips_to_array(additional_trips, route_id),
       timestamp: timestamp,
@@ -587,6 +588,14 @@ class RouteAnalyzer
     additional_trips.flat_map { |_, trips_by_direction|
       trips_by_direction.flat_map { |_, trips_by_routing|
         trips_by_routing.reject { |t| t.route_id == route_id }.map(&:id)
+      }
+    }.uniq
+  end
+
+  def self.summarize_routes_with_shared_tracks(routes_with_shared_tracks)
+    routes_with_shared_tracks.flat_map { |_, stops_with_shared_routes|
+      stops_with_shared_routes.flat_map { |_, routes|
+        routes.keys
       }
     }.uniq
   end
