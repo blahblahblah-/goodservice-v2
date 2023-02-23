@@ -690,9 +690,12 @@ class TrainModalDirectionPane extends React.Component {
     const { displayAdditionalTrips } = this.state;
     const startName = formatStation(stations[start].name);
     const endName = formatStation(stations[end].name);
-    const renderRoutes = routes.sort().map((r) => {
-      const selectedTrain = trains[r];
-      return (<TrainBullet name={selectedTrain.name} color={selectedTrain.color}
+    const renderRoutes = routes.sort().map((str) => {
+      const tuple = str.split('|');
+      const route = tuple[0];
+      const direction = tuple[1];
+      const selectedTrain = trains[route];
+      return (<TrainBullet name={selectedTrain.name} link={true} linkedView={direction[0].toUpperCase()} id={selectedTrain.id} color={selectedTrain.color}
         textColor={selectedTrain.text_color} style={{display: "inline-block"}} key={selectedTrain.id} size='small' />);
     });
     const hasSharedTracks = train.routes_with_shared_tracks && train.routes_with_shared_tracks[direction] && Object.keys(train.routes_with_shared_tracks[direction]).length > 0;
@@ -791,7 +794,7 @@ class TrainModalDirectionPane extends React.Component {
             selectedTrips,
             currentSegment[0],
             currentSegment[currentSegment.length - 1],
-            currentSharedRoutesArray.map((r) => r.split('|')[0]),
+            currentSharedRoutesArray,
             currentSegment,
           )
         );
@@ -809,7 +812,7 @@ class TrainModalDirectionPane extends React.Component {
         selectedTrips,
         currentSegment[0],
         currentSegment[currentSegment.length - 1],
-        Object.keys(currentSharedRoutes),
+        currentSharedRoutesArray,
         currentSegment,
       )
     );
