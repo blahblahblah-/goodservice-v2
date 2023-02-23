@@ -824,10 +824,15 @@ class TrainModalDirectionPane extends React.Component {
     const { trains, train, direction, stations } = this.props;
     const { selectedRouting, routings, travelTimeFrom, travelTimeTo, displayAdditionalTrips } = this.state;
     const routingToMap = selectedRouting === 'blended' ? train.actual_routings && train.actual_routings[direction] : [routings[selectedRouting]];
-    let tripsForMap = train.trips && train.trips[direction] && train.trips[direction][selectedRouting] || [];
-    if (selectedRouting === 'blended' && train.trips && train.trips[direction]) {
-      tripsForMap = Object.keys(train.trips[direction]).filter((key) => key !== 'blended').flatMap((key) => train.trips[direction][key])
-      tripsForMap = tripsForMap.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
+    let tripsForMap = [];
+    if (train.trips && train.trips[direction]) {
+      const tripsObj = displayAdditionalTrips ? train.trips_including_other_routes_on_shared_tracks[direction] : train.trips[direction];
+      tripsForMap = tripsObj[selectedRouting] || [];
+
+      if (selectedRouting === 'blended') {
+        tripsForMap = Object.keys(tripsObj).filter((key) => key !== 'blended').flatMap((key) => tripsObj[key])
+        tripsForMap = tripsForMap.filter((value, index, array) => array.indexOf(array.find((t) => t.id === value.id)) === index);
+      }
     }
     const hasSharedTracks = train.routes_with_shared_tracks && train.routes_with_shared_tracks[direction] && Object.keys(train.routes_with_shared_tracks[direction]).length > 0;
     return (

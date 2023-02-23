@@ -3,7 +3,7 @@ import { Header, Label, Icon } from 'semantic-ui-react';
 import { Link } from "react-router-dom";
 
 import TrainBullet from './trainBullet.jsx';
-import { formatStation } from './utils';
+import { formatStation, hexToRgb } from './utils';
 import { accessibilityIcon } from './accessibility.jsx';
 
 import './trainMapStop.scss'
@@ -11,27 +11,40 @@ import './trainMapStop.scss'
 class TrainMapStop extends React.Component {
 
   renderStop() {
-    const { southStop, northStop, train, direction, trips } = this.props;
+    const { trains, southStop, northStop, train, direction, trips } = this.props;
 
     const directionKey = direction && direction[0].toUpperCase();
     const time = Date.now() / 1000;
-    const stopsBefore = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) > 60);
-    const stopsAt = trips && trips.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) <= 60);
-    const anyTripDelayed = trips && trips.filter((t) => t.is_delayed).length > 0;
+    const stopsBefore = trips?.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) > 60);
+    const stopsAt = trips?.filter((t) => (t.estimated_upcoming_stop_arrival_time - time) <= 60);
+    const tripsBeforeDelayed = stopsBefore?.filter((t) => t.is_delayed).length > 0;
+    const tripsAtDelayed = stopsAt?.filter((t) => t.is_delayed).length > 0;
     const tripContainer = [];
 
     if (stopsBefore && stopsBefore.length > 0) {
+      const lastIndex = stopsBefore.length - 1;
+      const trip = stopsBefore[lastIndex];
+      const currentTrain = trains[trip.route_id];
+      const color = currentTrain.color;
+      const rgb = hexToRgb(color)
+      const style = trip.route_id === train.id ? {} : { backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},.4)`, border: "1px solid rgba(0, 0, 0,.4)" }
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${directionKey}/${stopsBefore[0].id}`} key={stopsBefore[0].id}>
-          <div className={anyTripDelayed ? 'delayed trip-before' : 'trip-before'} key='trip-before'></div>
+        <Link to={`/trains/${currentTrain.id}/${directionKey}/${trip.id}`} key={trip.id}>
+          <div className={tripsBeforeDelayed ? 'delayed trip-before' : 'trip-before'} style={style} key='trip-before'></div>
         </Link>
       );
     }
 
     if (stopsAt && stopsAt.length > 0) {
+      const lastIndex = stopsAt.length - 1;
+      const trip = stopsAt[lastIndex];
+      const currentTrain = trains[trip.route_id];
+      const color = currentTrain.color;
+      const rgb = hexToRgb(color)
+      const style = trip.route_id === train.id ? {} : { backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},.4)`, border: "1px solid rgba(0, 0, 0,.4)" }
       tripContainer.push(
-        <Link to={`/trains/${train.id}/${directionKey}/${stopsAt[0].id}`} key={stopsAt[0].id}>
-          <div className={anyTripDelayed ? 'delayed trip-at' : 'trip-at'} key='trip-at'></div>
+        <Link to={`/trains/${currentTrain.id}/${directionKey}/${trip.id}`} key={trip.id}>
+          <div className={tripsAtDelayed ? 'delayed trip-at' : 'trip-at'} style={style} key='trip-at'></div>
         </Link>
       );
     }
