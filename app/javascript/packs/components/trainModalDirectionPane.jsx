@@ -625,7 +625,7 @@ class TrainModalDirectionPane extends React.Component {
       const routing = train.actual_routings[direction].find((r) => key === `${r[0]}-${r[r.length - 1]}-${r.length}`);
       const i = routing.indexOf(commonRouting[0]);
       const subrouting = routing.slice(0, i);
-      const trips = remainingTrips.filter((trip) => subrouting.includes(trip.upcoming_stop));
+      const trips = subrouting.map((stopId) => remainingTrips.filter((trip) => trip.upcoming_stop === stopId)).map((trips) => trips.sort((a, b) => b.estimated_upcoming_stop_arrival_time - a.estimated_upcoming_stop_arrival_time)).flat();
       remainingTrips = remainingTrips.filter((trip => !trips.map((t) => t.id).includes(trip.id)));
       if (trips.length > 0) {
         componentArray.push(this.renderSingleRoutingTable(train, key, direction, trips, subrouting[0], commonRouting[0]));
