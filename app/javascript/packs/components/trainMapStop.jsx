@@ -28,8 +28,9 @@ class TrainMapStop extends React.Component {
       const color = currentTrain.color;
       const rgb = hexToRgb(color)
       const style = trip.route_id === train.id ? {} : { backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},.4)`, border: "2px solid rgba(0, 0, 0,.4)" }
+      const linkDirection = trip.direction ? trip.direction[0].toUpperCase() : directionKey;
       tripContainer.push(
-        <Link to={`/trains/${currentTrain.id}/${directionKey}/${trip.id}`} key={trip.id}>
+        <Link to={`/trains/${currentTrain.id}/${linkDirection}/${trip.id}`} key={trip.id}>
           <div className={tripsBeforeDelayed ? 'delayed trip-before' : 'trip-before'} style={style} key='trip-before'></div>
         </Link>
       );
@@ -42,8 +43,9 @@ class TrainMapStop extends React.Component {
       const color = currentTrain.color;
       const rgb = hexToRgb(color)
       const style = trip.route_id === train.id ? {} : { backgroundColor: `rgba(${rgb.r},${rgb.g},${rgb.b},.4)`, border: "2px solid rgba(0, 0, 0,.4)" }
+      const linkDirection = trip.direction ? trip.direction[0].toUpperCase() : directionKey;
       tripContainer.push(
-        <Link to={`/trains/${currentTrain.id}/${directionKey}/${trip.id}`} key={trip.id}>
+        <Link to={`/trains/${currentTrain.id}/${linkDirection}/${trip.id}`} key={trip.id}>
           <div className={tripsAtDelayed ? 'delayed trip-at' : 'trip-at'} style={style} key='trip-at'></div>
         </Link>
       );

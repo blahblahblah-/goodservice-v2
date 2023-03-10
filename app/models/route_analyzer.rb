@@ -610,6 +610,7 @@ class RouteAnalyzer
             {
               id: trip.id,
               route_id: trip.route_id,
+              direction: trip.direction == 3 ? "south" : "north",
               previous_stop: trip.previous_stop,
               previous_stop_arrival_time: trip.previous_stop_arrival_time,
               upcoming_stop: trip.upcoming_stop,
