@@ -41,7 +41,7 @@ class TrainMap extends React.Component {
       return [...obj].reverse();
     }) || [];
 
-    const allRoutings = southRoutings.concat(northRoutings);
+    const allRoutings = southRoutings.concat(northRoutings).sort((a, b) => b.length - a.length);
 
     const line = allRoutings[0];
 
