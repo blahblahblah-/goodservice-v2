@@ -133,7 +133,12 @@ class ServiceChangeAnalyzer
           scheduled_tuples = scheduled&.map { |s| [s.first, s.last] }&.uniq || []
 
           if actual_tuples.size > 1 && (scheduled_tuples.size != actual_tuples.size || !scheduled_tuples.all? { |s| actual_tuples.any? { |a| a == s }})
-            split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], actual_tuples)
+            evergreen_current_routing = evergreen_routings[route_id][direction[:scheduled_direction].to_s].sort_by(&:size).first
+            sorted_actual_tuples = evergreen_current_routing.flat_map { |s| actual_tuples.filter { |at| at.include?(s) }}.uniq
+            remaining_tuples = actual_tuples - sorted_actual_tuples
+            sorted_actual_tuples = sorted_actual_tuples.concat(remaining_tuples)
+
+            split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], sorted_actual_tuples)
             changes.each_with_index do |changes_by_routing, i|
               rerouting_changes = changes_by_routing.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && (c.begin_of_route? || c.end_of_route?)}
               related_routes = rerouting_changes.flat_map { |c| c.related_routes }.compact.uniq.select{ |r| r != route_id }
