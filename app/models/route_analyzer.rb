@@ -676,10 +676,10 @@ class RouteAnalyzer
   end
 
   def self.sort_actual_routings(actual_routings, scheduled_routings)
-    all_south_scheduled_routings = (scheduled_routings[1] + scheduled_routings[0]&.map(&:reverse)).compact.uniq
+    all_south_scheduled_routings = ((scheduled_routings[1] || []) + (scheduled_routings[0]&.map(&:reverse) || [])).compact.uniq
     actual_routings.to_h { |direction, a|
       compared_routings = direction == 3 ? all_south_scheduled_routings : all_south_scheduled_routings.map(&:reverse)
-      results = compared_routings.sort_by(&:size).first.flat_map { |s| a.filter { |a1| a1.any? { |s| a1.include?(s) }}.sort_by { |r| -r.size }}.compact.uniq
+      results = compared_routings.sort_by { |r| -r.size }.first&.flat_map { |s| a.filter { |a1| a1.any? { |s| a1.include?(s) }}}&.compact&.uniq || []
       remaining_routings = []
       [direction, results + remaining_routings]
     }
