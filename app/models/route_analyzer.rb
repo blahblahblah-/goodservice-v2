@@ -37,7 +37,7 @@ class RouteAnalyzer
       delay_summaries: convert_to_readable_directions(delay_summaries),
       service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
       service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names, stop_name_formatter),
-      actual_routings: convert_to_readable_directions(actual_routings),
+      actual_routings: convert_to_readable_directions(sort_actual_routings(actual_routings, scheduled_routings)),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       slow_sections: convert_to_readable_directions(slow_sections),
       long_headway_sections: convert_to_readable_directions(long_headway_sections),
@@ -67,7 +67,7 @@ class RouteAnalyzer
       overall_runtime_diff: convert_to_readable_directions(overall_runtime_diffs),
       max_headway_discrepancy: convert_to_readable_directions(headway_discrepancy),
       scheduled_headways: convert_scheduled_to_readable_directions(scheduled_headways_by_routes),
-      actual_routings: convert_to_readable_directions(actual_routings),
+      actual_routings: convert_to_readable_directions(sort_actual_routings(actual_routings, scheduled_routings)),
       common_routings: convert_to_readable_directions(common_routings),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       routes_with_shared_tracks: convert_to_readable_directions(routes_with_shared_tracks),
@@ -672,6 +672,16 @@ class RouteAnalyzer
           last_stop_made: last_past_stop,
         }
       }]
+    }
+  end
+
+  def self.sort_actual_routings(actual_routings, scheduled_routings)
+    all_south_scheduled_routings = (scheduled_routings[1] + scheduled_routings[0]&.map(&:reverse)).compact.uniq
+    actual_routings.to_h { |direction, a|
+      compared_routings = direction == 3 ? all_south_scheduled_routings : all_south_scheduled_routings.map(&:reverse)
+      results = compared_routings.sort_by(&:size).first.flat_map { |s| a.filter { |a1| a1.any? { |s| a1.include?(s) }}.sort_by { |r| -r.size }}.compact.uniq
+      remaining_routings = []
+      [direction, results + remaining_routings]
     }
   end
 
