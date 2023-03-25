@@ -680,7 +680,7 @@ class RouteAnalyzer
     actual_routings.to_h { |direction, a|
       compared_routings = direction == 3 ? all_south_scheduled_routings : all_south_scheduled_routings.map(&:reverse)
       results = compared_routings.sort_by { |r| -r.size }.first&.flat_map { |s| a.filter { |a1| a1.any? { |s| a1.include?(s) }}}&.compact&.uniq || []
-      remaining_routings = []
+      remaining_routings = a - results
       [direction, results + remaining_routings]
     }
   end
