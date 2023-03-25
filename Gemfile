@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.7.2'
+ruby File.read(".ruby-version").strip
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1.0'
@@ -9,7 +9,7 @@ gem 'rails', '~> 6.1.0'
 gem 'pg'
 
 # Use Puma as the app server
-gem 'puma', '~> 5.6'
+gem 'puma', '< 7'
 # Use SCSS for stylesheets
 gem 'sass-rails', '>= 6'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
@@ -29,7 +29,7 @@ gem 'hiredis'
 # gem 'image_processing', '~> 1.2'
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', '>= 1.4.4', require: false
+gem 'bootsnap', '>= 1.9.4', require: false
 
 gem 'gtfs-realtime-bindings'
 gem 'parallel'
@@ -42,6 +42,8 @@ gem 'naturally'
 gem 'twitter'
 gem 'rack-cors'
 gem 'httparty'
+gem 'psych', '< 4'
+gem 'rack', '~> 2.2.4'
 
 # gem 'rack-cors'
 # gem 'twitter'
@@ -77,3 +79,5 @@ end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+gem "webrick", "~> 1.8"
