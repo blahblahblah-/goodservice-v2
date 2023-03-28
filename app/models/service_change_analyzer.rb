@@ -133,7 +133,7 @@ class ServiceChangeAnalyzer
           scheduled_tuples = scheduled&.map { |s| [s.first, s.last] }&.uniq || []
 
           if actual_tuples.size > 1 && (scheduled_tuples.size != actual_tuples.size || !scheduled_tuples.all? { |s| actual_tuples.any? { |a| a == s }})
-            evergreen_current_routing = evergreen_routings[route_id][direction[:scheduled_direction].to_s].sort_by(&:size).first
+            evergreen_current_routing = evergreen_routings[route_id][direction[:scheduled_direction].to_s].max_by(&:size)
             sorted_actual_tuples = evergreen_current_routing.flat_map { |s| actual_tuples.filter { |at| at.include?(s) }}.uniq
             remaining_tuples = actual_tuples - sorted_actual_tuples
             sorted_actual_tuples = sorted_actual_tuples.concat(remaining_tuples)
