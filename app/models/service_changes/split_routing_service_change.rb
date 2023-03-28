@@ -32,4 +32,13 @@ class ServiceChanges::SplitRoutingServiceChange < ServiceChanges::ServiceChange
   def ==(other)
     self.class == other.class && self.direction == other.direction && self.routing_tuples == other.routing_tuples
   end
+
+  def as_json(options = {})
+    {
+      type: self.class.name.demodulize,
+      stations_affected: stations_affected,
+      related_routes: related_routes,
+      routing_tuples: routing_tuples,
+    }
+  end
 end
