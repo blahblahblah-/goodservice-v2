@@ -84,6 +84,7 @@ GEM
     concurrent-ruby (1.1.10)
     connection_pool (2.2.5)
     crass (1.0.6)
+    digest (3.1.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     equalizer (0.0.11)
@@ -127,6 +128,7 @@ GEM
       multi_xml (>= 0.5.2)
     i18n (1.10.0)
       concurrent-ruby (~> 1.0)
+    io-wait (0.2.1)
     jbuilder (2.10.1)
       activesupport (>= 5.0.0)
     listen (3.3.3)
@@ -155,6 +157,21 @@ GEM
     multipart-post (2.1.1)
     naturally (2.2.1)
     naught (1.1.0)
+    net-imap (0.2.3)
+      digest
+      net-protocol
+      strscan
+    net-pop (0.1.1)
+      digest
+      net-protocol
+      timeout
+    net-protocol (0.1.2)
+      io-wait
+      timeout
+    net-smtp (0.3.1)
+      digest
+      net-protocol
+      timeout
     nio4r (2.5.8)
     nokogiri (1.13.7)
       mini_portile2 (~> 2.8.0)
@@ -263,9 +280,11 @@ GEM
       activesupport (>= 5.2)
       sprockets (>= 3.0.0)
     statsd-ruby (1.5.0)
+    strscan (3.0.1)
     thor (1.2.1)
     thread_safe (0.3.6)
     tilt (2.0.10)
+    timeout (0.2.0)
     turbolinks (5.2.1)
       turbolinks-source (~> 5.2)
     turbolinks-source (5.2.0)
@@ -326,6 +345,9 @@ DEPENDENCIES
   jbuilder (~> 2.7)
   listen (~> 3.3)
   naturally
+  net-imap
+  net-pop
+  net-smtp
   parallel
   pg
   platform-api

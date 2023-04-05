@@ -44,7 +44,12 @@ gem 'rack-cors'
 gem 'httparty'
 gem 'psych', '< 4'
 gem 'rack', '~> 2.2.4'
+
+# Needed since Ruby 3.x upgrade
 gem 'rss'
+gem 'net-smtp' # to send email
+gem 'net-imap' # for rspec
+gem 'net-pop'  # for rspec
 
 # gem 'rack-cors'
 # gem 'twitter'
