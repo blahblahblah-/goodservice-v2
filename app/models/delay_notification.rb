@@ -42,7 +42,7 @@ class DelayNotification
   end
 
   def match_routing?(routing, potential_matched_stops, potential_stop_tracks)
-    return false unless routing.each_cons(stops.size).any? { |arr| arr == stops && arr.all? { |s| !tracks[s] || !potential_stop_tracks[s] || tracks[s] == potential_stop_tracks[s] }}}
+    return false unless routing.each_cons(stops.size).any? { |arr| arr == stops && arr.all? { |s| !tracks[s] || !potential_stop_tracks[s] || tracks[s] == potential_stop_tracks[s] }}
     return true if stops.any? { |s| potential_matched_stops.include?(s) && (!tracks[s] || !potential_stop_tracks[s] || tracks[s] == potential_stop_tracks[s])}
 
     stop_indices = [stops.first, stops.last].map {|s| routing.index(s) }
