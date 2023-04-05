@@ -228,6 +228,9 @@ GEM
       ffi (~> 1.0)
     redis (4.2.5)
     regexp_parser (1.8.2)
+    rexml (3.2.5)
+    rss (0.2.9)
+      rexml
     rubyzip (2.3.0)
     sass-rails (6.0.0)
       sassc-rails (~> 2.1, >= 2.1.1)
@@ -334,6 +337,7 @@ DEPENDENCIES
   rack-mini-profiler (~> 2.0)
   rails (~> 6.1.0)
   redis (~> 4.0)
+  rss
   sass-rails (>= 6)
   selenium-webdriver
   sidekiq

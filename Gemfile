@@ -44,6 +44,7 @@ gem 'rack-cors'
 gem 'httparty'
 gem 'psych', '< 4'
 gem 'rack', '~> 2.2.4'
+gem 'rss'
 
 # gem 'rack-cors'
 # gem 'twitter'
