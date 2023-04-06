@@ -223,7 +223,7 @@ class FeedProcessor
     end
 
     def complete_trips(feed_id, timestamp)
-      active_trips_not_in_current_feed = RedisStore.active_trip_list(feed_id, timestamp).to_set
+      active_trips_not_in_current_feed = RedisStore.active_trip_list(feed_id, timestamp - INACTIVE_TRIP_TIMEOUT).to_set
       active_trips_not_in_current_feed.each do |trip_id|
         marshaled_trip = RedisStore.active_trip(feed_id, trip_id)
         if marshaled_trip
@@ -243,9 +243,10 @@ class FeedProcessor
             a_stop_time = [timestamp, a_timestamp].min
             b_stop_time = [timestamp, b_timestamp].min
 
-            break if a_stop_time == b_stop_time
-            travel_time = b_stop_time - a_stop_time
-            RedisStore.add_travel_time(stops_str, travel_time, trip.id, timestamp)
+            if b_stop_time > a_stop_time
+              travel_time = b_stop_time - a_stop_time
+              RedisStore.add_travel_time(stops_str, travel_time, trip.id, timestamp)
+            end
           end
         end
         RedisStore.remove_from_active_trip_list(feed_id, trip_id)
