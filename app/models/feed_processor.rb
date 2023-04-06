@@ -4,7 +4,7 @@ class FeedProcessor
   UPCOMING_TRIPS_TIME_ALLOWANCE = 30.minutes.to_i
   UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI = 60.minutes.to_i
   SI_FEED = '-si'
-  INCOMPLETE_TRIP_TIMEOUT = 3.minutes.to_i
+  INACTIVE_TRIP_TIMEOUT = 3.minutes.to_i
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
