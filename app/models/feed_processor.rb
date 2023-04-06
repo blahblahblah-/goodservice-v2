@@ -228,24 +228,25 @@ class FeedProcessor
         marshaled_trip = RedisStore.active_trip(feed_id, trip_id)
         if marshaled_trip
           trip = Marshal.load(marshaled_trip)
-          next unless trip.stops.size < 2
-          stops_hash = {}
+          if trip.upcoming_stops.size < 2
+            stops_hash = {}
 
-          if trip.past_stops.present?
-            last_stop_id = trip.past_stops.keys.last
-            stops_hash[last_stop_id] = trip.past_stops[last_stop_id]
-          end
+            if trip.past_stops.present?
+              last_stop_id = trip.past_stops.keys.last
+              stops_hash[last_stop_id] = trip.past_stops[last_stop_id]
+            end
 
-          stops_hash.merge!(trip.stops.select { |_, time|
-            time > trip.timestamp
-          }).each_cons(2) do |(a_stop, a_timestamp), (b_stop, b_timestamp)|
-            stops_str = "#{a_stop}-#{b_stop}"
-            a_stop_time = [timestamp, a_timestamp].min
-            b_stop_time = [timestamp, b_timestamp].min
+            stops_hash.merge!(trip.stops.select { |_, time|
+              time > trip.timestamp
+            }).each_cons(2) do |(a_stop, a_timestamp), (b_stop, b_timestamp)|
+              stops_str = "#{a_stop}-#{b_stop}"
+              a_stop_time = [timestamp, a_timestamp].min
+              b_stop_time = [timestamp, b_timestamp].min
 
-            if b_stop_time > a_stop_time
-              travel_time = b_stop_time - a_stop_time
-              RedisStore.add_travel_time(stops_str, travel_time, trip.id, timestamp)
+              if b_stop_time > a_stop_time
+                travel_time = b_stop_time - a_stop_time
+                RedisStore.add_travel_time(stops_str, travel_time, trip.id, timestamp)
+              end
             end
           end
         end
