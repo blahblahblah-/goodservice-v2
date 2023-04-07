@@ -127,7 +127,7 @@ class RouteProcessor
 
         [stops_str, trimmed_average(travel_times.map { |combined_str|
             array = combined_str.split("-")
-            array[1].to_i
+            array.last.to_i
           })
         ]
       }
