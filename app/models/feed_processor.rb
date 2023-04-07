@@ -44,7 +44,7 @@ class FeedProcessor
 
       trips = trip_entities.map { |entity|
         if duplicate_trip_ids.include?(entity.trip_update.trip.trip_id)
-          entity.trip_update.trip.trip_id = "#{entity.trip_update.trip.trip_id}-#{entity.trip_update.stop_time_update.last.stop_id[0..2]}"
+          entity.trip_update.trip.trip_id = "#{entity.trip_update.trip.trip_id}_#{entity.trip_update.stop_time_update.last.stop_id[0..2]}"
         end
 
         entity
