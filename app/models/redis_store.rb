@@ -77,8 +77,9 @@ class RedisStore
     end
 
     # Trips
-    def active_trip_list(feed_id, timestamp)
-      REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{timestamp}")
+    def active_trip_list(feed_id, timestamp, timeout_threshold = 0)
+      upperbound = timestamp - timeout_threshold
+      REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{upperbound}")
     end
 
     def add_to_active_trip_list(feed_id, trip_id, timestamp)
