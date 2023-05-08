@@ -7,7 +7,7 @@ class FeedProcessor
   INACTIVE_TRIP_TIMEOUT = 10.minutes.to_i
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
-  TRIP_UPDATE_TIMEOUT = 10.minutes.to_i
+  TRIP_UPDATE_TIMEOUT = 30.minutes.to_i
   CLOSED_STOPS = ENV['CLOSED_STOPS']&.split(',') || []
 
   class << self
