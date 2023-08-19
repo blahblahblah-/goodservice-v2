@@ -20,8 +20,8 @@ class Footer extends React.Component {
                   </a>
                 </List.Item>
                 <List.Item>
-                  <a href='https://assistant.google.com/services/a/uid/0000008e2bd43866' target='_blank'>
-                    Google Assistant
+                  <a href='https://tidbyt.com/pages/apps#live' target='_blank'>
+                    Tidbyt
                   </a>
                 </List.Item>
                 <List.Item>
@@ -50,11 +50,6 @@ class Footer extends React.Component {
                 <List.Item>
                   <a href='https://www.subwaydle.com' target='_blank'>
                     Subwaydle - Daily Subway Puzzle Game
-                  </a>
-                </List.Item>
-                <List.Item>
-                  <a href='https://www.subwayridership.nyc' target='_blank'>
-                    NYC Subway Ridership
                   </a>
                 </List.Item>
               </List>

@@ -76,10 +76,6 @@ The `TwitterDelaysNotifierWorker` job to used to check if there are currently de
 
 See [goodservice-ask](https://github.com/blahblahblah-/goodservice-ask).
 
-### Google Assistant
-
-See [goodservice-gactions](https://github.com/blahblahblah-/goodservice-gactions).
-
 ## Other resources
 
 * [MTA's GTFS-realtime manual](http://datamine.mta.info/sites/all/files/pdfs/GTFS-Realtime-NYC-Subway%20version%201%20dated%207%20Sep.pdf)
