@@ -240,7 +240,8 @@ class RouteProcessor
         headway_by_routing = routing_trips.map { |r, s| [r, determine_scheduled_routing_headway(s)] }.to_h
 
         if headway_by_routing.size > 1
-          headway_by_routing['blended'] = determine_scheduled_blended_headway(trips)
+          blended_headway = determine_scheduled_blended_headway(trips)
+          headway_by_routing['blended'] = blended_headway if blended_headway.size > 1
         end
 
         [direction, headway_by_routing]
@@ -256,9 +257,13 @@ class RouteProcessor
     def determine_scheduled_blended_headway(trips)
       reverse_trip_stops = trips.map { |t| t.stop_times.pluck(:stop_internal_id).reverse }
       common_stop = reverse_trip_stops.first.find { |s| reverse_trip_stops.all? { |t| t.include?(s) } }
-      departure_times = trips.map { |t| t.stop_times.find { |s| s.stop_internal_id == common_stop }}.map(&:departure_time)
+      departure_times = trips.map { |t| t.stop_times.find { |s| s.stop_internal_id == common_stop }}.compact.map(&:departure_time)
 
-      calculate_scheduled_headway(departure_times)
+      if departure_times.present?
+        calculate_scheduled_headway(departure_times)
+      else
+        []
+      end
     end
 
     def calculate_scheduled_headway(departure_times)
