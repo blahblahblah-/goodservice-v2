@@ -531,9 +531,17 @@ class RouteAnalyzer
 
       service_changes.select { |c| c.is_a?(ServiceChanges::ExpressToLocalServiceChange)}.each do |change|
         if direction == :both
-          sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          if change.stations_affected == ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " stopping at #{stop_name_formatter.stop_name(ServiceChangeAnalyzer::DEKALB_AV_STOP)}."
+          else
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          end
         else
-          sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}-bound trains are making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          if change.stations_affected == ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE || change.stations_affected == ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE.reverse
+            sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}-bound trains are stopping at #{stop_name_formatter.stop_name(ServiceChangeAnalyzer::DEKALB_AV_STOP)}."
+          else
+            sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}-bound trains are making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          end
         end
         notices << sentence
       end

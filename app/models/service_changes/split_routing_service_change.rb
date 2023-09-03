@@ -1,11 +1,12 @@
 class ServiceChanges::SplitRoutingServiceChange < ServiceChanges::ServiceChange
   attr_accessor :routing_tuples, :related_routes_by_segments
 
-  def initialize(direction, routing_tuples)
+  def initialize(direction, routing_tuples, long_term_override)
     self.direction = direction
     self.affects_some_trains = false
     self.routing_tuples = routing_tuples
     self.related_routes_by_segments = {}
+    self.long_term_override = long_term_override
   end
 
   def match?(comparing_change)

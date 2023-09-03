@@ -476,9 +476,18 @@ class TrainModalDirectionPane extends React.Component {
     const { routings, selectedRouting } = this.state;
     const options = Object.keys(routings).map((hash) => {
       const routing = routings[hash];
+      const allRoutings = Object.keys(routings).filter((key) => key !== hash).map((key) => routings[key]);
+      const isLocal = allRoutings.some((r) => r.every((s) => routing.includes(s)) && !routing.every((s) => r.includes(s)));
+      const isExpress = allRoutings.some((r) => !r.every((s) => routing.includes(s)) && routing.every((s) => r.includes(s)));
+      let text = `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops)`;
+      if (isLocal) {
+        text = `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops via Local)`;
+      } else if (isExpress) {
+        text = `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops via Express)`;
+      }
       return {
         key: hash,
-        text: `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops)`,
+        text: text,
         value: hash,
       };
     });

@@ -11,6 +11,64 @@ class ServiceChangeAnalyzer
     suffix: 'S'
   }
 
+  CITY_HALL_STOP = "R24" # Use to disguish re-routes via Manhattan Bridge/Lower Manhattan as not just Local <=> Express, but re-routes
+
+  CANAL_TO_ATLANTIC_VIA_BRIDGE = ["Q01", "R30", "R31"]
+
+  DEKALB_AV_STOP = "R30"
+
+  SIXTY_THIRD_STREET_SERVICE_CHANGES = {
+    "F" => {
+      default: [
+        "D43",
+        "D42",
+        "F39",
+        "F38",
+        "F36",
+        "F35",
+        "F34",
+        "F33",
+        "F32",
+        "F31",
+        "F30",
+        "F29",
+        "F27",
+        "F26",
+        "F25",
+        "F24",
+        "F23",
+        "F22",
+        "F21",
+        "F20",
+        "A41",
+        "F18",
+        "F16",
+        "F15",
+        "F14",
+        "D21",
+        "D20",
+        "D19",
+        "D18",
+        "D17",
+        "D16",
+        "D15",
+        "B10",
+        "B08",
+        "B06",
+        "B04",
+        "G14",
+        "G08",
+        "F07",
+        "F06",
+        "F05",
+        "F04",
+        "F03",
+        "F02",
+        "F01",
+      ],
+    },
+  }
+
   class << self
     def service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
       direction_changes = [NORTH, SOUTH].map do |direction|
@@ -20,18 +78,28 @@ class ServiceChangeAnalyzer
 
         if !actual || actual.empty?
           if !scheduled || scheduled.empty?
-            changes << [ServiceChanges::NotScheduledServiceChange.new(direction[:route_direction], [], nil, nil)]
+            changes << [ServiceChanges::NotScheduledServiceChange.new(direction[:route_direction], [], nil, nil, false)]
           else
-            changes << [ServiceChanges::NoTrainServiceChange.new(direction[:route_direction], [], nil, nil)]
+            changes << [ServiceChanges::NoTrainServiceChange.new(direction[:route_direction], [], nil, nil, false)]
           end
         else
           actual.each do |actual_routing|
             routing_changes = []
             ongoing_service_change = nil
             scheduled_routing = scheduled&.min_by { |sr| [(actual_routing - sr).size, (sr - actual_routing).size] }
+            long_term_change = false
+
+            if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
+              long_term_change = true
+              if direction == NORTH
+                scheduled_routing = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default]
+              else
+                scheduled_routing = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default].reverse
+              end
+            end
 
             if !scheduled_routing
-              changes << [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing)]
+              changes << [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing, false)]
               next
             end
 
@@ -54,25 +122,29 @@ class ServiceChangeAnalyzer
                   if (scheduled_index_to_current_station = scheduled_routing.index(actual_station)) || interchangeable_transfers[actual_station]&.any?{ |t| scheduled_index_to_current_station = scheduled_routing.index(t.from_stop_internal_id)}
                     if previous_actual_station.nil? && previous_scheduled_station.nil?
                       array_of_skipped_stations = [nil].concat(scheduled_routing[0..scheduled_index_to_current_station])
-                      routing_changes << ServiceChanges::TruncatedServiceChange.new(direction[:route_direction], array_of_skipped_stations, actual_routing.first, actual_routing)
+                      routing_changes << ServiceChanges::TruncatedServiceChange.new(direction[:route_direction], array_of_skipped_stations, actual_routing.first, actual_routing, long_term_change)
                       scheduled_index = scheduled_index_to_current_station + 1
                       previous_scheduled_station = array_of_skipped_stations.last
                     else
                       array_of_skipped_stations = scheduled_routing[(scheduled_index - 1)..scheduled_index_to_current_station]
-                      routing_changes << ServiceChanges::LocalToExpressServiceChange.new(direction[:route_direction], array_of_skipped_stations, actual_routing.first, actual_routing)
+                      if array_of_skipped_stations.include?(CITY_HALL_STOP)
+                        routing_changes << ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing, long_term_change)
+                      else
+                        routing_changes << ServiceChanges::LocalToExpressServiceChange.new(direction[:route_direction], array_of_skipped_stations, actual_routing.first, actual_routing, long_term_change)
+                      end
                       scheduled_index = scheduled_index_to_current_station + 1
                       previous_scheduled_station = actual_station
                     end
                   else
                     if (actual_routing.include?(scheduled_station) || interchangeable_transfers[scheduled_station]&.any? { |t| actual_routing.include?(t.from_stop_internal_id) }) && previous_actual_station
-                      if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
+                      if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && !(routing_changes.last.stations_affected == CANAL_TO_ATLANTIC_VIA_BRIDGE || routing_changes.last.stations_affected == CANAL_TO_ATLANTIC_VIA_BRIDGE.reverse) && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
                         ongoing_service_change = routing_changes.pop
                         ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
                       else
-                        ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station].compact, actual_routing.first, actual_routing)
+                        ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station].compact, actual_routing.first, actual_routing, long_term_change)
                       end
                     else
-                      ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                      ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing, long_term_change)
                     end
                   end
                 else
@@ -81,6 +153,9 @@ class ServiceChangeAnalyzer
                 end
               else
                 if ongoing_service_change.is_a?(ServiceChanges::ExpressToLocalServiceChange)
+                  if actual_station == CITY_HALL_STOP
+                    ongoing_service_change = ongoing_service_change.convert_to_rerouting
+                  end
                   ongoing_service_change.stations_affected << actual_station
 
                   if actual_station == scheduled_station || interchangeable_transfers[actual_station]&.any? { |t| t.from_stop_internal_id == scheduled_station }
@@ -107,9 +182,9 @@ class ServiceChangeAnalyzer
               ongoing_service_change.stations_affected << nil
               routing_changes << ongoing_service_change
             elsif remaining_stations.present?
-              routing_changes << ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], remaining_stations.concat([nil]), actual_routing.first, actual_routing)
+              routing_changes << ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], remaining_stations.concat([nil]), actual_routing.first, actual_routing, long_term_change)
             elsif scheduled_routing[scheduled_index] && scheduled_routing.size > scheduled_index
-              routing_changes << ServiceChanges::TruncatedServiceChange.new(direction[:route_direction], scheduled_routing[scheduled_index - 1..scheduled_routing.length].concat([nil]), actual_routing.first, actual_routing)
+              routing_changes << ServiceChanges::TruncatedServiceChange.new(direction[:route_direction], scheduled_routing[scheduled_index - 1..scheduled_routing.length].concat([nil]), actual_routing.first, actual_routing, long_term_change)
             end
             changes << routing_changes
           end
@@ -138,7 +213,7 @@ class ServiceChangeAnalyzer
             remaining_tuples = actual_tuples - sorted_actual_tuples
             sorted_actual_tuples = sorted_actual_tuples.concat(remaining_tuples)
 
-            split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], sorted_actual_tuples)
+            split_change = ServiceChanges::SplitRoutingServiceChange.new(direction[:route_direction], sorted_actual_tuples, false)
             changes.each_with_index do |changes_by_routing, i|
               rerouting_changes = changes_by_routing.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && (c.begin_of_route? || c.end_of_route?)}
               related_routes = rerouting_changes.flat_map { |c| c.related_routes }.compact.uniq.select{ |r| r != route_id }
@@ -235,6 +310,7 @@ class ServiceChangeAnalyzer
       current_evergreen_routings = { current_route_id => evergreen_routings[current_route_id] }
       [current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
+          next false if route_id == current_route_id
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
               routings.any? {|r| r.each_cons(sc.length).any?(&sc.method(:==))}

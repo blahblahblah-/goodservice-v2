@@ -1,13 +1,14 @@
 class ServiceChanges::ServiceChange
-  attr_accessor :direction, :stations_affected, :related_routes, :affects_some_trains, :origin, :destinations, :routing
+  attr_accessor :direction, :stations_affected, :related_routes, :affects_some_trains, :origin, :destinations, :routing, :long_term_override
 
-  def initialize(direction, stations_affected, origin, routing)
+  def initialize(direction, stations_affected, origin, routing, long_term_override)
     self.direction = direction
     self.stations_affected = stations_affected
     self.affects_some_trains = false
     self.origin = origin
     self.routing = routing
     self.destinations = [routing&.last].compact
+    self.long_term_override = long_term_override
   end
 
   def first_station
@@ -55,6 +56,6 @@ class ServiceChanges::ServiceChange
   end
 
   def not_long_term?
-    true
+    !self.long_term_override
   end
 end
