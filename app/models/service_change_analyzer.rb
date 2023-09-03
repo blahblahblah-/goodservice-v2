@@ -13,9 +13,13 @@ class ServiceChangeAnalyzer
 
   CITY_HALL_STOP = "R24" # Use to disguish re-routes via Manhattan Bridge/Lower Manhattan as not just Local <=> Express, but re-routes
 
-  CANAL_TO_ATLANTIC_VIA_BRIDGE = ["Q01", "R30", "R31"]
+  CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB = [["Q01", "R30", "R31"], ["Q01", "R30", "D24"]]
+
+  CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS = CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB + CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB.map {|r| r.reverse}
 
   DEKALB_AV_STOP = "R30"
+
+  ATLANTIC_AV_STOPS = ["R31", "R24"]
 
   SIXTY_THIRD_STREET_SERVICE_CHANGES = {
     "F" => {
@@ -137,7 +141,7 @@ class ServiceChangeAnalyzer
                     end
                   else
                     if (actual_routing.include?(scheduled_station) || interchangeable_transfers[scheduled_station]&.any? { |t| actual_routing.include?(t.from_stop_internal_id) }) && previous_actual_station
-                      if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && !(routing_changes.last.stations_affected == CANAL_TO_ATLANTIC_VIA_BRIDGE || routing_changes.last.stations_affected == CANAL_TO_ATLANTIC_VIA_BRIDGE.reverse) && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
+                      if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && !CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(routing_changes.last.stations_affected) && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
                         ongoing_service_change = routing_changes.pop
                         ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
                       else
@@ -291,8 +295,9 @@ class ServiceChangeAnalyzer
 
     def match_route(current_route_id, reroute_service_change, recent_scheduled_routings, timestamp)
       current = current_routings(timestamp)
-      stations = reroute_service_change.stations_affected.compact - [DEKALB_AV_STOP]
-      station_combinations = stations
+      stations = reroute_service_change.stations_affected.compact
+      stations -= [DEKALB_AV_STOP]
+      station_combinations = stations.dup
       if tr = interchangeable_transfers[stations.first]
         tr.each do |t|
           station_combinations << [t.from_stop_internal_id].concat(stations[1...stations.length])
@@ -314,7 +319,8 @@ class ServiceChangeAnalyzer
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
               routings.any? do |r|
-                routing = r - [DEKALB_AV_STOP]
+                routing = r
+                routing -= [DEKALB_AV_STOP]
                 routing.each_cons(sc.length).any?(&sc.method(:==))
               end
             end
@@ -333,8 +339,8 @@ class ServiceChangeAnalyzer
       [current, evergreen_routings].each do |routing_set|
         (0..1).each do |j|
           ((1 + j)...stations.size - 1).each_with_index do |i|
-            first_station_sequence = stations[0..(i - j)]
-            second_station_sequence = stations[i..stations.size]
+            first_station_sequence = stations[0..(i - j)] - [DEKALB_AV_STOP]
+            second_station_sequence = stations[i..stations.size] - [DEKALB_AV_STOP]
 
             route_pairs = [first_station_sequence, second_station_sequence].map do |station_sequence|
               route_pair = routing_set.find do |route_id, direction|
@@ -359,9 +365,9 @@ class ServiceChangeAnalyzer
       [current, evergreen_routings].each do |routing_set|
         (0...stations.size - 2).each_with_index do |i|
           (i...stations.size - 1).each_with_index do |j|
-            first_station_sequence = stations[0..i]
-            second_station_sequence = stations[i..j]
-            third_station_sequence = stations[j..stations.size]
+            first_station_sequence = stations[0..i] - [DEKALB_AV_STOP]
+            second_station_sequence = stations[i..j] - [DEKALB_AV_STOP]
+            third_station_sequence = stations[j..stations.size] - [DEKALB_AV_STOP]
 
             route_pairs = [first_station_sequence, second_station_sequence, third_station_sequence].map do |station_sequence|
               route_pair = routing_set.find do |route_id, direction|
