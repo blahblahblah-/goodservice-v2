@@ -291,8 +291,8 @@ class ServiceChangeAnalyzer
 
     def match_route(current_route_id, reroute_service_change, recent_scheduled_routings, timestamp)
       current = current_routings(timestamp)
-      stations = reroute_service_change.stations_affected.compact
-      station_combinations = [stations]
+      stations = reroute_service_change.stations_affected.compact - [DEKALB_AV_STOP]
+      station_combinations = stations
       if tr = interchangeable_transfers[stations.first]
         tr.each do |t|
           station_combinations << [t.from_stop_internal_id].concat(stations[1...stations.length])
@@ -313,7 +313,10 @@ class ServiceChangeAnalyzer
           next false if route_id == current_route_id
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
-              routings.any? {|r| r.each_cons(sc.length).any?(&sc.method(:==))}
+              routings.any? do |r|
+                routing = r - [DEKALB_AV_STOP]
+                routing.each_cons(sc.length).any?(&sc.method(:==))
+              end
             end
           end
         end
