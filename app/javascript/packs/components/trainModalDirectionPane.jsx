@@ -697,8 +697,8 @@ class TrainModalDirectionPane extends React.Component {
   renderTableSection(selectedRouting, trips, start, end, routes = [], segment = []) {
     const { train, trains, direction, stations } = this.props;
     const { displayAdditionalTrips } = this.state;
-    const startName = formatStation(stations[start].name);
-    const endName = formatStation(stations[end].name);
+    const startName = formatStation(stations[start]?.name);
+    const endName = formatStation(stations[end]?.name);
     const renderRoutes = routes.sort().map((str) => {
       const tuple = str.split('|');
       const route = tuple[0];
@@ -778,7 +778,7 @@ class TrainModalDirectionPane extends React.Component {
   }
 
   renderSingleRoutingTable(train, selectedRouting, direction, trips, start, end) {
-    let routing = selectedRouting === 'blended' ? train.common_routings[direction] : train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`);
+    let routing = selectedRouting === 'blended' ? train.common_routings[direction] : train.actual_routings[direction].find((r) => selectedRouting === `${r[0]}-${r[r.length - 1]}-${r.length}`) || [];
     if (start && end) {
       const a = routing.indexOf(start);
       const b = routing.indexOf(end);
@@ -786,7 +786,7 @@ class TrainModalDirectionPane extends React.Component {
     }
     const stopsSharedWithOtherRoutes = train.routes_with_shared_tracks[direction];
     const componentArray = [];
-    let currentSharedRoutes = stopsSharedWithOtherRoutes[routing[0]] || {};
+    let currentSharedRoutes = stopsSharedWithOtherRoutes && routing && stopsSharedWithOtherRoutes[routing[0]] || {};
     let currentSegment = [];
 
     routing.forEach((stopId) => {
