@@ -297,7 +297,7 @@ class ServiceChangeAnalyzer
       current = current_routings(timestamp)
       stations = reroute_service_change.stations_affected.compact
       stations -= [DEKALB_AV_STOP]
-      station_combinations = stations.dup
+      station_combinations = [stations.dup]
       if tr = interchangeable_transfers[stations.first]
         tr.each do |t|
           station_combinations << [t.from_stop_internal_id].concat(stations[1...stations.length])
