@@ -1,7 +1,7 @@
 class ServiceChanges::SplitRoutingServiceChange < ServiceChanges::ServiceChange
   attr_accessor :routing_tuples, :related_routes_by_segments
 
-  def initialize(direction, routing_tuples, long_term_override)
+  def initialize(direction, routing_tuples, long_term_override = false)
     self.direction = direction
     self.affects_some_trains = false
     self.routing_tuples = routing_tuples
@@ -40,6 +40,7 @@ class ServiceChanges::SplitRoutingServiceChange < ServiceChanges::ServiceChange
       stations_affected: stations_affected,
       related_routes: related_routes,
       routing_tuples: routing_tuples,
+      long_term: !not_long_term?,
     }
   end
 end

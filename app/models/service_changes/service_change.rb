@@ -1,7 +1,7 @@
 class ServiceChanges::ServiceChange
   attr_accessor :direction, :stations_affected, :related_routes, :affects_some_trains, :origin, :destinations, :routing, :long_term_override
 
-  def initialize(direction, stations_affected, origin, routing, long_term_override)
+  def initialize(direction, stations_affected, origin, routing, long_term_override = false)
     self.direction = direction
     self.stations_affected = stations_affected
     self.affects_some_trains = false
@@ -52,6 +52,7 @@ class ServiceChanges::ServiceChange
       type: self.class.name.demodulize,
       stations_affected: stations_affected,
       related_routes: related_routes,
+      long_term: !not_long_term?,
     }
   end
 
