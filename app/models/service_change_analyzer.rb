@@ -316,14 +316,21 @@ class ServiceChangeAnalyzer
       stations = reroute_service_change.stations_affected.compact
       stations -= [DEKALB_AV_STOP]
       station_combinations = [stations.dup]
-      if tr = interchangeable_transfers[stations.first]
-        tr.each do |t|
-          station_combinations << [t.from_stop_internal_id].concat(stations[1...stations.length])
+      tr1 = interchangeable_transfers[stations.first]&.map(&:from_stop_internal_id)
+      tr2 = interchangeable_transfers[stations.last]&.map(&:from_stop_internal_id)
+      if tr1 && tr2
+        ([stations.first] + tr1).each do |t1|
+          ([stations.last] + tr2).each do |t2|
+            station_combinations << [t1].concat(stations[1...stations.length - 1]).concat([t2])
+          end
         end
-      end
-      if tr = interchangeable_transfers[stations.last]
-        tr.each do |t|
-          station_combinations << stations[0...stations.length - 1].concat([t.from_stop_internal_id])
+      elsif tr1
+        tr1.each do |t1|
+          station_combinations << [t1].concat(stations[1...stations.length])
+        end
+      elsif tr2
+        tr2.each do |t2|
+          station_combinations << stations[0...stations.length - 1].concat([t2])
         end
       end
 
@@ -333,7 +340,8 @@ class ServiceChangeAnalyzer
       current_evergreen_routings = { current_route_id => evergreen_routings[current_route_id] }
       [current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
-          next false if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && route_id == current_route_id && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
+          next false if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present? && route_id == current_route_id
+          next false if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?  && route_id.end_with?('X')
           next false if !is_begin_of_route && route_id == current_route_id
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
