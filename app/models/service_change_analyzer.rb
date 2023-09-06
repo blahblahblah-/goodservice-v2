@@ -226,6 +226,7 @@ class ServiceChangeAnalyzer
           if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
             originally_scheduled_routings = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default]
             originally_scheduled_routings = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default].reverse if direction == SOUTH
+            scheduled_tuples = originally_scheduled_routings&.map { |s| [s.first, s.last] }&.uniq || []
             long_term_change = true
           end
 
