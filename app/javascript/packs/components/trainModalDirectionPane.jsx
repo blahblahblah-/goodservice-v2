@@ -478,22 +478,30 @@ class TrainModalDirectionPane extends React.Component {
       const routing = routings[hash];
       const allRoutings = Object.keys(routings).filter((key) => key !== hash).map((key) => routings[key]);
       const isLocal = allRoutings.some((r) => {
-        let commonStop = routing.find((s) => r.includes(s));
-        if (!commonStop) {
+        let commonStart = routing.find((s) => r.includes(s));
+        if (!commonStart) {
           return false;
         }
-        let subrouting1 = routing.slice(routing.indexOf(commonStop));
-        let subrouting2 = r.slice(r.indexOf(commonStop));
+        let commonEnd = routing.toReversed().find((s) => r.includes(s));
+        if (commonStart === commonEnd) {
+          return false;
+        }
+        let subrouting1 = routing.slice(routing.indexOf(commonStart), routing.indexOf(commonEnd));
+        let subrouting2 = r.slice(r.indexOf(commonStart), r.indexOf(commonEnd));
         return subrouting2.every((s) => subrouting1.includes(s)) && !subrouting1.every((s) => subrouting2.includes(s))
       });
       const isExpress = allRoutings.some((r) => {
-        let commonStop = routing.find((s) => r.includes(s));
-        if (!commonStop) {
+        let commonStart = routing.find((s) => r.includes(s));
+        if (!commonStart) {
           return false;
         }
-        let subrouting1 = routing.slice(routing.indexOf(commonStop));
-        let subrouting2 = r.slice(r.indexOf(commonStop));
-        return !subrouting2.every((s) => subrouting1.includes(s)) && subrouting1.every((s) => subrouting2.includes(s));
+        let commonEnd = routing.toReversed().find((s) => r.includes(s));
+        if (commonStart === commonEnd) {
+          return false;
+        }
+        let subrouting1 = routing.slice(routing.indexOf(commonStart), routing.indexOf(commonEnd));
+        let subrouting2 = r.slice(r.indexOf(commonStart), r.indexOf(commonEnd));
+        return !subrouting2.every((s) => subrouting1.includes(s)) && subrouting1.every((s) => subrouting2.includes(s))
       });
       let text = `${formatStation(stations[routing[0]].name)} ➜ ${formatStation(stations[routing[routing.length - 1]].name)} (${routing.length} stops)`;
       if (isLocal) {
