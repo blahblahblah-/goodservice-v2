@@ -23,58 +23,6 @@ class ServiceChangeAnalyzer
 
   ATLANTIC_AV_STOPS = ["R31", "R24"]
 
-  SIXTY_THIRD_STREET_SERVICE_CHANGES = {
-    "F" => {
-      default: [
-        "D43",
-        "D42",
-        "F39",
-        "F38",
-        "F36",
-        "F35",
-        "F34",
-        "F33",
-        "F32",
-        "F31",
-        "F30",
-        "F29",
-        "F27",
-        "F26",
-        "F25",
-        "F24",
-        "F23",
-        "F22",
-        "F21",
-        "F20",
-        "A41",
-        "F18",
-        "F16",
-        "F15",
-        "F14",
-        "D21",
-        "D20",
-        "D19",
-        "D18",
-        "D17",
-        "D16",
-        "D15",
-        "B10",
-        "B08",
-        "B06",
-        "B04",
-        "G14",
-        "G08",
-        "F07",
-        "F06",
-        "F05",
-        "F04",
-        "F03",
-        "F02",
-        "F01",
-      ],
-    },
-  }
-
   class << self
     def service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
       direction_changes = [NORTH, SOUTH].map do |direction|
@@ -222,7 +170,7 @@ class ServiceChangeAnalyzer
           actual_tuples = unique_actual_routings.select { |a1|
             unique_actual_routings.none? { |a2| a1 != a2 && a2.include?(a1.first) && a2.include?(a1.last) }
           }.map { |a| [a.first, a.last] }.uniq
-          scheduled_tuples = scheduled_routings&.map { |s| [s.first, s.last] }&.uniq || []
+          scheduled_tuples = scheduled&.map { |s| [s.first, s.last] }&.uniq || []
           long_term_change = false
           if long_term_routings.present?
             scheduled_tuples = long_term_routings&.map { |s| [s.first, s.last] }&.uniq || []
@@ -419,6 +367,7 @@ class ServiceChangeAnalyzer
 
     def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
       all_routings = current_routings(timestamp)
+      all_routings.merge!(LongTermServiceChangeRoutingManager.get_all_routings)
       stations_sequence = express_to_local_service_change.stations_affected
       results = stations_sequence
       found = false
@@ -428,7 +377,7 @@ class ServiceChangeAnalyzer
           if all_routings.any? { |_, routings_by_direction|
             routings_by_direction.any? do |_, routings|
               routings.any? do |routing|
-                stations == routing & stations
+                stations == routing & stations && routing.each_cons(stations.size).any?(&stations.method(:==))
               end
             end
           }

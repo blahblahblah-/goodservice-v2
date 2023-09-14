@@ -685,9 +685,10 @@ class RouteAnalyzer
 
   def self.sort_actual_routings(route_id, actual_routings, scheduled_routings)
     all_south_scheduled_routings = ((scheduled_routings[1] || []) + (scheduled_routings[0]&.map(&:reverse) || [])).compact.uniq
-    if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && ServiceChangeAnalyzer::SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
-      all_south_scheduled_routings = ServiceChangeAnalyzer::SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].map { |_, r| r.reverse }
-    end
+    # TODO: Replace this
+    # if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && ServiceChangeAnalyzer::SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
+    #   all_south_scheduled_routings = ServiceChangeAnalyzer::SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].map { |_, r| r.reverse }
+    # end
     actual_routings.to_h { |direction, a|
       compared_routings = direction == 3 ? all_south_scheduled_routings : all_south_scheduled_routings.map(&:reverse)
       results = compared_routings.sort_by { |r| -r.size }.first&.flat_map { |s| a.filter { |a1| a1.any? { |s| a1.include?(s) }}}&.compact&.uniq || []
