@@ -2,13 +2,15 @@ class ServiceChangeAnalyzer
   NORTH = {
     route_direction: 1,
     scheduled_direction: 0,
-    suffix: 'N'
+    suffix: 'N',
+    sym: :north,
   }
 
   SOUTH = {
     route_direction: 3,
     scheduled_direction: 1,
-    suffix: 'S'
+    suffix: 'S',
+    sym: :south,
   }
 
   CITY_HALL_STOP = "R24" # Use to disguish re-routes via Manhattan Bridge/Lower Manhattan as not just Local <=> Express, but re-routes
@@ -79,6 +81,7 @@ class ServiceChangeAnalyzer
         changes = []
         actual = actual_routings[direction[:route_direction]]
         scheduled = scheduled_routings[direction[:scheduled_direction]]
+        long_term_routings = LongTermServiceChangeRoutingManager.get_routing(route_id, direction[:sym])
 
         if !actual || actual.empty?
           if !scheduled || scheduled.empty?
@@ -89,19 +92,15 @@ class ServiceChangeAnalyzer
         else
           actual.each do |actual_routing|
             proposed_changes = [false, true].map do |long_term_change|
-              next [] unless !long_term_change || (ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?)
+              next [] unless !long_term_change || long_term_routings.present?
               routing_changes = []
               ongoing_service_change = nil
-              scheduled_routing = scheduled&.min_by { |sr| [(actual_routing - sr).size, (sr - actual_routing).size] }
-              long_term_change_current_routing = scheduled_routing.dup
-
+              scheduled_routings_to_use = scheduled
               if long_term_change == true
-                if direction == NORTH
-                  scheduled_routing = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default]
-                else
-                  scheduled_routing = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default].reverse
-                end
+                scheduled_routings_to_use = long_term_routings
               end
+
+              scheduled_routing = scheduled_routings_to_use&.min_by { |sr| [(actual_routing - sr).size, (sr - actual_routing).size] }
 
               if !scheduled_routing
                 next [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing)]
@@ -193,7 +192,7 @@ class ServiceChangeAnalyzer
               routing_changes
             end
 
-            if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
+            if long_term_routings.present?
               long_term_changes = (proposed_changes.second - proposed_changes.first).map { |c|
                 c.long_term_override = true
                 c
@@ -210,6 +209,8 @@ class ServiceChangeAnalyzer
           changes_by_routing.each do |c|
             if c.is_a?(ServiceChanges::ReroutingServiceChange)
               match_route(route_id, c, recent_scheduled_routings, timestamp, c.begin_of_route?)
+            elsif c.is_a?(ServiceChanges::ExpressToLocalServiceChange)
+              trim_express_to_local_service_change(c, timestamp)
             end
           end
         end
@@ -221,12 +222,10 @@ class ServiceChangeAnalyzer
           actual_tuples = unique_actual_routings.select { |a1|
             unique_actual_routings.none? { |a2| a1 != a2 && a2.include?(a1.first) && a2.include?(a1.last) }
           }.map { |a| [a.first, a.last] }.uniq
-          scheduled_tuples = scheduled&.map { |s| [s.first, s.last] }&.uniq || []
+          scheduled_tuples = scheduled_routings&.map { |s| [s.first, s.last] }&.uniq || []
           long_term_change = false
-          if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id].present?
-            originally_scheduled_routings = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default]
-            originally_scheduled_routings = SIXTY_THIRD_STREET_SERVICE_CHANGES[route_id][:default].reverse if direction == SOUTH
-            scheduled_tuples = originally_scheduled_routings&.map { |s| [s.first, s.last] }&.uniq || []
+          if long_term_routings.present?
+            scheduled_tuples = long_term_routings&.map { |s| [s.first, s.last] }&.uniq || []
             long_term_change = true
           end
 
@@ -314,6 +313,7 @@ class ServiceChangeAnalyzer
 
     def match_route(current_route_id, reroute_service_change, recent_scheduled_routings, timestamp, is_begin_of_route)
       current = current_routings(timestamp)
+      long_term_routings = LongTermServiceChangeRoutingManager.get_all_routings
       stations = reroute_service_change.stations_affected.compact
       stations -= [DEKALB_AV_STOP]
       station_combinations = [stations.dup]
@@ -337,12 +337,11 @@ class ServiceChangeAnalyzer
 
       route_pair = nil
       current_route_routings = { current_route_id => current[current_route_id] }
+      current_long_term_routings = {current_route_id => long_term_routings[current_route_id] }
       recent_route_routings = { current_route_id => recent_scheduled_routings }
       current_evergreen_routings = { current_route_id => evergreen_routings[current_route_id] }
-      [current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
+      [current_long_term_routings, long_term_routings, current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
-          next false if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[current_route_id].present? && route_id == current_route_id
-          next false if ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true" && SIXTY_THIRD_STREET_SERVICE_CHANGES[current_route_id].present? && route_id.end_with?('X')
           next false if !is_begin_of_route && route_id == current_route_id
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
@@ -364,7 +363,7 @@ class ServiceChangeAnalyzer
 
       route_pairs = []
 
-      [current, evergreen_routings].each do |routing_set|
+      [long_term_routings, current, evergreen_routings].each do |routing_set|
         (0..1).each do |j|
           ((1 + j)...stations.size - 1).each_with_index do |i|
             first_station_sequence = stations[0..(i - j)] - [DEKALB_AV_STOP]
@@ -390,7 +389,7 @@ class ServiceChangeAnalyzer
         return
       end
 
-      [current, evergreen_routings].each do |routing_set|
+      [long_term_routings, current, evergreen_routings].each do |routing_set|
         (0...stations.size - 2).each_with_index do |i|
           (i...stations.size - 1).each_with_index do |j|
             first_station_sequence = stations[0..i] - [DEKALB_AV_STOP]
@@ -416,6 +415,32 @@ class ServiceChangeAnalyzer
         reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq
         return
       end
+    end
+
+    def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
+      all_routings = current_routings(timestamp)
+      stations_sequence = express_to_local_service_change.stations_affected
+      results = stations_sequence
+      found = false
+
+      (0..stations_sequence.size - 1).each do |i|
+        [stations_sequence.slice(0, stations_sequence.size - i), stations_sequence.slice(i, stations_sequence.size)].each do |stations|
+          if all_routings.any? { |_, routings_by_direction|
+            routings_by_direction.any? do |_, routings|
+              routings.any? do |routing|
+                stations == routing & stations
+              end
+            end
+          }
+            results = stations
+            found = true
+            break
+          end
+        end
+        break if found
+      end
+
+      express_to_local_service_change.stations_affected = results
     end
 
     def truncate_service_change_overlaps_with_different_routing?(service_change, routings)
