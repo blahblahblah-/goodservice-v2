@@ -482,7 +482,8 @@ class TrainModalDirectionPane extends React.Component {
         if (!commonStart) {
           return false;
         }
-        let commonEnd = routing.toReversed().find((s) => r.includes(s));
+        let reverseRouting = [...routing].reverse();
+        let commonEnd = reverseRouting.find((s) => r.includes(s));
         if (commonStart === commonEnd) {
           return false;
         }
@@ -495,7 +496,8 @@ class TrainModalDirectionPane extends React.Component {
         if (!commonStart) {
           return false;
         }
-        let commonEnd = routing.toReversed().find((s) => r.includes(s));
+        let reverseRouting = [...routing].reverse();
+        let commonEnd = reverseRouting.find((s) => r.includes(s));
         if (commonStart === commonEnd) {
           return false;
         }
