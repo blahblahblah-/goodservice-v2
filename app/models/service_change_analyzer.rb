@@ -288,6 +288,7 @@ class ServiceChangeAnalyzer
       current_long_term_routings = {current_route_id => long_term_routings[current_route_id] }
       recent_route_routings = { current_route_id => recent_scheduled_routings }
       current_evergreen_routings = { current_route_id => evergreen_routings[current_route_id] }
+
       [current_long_term_routings, long_term_routings, current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
           next false if !is_begin_of_route && route_id == current_route_id
