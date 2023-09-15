@@ -364,6 +364,34 @@ class ServiceChangeAnalyzer
         reroute_service_change.related_routes = route_pairs.map {|r| r[0] }.uniq
         return
       end
+
+      [current_long_term_routings, long_term_routings, current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
+        route_pair = routing_set.find do |route_id, direction|
+          next false if !is_begin_of_route && route_id == current_route_id
+          next false if long_term_routings[route_id].present? && route_id.first == current_route_id.first
+          direction&.any? do |_, routings|
+            (0..station_combinations.first.size - 1).any? do |i|
+              [[i, station_combinations.first.size], [0, station_combinations.first.size - 1 - i]].any? do |j|
+                station_combinations.any? do |sc|
+                  sub_sc = sc.slice(j.first, j.second)
+                  next false if sub_sc.size < 2
+                  routings.any? do |r|
+                    routing = r
+                    routing -= [DEKALB_AV_STOP]
+                    routing.each_cons(sub_sc.length).any?(&sub_sc.method(:==))
+                  end
+                end
+              end
+            end
+          end
+        end
+        break if route_pair
+      end
+
+      if route_pair
+        reroute_service_change.related_routes = [route_pair[0]]
+        return
+      end
     end
 
     def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
