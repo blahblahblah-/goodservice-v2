@@ -395,7 +395,18 @@ class ServiceChangeAnalyzer
 
     def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
       all_routings = current_routings(timestamp)
-      all_routings.merge!(LongTermServiceChangeRoutingManager.get_all_routings)
+      long_term_routings = LongTermServiceChangeRoutingManager.get_all_routings
+      all_routings = all_routings.to_h do |route_id, routing_by_direction|
+        if long_term_routings[route_id].present?
+          if long_term_routings[route_id][:north].present?
+            routing_by_direction[0] = long_term_routings[route_id][:north]
+          end
+          if long_term_routings[route_id][:south].present?
+            routing_by_direction[1] = long_term_routings[route_id][:south]
+          end
+        end
+        [route_id, routing_by_direction]
+      end
       stations_sequence = express_to_local_service_change.stations_affected
       results = stations_sequence
       found = false
