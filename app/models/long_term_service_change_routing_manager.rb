@@ -1333,7 +1333,7 @@ class LongTermServiceChangeRoutingManager
   end
 
   def self.get_all_routings(time = Scheduled::StopTime.rounded_time)
-    return [] unless ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true"
+    return {} unless ENV["SIXTY_THIRD_STREET_SERVICE_CHANGES"] == "true"
 
     SCHEDULED_ROUTING_OVERRIDES.keys.to_h { |route_id|
       [route_id, [:north, :south].to_h { |direction|

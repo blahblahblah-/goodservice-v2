@@ -227,7 +227,6 @@ class ServiceChangeAnalyzer
             c1.class != ServiceChanges::SplitRoutingServiceChange &&
             (c1.class == c2.class || [c1.class, c2.class].all? { |klass| [ServiceChanges::ReroutingServiceChange, ServiceChanges::TruncatedServiceChange].include?(klass) }) &&
             (
-              ([c1.class, c2.class].any? { |klass| klass == ServiceChanges::ReroutingServiceChange } && c1.routing.first == c2.routing.last && c1.routing.last == c2.routing.first) ||
               (c1.first_station == c2.last_station || interchangeable_transfers[c1.first_station]&.any?{ |t| t.from_stop_internal_id == c2.last_station }) &&
               (c1.last_station == c2.first_station || interchangeable_transfers[c1.last_station]&.any?{ |t| t.from_stop_internal_id == c2.first_station })
             )
