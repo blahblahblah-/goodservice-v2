@@ -434,15 +434,17 @@ class ServiceChangeAnalyzer
     def truncate_service_change_overlaps_with_different_routing?(service_change, routings)
       if service_change.begin_of_route?
         routings.any? do |r|
-          next if r == service_change.routing
+          next false if r == service_change.routing
+          next false if service_change.routing.first == r.first
           i = r.index(service_change.destinations.first)
-          i && i > 0
+          i && i > 0 && !r.include?(service_change.routing.first)
         end
       else
         routings.any? do |r|
-          next if r == service_change.routing
+          next false if r == service_change.routing
+          next false if service_change.routing.last == r.last
           i = r.index(service_change.first_station)
-          i && i < r.size - 1
+          i && i < r.size - 1 && !r.include?(service_change.routing.last)
         end
       end
     end
