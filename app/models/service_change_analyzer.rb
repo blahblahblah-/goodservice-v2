@@ -51,7 +51,7 @@ class ServiceChangeAnalyzer
               scheduled_routing = scheduled_routings_to_use&.min_by { |sr| [(actual_routing - sr).size, (sr - actual_routing).size] }
 
               if !scheduled_routing
-                next [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], actual_routing, actual_routing.first, actual_routing)]
+                next [ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [nil] + actual_routing + [nil], actual_routing.first, actual_routing)]
               end
 
               scheduled_index = 0
