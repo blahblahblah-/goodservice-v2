@@ -288,7 +288,7 @@ class ServiceChangeAnalyzer
       recent_route_routings = { current_route_id => recent_scheduled_routings }
       current_evergreen_routings = { current_route_id => evergreen_routings[current_route_id] }
 
-      [current_long_term_routings, long_term_routings, current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
+      [current_long_term_routings, long_term_routings, current_route_routings, current_evergreen_routings, evergreen_routings, current, recent_route_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
           next false if long_term_routings[route_id].present? && route_id.first == current_route_id.first
           next false if !reroute_service_change.begin_of_route? && !reroute_service_change.end_of_route? && route_id.first == current_route_id.first
@@ -312,7 +312,7 @@ class ServiceChangeAnalyzer
 
       route_pairs = []
 
-      [long_term_routings, current, evergreen_routings].each do |routing_set|
+      [long_term_routings, evergreen_routings, current].each do |routing_set|
         (0..1).each do |j|
           ((1 + j)...stations.size - 1).each_with_index do |i|
             first_station_sequence = stations[0..(i - j)] - [DEKALB_AV_STOP]
@@ -338,7 +338,7 @@ class ServiceChangeAnalyzer
         return
       end
 
-      [long_term_routings, current, evergreen_routings].each do |routing_set|
+      [long_term_routings, evergreen_routings, current].each do |routing_set|
         (0...stations.size - 2).each_with_index do |i|
           (i...stations.size - 1).each_with_index do |j|
             first_station_sequence = stations[0..i] - [DEKALB_AV_STOP]
@@ -365,7 +365,7 @@ class ServiceChangeAnalyzer
         return
       end
 
-      [current_long_term_routings, long_term_routings, current_route_routings, recent_route_routings, current_evergreen_routings, current, evergreen_routings].each do |routing_set|
+      [current_long_term_routings, long_term_routings, current_route_routings, current_evergreen_routings, evergreen_routings, current, recent_route_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
           next false if !is_begin_of_route && route_id == current_route_id
           next false if long_term_routings[route_id].present? && route_id.first == current_route_id.first
