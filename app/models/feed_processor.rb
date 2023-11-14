@@ -9,6 +9,9 @@ class FeedProcessor
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 30.minutes.to_i
   CLOSED_STOPS = ENV['CLOSED_STOPS']&.split(',') || []
+  CANAL_ST_BRIDGE_STOP = "Q01"
+  CANAL_ST_TUNNEL_STOP = "R23"
+  CITY_HALL_STOP = "R24"
 
   class << self
     def analyze_feed(feed_id, minutes, fraction_of_minute)
@@ -139,6 +142,7 @@ class FeedProcessor
       remove_hidden_stops!(entity.trip_update)
       remove_closed_stops!(entity.trip_update)
       remove_bad_data!(entity.trip_update, timestamp)
+      correct_canal_st_stop!(entity.trip_update, direction)
       trip_timestamp = [trip_timestamps[trip_id] || timestamp, timestamp].min
 
       Trip.new(route_id, direction, trip_id, trip_timestamp, entity.trip_update, is_assigned)
@@ -292,6 +296,21 @@ class FeedProcessor
       first_stop = trip_update.stop_time_update.select { |update| (update.departure&.time || update.arrival&.time || 0) > 0 }.sort_by { |update| update.departure&.time && update.departure.time > 0 ? update.departure.time : update.arrival&.time }.first
       first_stop_index = trip_update.stop_time_update.index(first_stop)
       trip_update.stop_time_update.filter! { |update| (update.departure&.time || update.arrival&.time || 0) > 0 && trip_update.stop_time_update.index(update) >= first_stop_index || (update.departure || update.arrival).time < (first_stop.departure || first_stop.arrival).time }
+    end
+
+    def correct_canal_st_stop!(trip_update, direction)
+      direction_str = direction == Transit_realtime::NyctTripDescriptor::Direction::NORTH ? 'N' : 'S'
+      if (canal_update = trip_update.stop_time_update.find { |update| update.stop_id[0..2] == CANAL_ST_BRIDGE_STOP })
+        i = trip_update.stop_time_update.index(canal_update)
+        city_hall_update = trip_update.stop_time_update.find { |update| update.stop_id[0..2] == CITY_HALL_STOP }
+        return unless city_hall_update
+        canal_update.stop_id = "#{CANAL_ST_TUNNEL_STOP}#{direction_str}"
+      elsif (canal_update = trip_update.stop_time_update.find { |update| update.stop_id[0..2] == CANAL_ST_TUNNEL_STOP })
+        i = trip_update.stop_time_update.index(canal_update)
+        city_hall_update = trip_update.stop_time_update.find { |update| update.stop_id[0..2] == CITY_HALL_STOP }
+        return if city_hall_update || (i == 0 && direction_str == 'N')
+        canal_update.stop_id = "#{CANAL_ST_BRIDGE_STOP}#{direction_str}"
+      end
     end
 
     def valid_stops
