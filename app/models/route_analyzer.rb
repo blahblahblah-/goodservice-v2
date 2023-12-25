@@ -658,9 +658,13 @@ class RouteAnalyzer
 
   def self.format_trips_with_upcoming_stop_times(processed_trips, travel_times)
     processed_trips.to_h { |direction, trips_by_routes|
-      [direction, trips_by_routes.flat_map { |_, trips|
-        trips
-      }.uniq(&:id).map { |trip|
+      [direction, trips_by_routes.flat_map { |routing_id, trips|
+        trips.map { |trip|
+          [routing_id, trip]
+        }
+      }.uniq { |routing_id, trip|
+        trip.id
+      }.map { |routing_id, trip|
         stops = {}
         last_past_stop = trip.past_stops.keys.last
         stops[last_past_stop] = trip.past_stops[last_past_stop] if last_past_stop
@@ -678,6 +682,7 @@ class RouteAnalyzer
           is_delayed: trip.delayed?,
           is_assigned: trip.is_assigned,
           last_stop_made: last_past_stop,
+          routing_id: routing_id
         }
       }]
     }
