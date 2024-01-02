@@ -23,6 +23,7 @@ class RouteAnalyzer
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings, stop_name_formatter)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     irregularity_summaries = service_irregularity_summaries(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
+    irregularities = service_irregularities(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
     delay_summaries = delay_summaries(max_delayed_time, delayed_sections, destination_station_names, processed_trips, stop_name_formatter)
     additional_trips = append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks)
 
@@ -36,6 +37,7 @@ class RouteAnalyzer
       direction_statuses: convert_to_readable_directions(direction_statuses),
       delay_summaries: convert_to_readable_directions(delay_summaries),
       service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
+      service_irregularities: convert_to_readable_directions(irregularities),
       service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names, stop_name_formatter),
       actual_routings: convert_to_readable_directions(sort_actual_routings(route_id, actual_routings, scheduled_routings)),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
@@ -54,6 +56,7 @@ class RouteAnalyzer
       direction_statuses: convert_to_readable_directions(direction_statuses),
       delay_summaries: convert_to_readable_directions(delay_summaries),
       service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
+      service_irregularities: convert_to_readable_directions(irregularities),
       service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names, stop_name_formatter),
       service_changes: service_changes,
       destinations: converted_destination_station_names,
@@ -154,6 +157,38 @@ class RouteAnalyzer
       next [direction[:route_direction], nil] unless strs.present?
 
       [direction[:route_direction], "#{intro}#{strs.to_sentence(two_words_connector: ", and ")}."]
+    }.to_h
+  end
+
+  def self.service_irregularities(runtime_diff, slow_sections, long_headway_sections, destination_stations, actual_trips, scheduled_headways_by_routes, stop_name_formatter)
+    direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
+      next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
+      strs = []
+      intro = "#{destination_stations[direction[:route_direction]].sort.join('/')}-bound trains are "
+
+      if slow_sections[direction[:route_direction]].present?
+        slow_strs = slow_sections[direction[:route_direction]].map do |s|
+           "#{(s[:runtime_diff] / 60.0).round} mins longer to travel between #{stop_name_formatter.stop_name(s[:begin])} and #{stop_name_formatter.stop_name(s[:end])}"
+        end
+        slow_strs[0] = "taking #{slow_strs[0]}"
+        strs << intro + slow_strs.join(", ")
+      elsif runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
+        strs << intro + "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip"
+      end
+
+      if long_headway_sections[direction[:route_direction]].present?
+        first_stop = long_headway_sections[direction[:route_direction]].first[:begin]
+        last_stop = long_headway_sections[direction[:route_direction]].last[:end]
+        max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60.0).round
+        max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60.0).round
+        if first_stop == last_stop
+          strs << intro + "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+        else
+          strs << intro + "having longer wait times between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+        end
+      end
+
+      [direction[:route_direction], strs]
     }.to_h
   end
 
