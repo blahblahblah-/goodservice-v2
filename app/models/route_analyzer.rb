@@ -174,13 +174,13 @@ class RouteAnalyzer
         slow_strs[0] = "taking #{slow_strs[0]}"
         results << {
           type: "Slow",
-          description: intro + slow_strs.join(", "),
+          description: intro + slow_strs.join(", ") + ".",
           stations_affected: slow_sections[direction[:route_direction]].flat_map { |s| s[:stops] },
         }
       elsif runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
         results << {
           type: "Slow",
-          description: intro + "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip",
+          description: intro + "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip.",
           stations_affected: nil,
         }
       end
@@ -193,13 +193,13 @@ class RouteAnalyzer
         if first_stop == last_stop
           results << {
             type: "LongHeadway",
-            description: intro + "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)",
+            description: intro + "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins).",
             stations_affected: [first_stop],
           }
         else
           results << {
             type: "LongHeadway",
-            description: intro + "having longer wait times between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)",
+            description: intro + "having longer wait times between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins).",
             # Not actually accurate, but we're not using it right now, so we don't care.
             stations_affected: [first_stop, last_stop],
           }
