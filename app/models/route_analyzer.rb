@@ -163,7 +163,7 @@ class RouteAnalyzer
 
   def self.service_irregularities(runtime_diff, slow_sections, long_headway_sections, destination_stations, actual_trips, scheduled_headways_by_routes, stop_name_formatter)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
-      next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
+      next [direction[:route_direction], []] unless actual_trips[direction[:route_direction]]
       results = []
       intro = "#{destination_stations[direction[:route_direction]].sort.join('/')}-bound trains are "
 
