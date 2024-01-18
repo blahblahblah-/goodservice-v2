@@ -5,7 +5,7 @@ class RouteAnalyzer
     stop_name_formatter = StopNameFormatter.new(actual_routings, scheduled_routings)
     travel_times_data = RedisStore.travel_times
     travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
-    service_changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings.to_h { |direction, routings|
+    changes = ServiceChangeAnalyzer.service_change_summary(route_id, actual_routings.to_h { |direction, routings|
       [direction, routings.filter { |r|
         processed_trips[direction]["#{r.first}-#{r.last}-#{r.size}"]&.any? { |t| !t.is_phantom? } || processed_trips[direction]["#{r.first}-#{r.last}-#{r.size}"]&.size > 1
       }.presence || routings]
@@ -19,7 +19,7 @@ class RouteAnalyzer
     runtime_diffs = calculate_runtime_diff(scheduled_runtimes, estimated_runtimes)
     overall_runtime_diffs = overall_runtime_diff(scheduled_runtimes, estimated_runtimes)
     headway_discrepancy = max_headway_discrepancy(processed_trips, scheduled_headways_by_routes)
-    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, service_changes, processed_trips, scheduled_trips)
+    direction_statuses, status = route_status(max_delayed_time, overall_runtime_diffs, slow_sections, long_headway_sections, changes, processed_trips, scheduled_trips)
     destination_station_names = destinations(route_id, scheduled_trips, actual_routings, stop_name_formatter)
     converted_destination_station_names = convert_to_readable_directions(destination_station_names)
     irregularity_summaries = service_irregularity_summaries(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
@@ -38,7 +38,8 @@ class RouteAnalyzer
       delay_summaries: convert_to_readable_directions(delay_summaries),
       service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
       service_irregularities: convert_to_readable_directions(irregularities),
-      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names, stop_name_formatter),
+      service_change_summaries: service_change_summaries(route_id, changes, converted_destination_station_names, stop_name_formatter),
+      service_changes: service_changes(route_id, changes, converted_destination_station_names, stop_name_formatter),
       actual_routings: convert_to_readable_directions(sort_actual_routings(route_id, actual_routings, scheduled_routings)),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       slow_sections: convert_to_readable_directions(slow_sections),
@@ -57,8 +58,8 @@ class RouteAnalyzer
       delay_summaries: convert_to_readable_directions(delay_summaries),
       service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
       service_irregularities: convert_to_readable_directions(irregularities),
-      service_change_summaries: service_change_summaries(route_id, service_changes, converted_destination_station_names, stop_name_formatter),
-      service_changes: service_changes,
+      service_change_summaries: service_change_summaries(route_id, changes, converted_destination_station_names, stop_name_formatter),
+      service_changes: service_changes(route_id, changes, converted_destination_station_names, stop_name_formatter),
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       slow_sections: convert_to_readable_directions(slow_sections),
@@ -96,7 +97,7 @@ class RouteAnalyzer
 
   private
 
-  def self.route_status(delays, runtime_diff, slow_sections, long_headway_sections, service_changes, actual_trips, scheduled_trips)
+  def self.route_status(delays, runtime_diff, slow_sections, long_headway_sections, changes, actual_trips, scheduled_trips)
     direction_statuses = [1, 3].map { |direction|
       direction_key = direction == 3 ? :south : :north
       scheduled_key = direction == 3 ? 1 : 0
@@ -109,7 +110,7 @@ class RouteAnalyzer
         end
       elsif delays[direction] && delays[direction] >= Processed::Trip::DELAY_THRESHOLD
         status = 'Delay'
-      elsif service_changes[direction_key]&.select(&:not_long_term?).present? || service_changes[:both]&.select(&:not_long_term?).present?
+      elsif changes[direction_key]&.select(&:not_long_term?).present? || changes[:both]&.select(&:not_long_term?).present?
         status = 'Service Change'
       elsif (runtime_diff[direction] && runtime_diff[direction] >= 300) || slow_sections[direction].present?
         status = 'Slow'
@@ -163,7 +164,7 @@ class RouteAnalyzer
   def self.service_irregularities(runtime_diff, slow_sections, long_headway_sections, destination_stations, actual_trips, scheduled_headways_by_routes, stop_name_formatter)
     direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
       next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
-      strs = []
+      results = []
       intro = "#{destination_stations[direction[:route_direction]].sort.join('/')}-bound trains are "
 
       if slow_sections[direction[:route_direction]].present?
@@ -171,9 +172,17 @@ class RouteAnalyzer
            "#{(s[:runtime_diff] / 60.0).round} mins longer to travel between #{stop_name_formatter.stop_name(s[:begin])} and #{stop_name_formatter.stop_name(s[:end])}"
         end
         slow_strs[0] = "taking #{slow_strs[0]}"
-        strs << intro + slow_strs.join(", ")
+        results << {
+          type: "Slow",
+          description: intro + slow_strs.join(", "),
+          stations_affected: slow_sections[direction[:route_direction]].flat_map { |s| s[:stops] },
+        }
       elsif runtime_diff[direction[:route_direction]] && runtime_diff[direction[:route_direction]] >= 300
-        strs << intro + "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip"
+        results << {
+          type: "Slow",
+          description: intro + "taking #{(runtime_diff[direction[:route_direction]] / 60.0).round} mins longer to travel per trip",
+          stations_affected: nil,
+        }
       end
 
       if long_headway_sections[direction[:route_direction]].present?
@@ -182,13 +191,22 @@ class RouteAnalyzer
         max_actual = (long_headway_sections[direction[:route_direction]].map { |s| s[:max_actual_headway] }.max / 60.0).round
         max_scheduled = (long_headway_sections[direction[:route_direction]].first[:max_scheduled_headway] / 60.0).round
         if first_stop == last_stop
-          strs << intro + "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+          results << {
+            type: "LongHeadway",
+            description: intro + "having longer wait times at #{stop_name_formatter.stop_name(first_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)",
+            stations_affected: [first_stop],
+          }
         else
-          strs << intro + "having longer wait times between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)"
+          results << {
+            type: "LongHeadway",
+            description: intro + "having longer wait times between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (up to #{max_actual} mins, normally every #{max_scheduled} mins)",
+            # Not actually accurate, but we're not using it right now, so we don't care.
+            stations_affected: [first_stop, last_stop],
+          }
         end
       end
 
-      [direction[:route_direction], strs]
+      [direction[:route_direction], results]
     }.to_h
   end
 
@@ -310,6 +328,7 @@ class RouteAnalyzer
         {
           begin: o[:stops].first,
           end: o[:stops].last,
+          stops: o[:stops],
           runtime_diff: o[:runtime_diff],
         }
       }]
@@ -435,11 +454,11 @@ class RouteAnalyzer
   end
 
   def self.service_change_summaries(route_id, service_changes_by_directions, destination_stations, stop_name_formatter)
-    service_changes_by_directions.map { |direction, service_changes|
-      next [direction, []] unless service_changes
+    service_changes_by_directions.map { |direction, changes|
+      next [direction, []] unless changes
       destination_names = destination_stations[direction]&.sort&.join('/')
 
-      service_changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
+      changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
 
       notices = []
 
@@ -454,27 +473,27 @@ class RouteAnalyzer
         end_preposition = 'to'
       end
 
-      if service_changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
+      if changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
         next [direction, ["#{sentence_intro} not running."]]
       end
 
-      begin_of_route = service_changes.find(&:begin_of_route?)
-      end_of_route = service_changes.find(&:end_of_route?)
+      begin_of_route = changes.find(&:begin_of_route?)
+      end_of_route = changes.find(&:end_of_route?)
 
       if begin_of_route || end_of_route
         if direction != :both && begin_of_route.present? && end_of_route.nil?
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{begin_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{begin_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
         elsif direction != :both && end_of_route.present?
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
         else
           if direction == :both
-            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
           else
-            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{service_changes.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{changes.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
           end
         end
         if end_of_route.present? && direction != :both
-          sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
         end
 
         if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
@@ -512,7 +531,7 @@ class RouteAnalyzer
         notices << sentence
       end
 
-      split_route_changes = service_changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
+      split_route_changes = changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
 
       if split_route_changes.present?
         split_routes = split_route_changes.routing_tuples.map.with_index { |rt, i|
@@ -529,11 +548,11 @@ class RouteAnalyzer
         notices << sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}."
       end
 
-      service_changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|
+      changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|
         if direction == :both
             sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " running"
           else
-            sentence = (service_changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
           end
         if change.related_routes.present?
           if change.related_routes.include?(route_id)
@@ -547,7 +566,7 @@ class RouteAnalyzer
         notices << sentence
       end
 
-      local_to_express = service_changes.select { |c| c.is_a?(ServiceChanges::LocalToExpressServiceChange)}
+      local_to_express = changes.select { |c| c.is_a?(ServiceChanges::LocalToExpressServiceChange)}
 
       if local_to_express.present?
         skipped_stops = local_to_express.flat_map { |c| c.intermediate_stations }.map { |s| stop_name_formatter.stop_name(s) }
@@ -564,7 +583,7 @@ class RouteAnalyzer
         notices << sentence
       end
 
-      service_changes.select { |c| c.is_a?(ServiceChanges::ExpressToLocalServiceChange)}.each do |change|
+      changes.select { |c| c.is_a?(ServiceChanges::ExpressToLocalServiceChange)}.each do |change|
         if direction == :both
           if ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(change.stations_affected)
             sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " stopping at #{stop_name_formatter.stop_name(ServiceChangeAnalyzer::DEKALB_AV_STOP)}."
@@ -582,6 +601,177 @@ class RouteAnalyzer
       end
 
       [direction, notices]
+    }.to_h
+  end
+
+  def self.service_changes(route_id, service_changes_by_directions, destination_stations, stop_name_formatter)
+    service_changes_by_directions.map { |direction, changes|
+      next [direction, []] unless changes
+      destination_names = destination_stations[direction]&.sort&.join('/')
+
+      changes.select! { |s| !s.is_a?(ServiceChanges::NotScheduledServiceChange)}
+
+      results = []
+
+      case direction
+      when :both
+        sentence_intro = "<#{route_id}> trains are"
+        begin_preposition = 'to/from'
+        end_preposition = 'to/from'
+      else
+        sentence_intro = "#{destination_names}-bound trains are"
+        begin_preposition = 'from'
+        end_preposition = 'to'
+      end
+
+      if changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
+        next [direction, ["#{sentence_intro} not running."]]
+      end
+
+      begin_of_route = changes.find(&:begin_of_route?)
+      end_of_route = changes.find(&:end_of_route?)
+
+      if begin_of_route || end_of_route
+        if direction != :both && begin_of_route.present? && end_of_route.nil?
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{begin_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+        elsif direction != :both && end_of_route.present?
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+        else
+          if direction == :both
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " running"
+          else
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{changes.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+          end
+        end
+        if end_of_route.present? && direction != :both
+          sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{end_of_route.destinations.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+        end
+
+        if begin_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
+          if begin_of_route.related_routes.present? && !begin_of_route.related_routes.include?(route_id)
+            if begin_of_route == end_of_route
+              if begin_of_route.first_station == begin_of_route.last_station
+                sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} to"
+              else
+                sentence += " via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name_formatter.stop_name(begin_of_route.first_station)} and"
+              end
+            else
+              sentence += " #{begin_preposition} #{stop_name_formatter.stop_name(begin_of_route.first_station)} via #{begin_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')}, and between #{stop_name_formatter.stop_name(begin_of_route.last_station)} and"
+            end
+          else
+            sentence += " between #{stop_name_formatter.stop_name(begin_of_route.first_station)} and"
+          end
+        elsif begin_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
+          sentence += " between #{stop_name_formatter.stop_name(begin_of_route.last_station)} and"
+        elsif end_of_route
+          sentence += " between #{stop_name_formatter.stop_name(end_of_route.origin)} and"
+        end
+
+        if end_of_route&.is_a?(ServiceChanges::ReroutingServiceChange)
+          if end_of_route.related_routes.present? && begin_of_route != end_of_route && !end_of_route.related_routes.include?(route_id)
+            sentence += " #{stop_name_formatter.stop_name(end_of_route.first_station)}, via  #{end_of_route.related_routes.map { |r| "<#{r}>" }.join(' and ')} #{end_preposition} #{stop_name_formatter.stop_name(end_of_route.last_station)}."
+          else
+            sentence += " #{stop_name_formatter.stop_name(end_of_route.last_station)}."
+          end
+        elsif end_of_route&.is_a?(ServiceChanges::TruncatedServiceChange)
+          sentence += " #{stop_name_formatter.stop_name(end_of_route.first_station)}."
+        elsif begin_of_route
+          sentence += " #{begin_of_route.destinations.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}."
+        end
+
+        results << {
+          types: [begin_of_route&.class&.name&.demodulize, end_of_route&.class&.name&.demodulize].compact.uniq,
+          description: sentence,
+          stations_affected: [begin_of_route&.stations_affected, end_of_route&.stations_affected].flatten.compact.uniq,
+        }
+      end
+
+      split_route_changes = changes.find { |c| c.is_a?(ServiceChanges::SplitRoutingServiceChange)}
+
+      if split_route_changes.present?
+        split_routes = split_route_changes.routing_tuples.map.with_index { |rt, i|
+          if rt.first == rt.last
+            "at #{stop_name_formatter.stop_name(rt.first)}"
+          else
+            if related_routes = split_route_changes.related_routes_by_segments[i]
+              "between #{stop_name_formatter.stop_name(rt.first)} and #{stop_name_formatter.stop_name(rt.last)} via #{related_routes.map { |r| "<#{r}>" }.join(' and ')}"
+            else
+              "between #{stop_name_formatter.stop_name(rt.first)} and #{stop_name_formatter.stop_name(rt.last)}"
+            end
+          end
+        }.to_sentence(two_words_connector: ", and ")
+        results << {
+          types: [split_route_changes.class.name.demodulize],
+          description: sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}.",
+          stations_affected: split_route_changes.stations_affected,
+        }
+      end
+
+      changes.select { |c| c.is_a?(ServiceChanges::ReroutingServiceChange) && !c.begin_of_route? && !c.end_of_route?}.each do |change|
+        if direction == :both
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " running"
+          else
+            sentence = (changes.any?(&:affects_some_trains) ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are running"
+          end
+        if change.related_routes.present?
+          if change.related_routes.include?(route_id)
+            sentence += " between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          else
+            sentence += " via #{change.related_routes.map { |r| "<#{r}>" }.join(' and ')} between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          end
+        else
+          sentence += " via #{change.intermediate_stations.map { |s| stop_name_formatter.stop_name(s) }.join(', ') } between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+        end
+        results << {
+          types: [change.class.name.demodulize],
+          description: sentence,
+          stations_affected: change.stations_affected,
+        }
+      end
+
+      local_to_express = changes.select { |c| c.is_a?(ServiceChanges::LocalToExpressServiceChange)}
+
+      if local_to_express.present?
+        skipped_stops = local_to_express.flat_map { |c| c.intermediate_stations }.map { |s| stop_name_formatter.stop_name(s) }
+        if skipped_stops.length > 1
+          skipped_stops_text = "#{skipped_stops[0...-1].join(', ')}, and #{skipped_stops.last}"
+        else
+          skipped_stops_text = skipped_stops.first
+        end
+        if direction == :both
+          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + sentence_intro + " skipping #{skipped_stops_text}."
+        else
+          sentence = (local_to_express.any?(&:affects_some_trains) ? 'Some ' : '') + "#{local_to_express.map(&:destinations).flatten.uniq.map { |d| stop_name_formatter.brief_stop_name(d) }.sort.join('/')}-bound trains are skipping #{skipped_stops_text}."
+        end
+        results << {
+          types: local_to_express.map { |s| s.class.name.demodulize }.uniq,
+          description: sentence,
+          stations_affected: local_to_express.flat_map { |s| s.stations_affected }.compact.uniq,
+        }
+      end
+
+      changes.select { |c| c.is_a?(ServiceChanges::ExpressToLocalServiceChange)}.each do |change|
+        if direction == :both
+          if ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(change.stations_affected)
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " stopping at #{stop_name_formatter.stop_name(ServiceChangeAnalyzer::DEKALB_AV_STOP)}."
+          else
+            sentence = (change.affects_some_trains ? 'Some ' : '') + sentence_intro + " making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          end
+        else
+          if ServiceChangeAnalyzer::CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(change.stations_affected)
+            sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}-bound trains are stopping at #{stop_name_formatter.stop_name(ServiceChangeAnalyzer::DEKALB_AV_STOP)}."
+          else
+            sentence = (change.affects_some_trains ? 'Some ' : '') + "#{change.destinations.uniq.map { |d| stop_name_formatter.stop_name(d) }.sort.join('/')}-bound trains are making local stops between #{stop_name_formatter.stop_name(change.first_station)} and #{stop_name_formatter.stop_name(change.last_station)}."
+          end
+        end
+        results << {
+          types: [change.class.name.demodulize],
+          description: sentence,
+          stations_affected: change.stations_affected,
+        }
+      end
+
+      [direction, results]
     }.to_h
   end
 
