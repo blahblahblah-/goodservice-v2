@@ -25,6 +25,7 @@ class RouteAnalyzer
     irregularity_summaries = service_irregularity_summaries(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
     irregularities = service_irregularities(overall_runtime_diffs, slow_sections, long_headway_sections, destination_station_names, processed_trips, scheduled_headways_by_routes, stop_name_formatter)
     delay_summaries = delay_summaries(max_delayed_time, delayed_sections, destination_station_names, processed_trips, stop_name_formatter)
+    delays = determine_delays(max_delayed_time, delayed_sections, destination_station_names, processed_trips, stop_name_formatter)
     additional_trips = append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks)
 
     summary = {
@@ -36,10 +37,11 @@ class RouteAnalyzer
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
       delay_summaries: convert_to_readable_directions(delay_summaries),
-      service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
-      service_irregularities: convert_to_readable_directions(irregularities),
+      delays: convert_to_readable_directions(delays),
       service_change_summaries: service_change_summaries(route_id, changes, converted_destination_station_names, stop_name_formatter),
       service_changes: service_changes(route_id, changes, converted_destination_station_names, stop_name_formatter),
+      service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
+      service_irregularities: convert_to_readable_directions(irregularities),
       actual_routings: convert_to_readable_directions(sort_actual_routings(route_id, actual_routings, scheduled_routings)),
       scheduled_routings: convert_scheduled_to_readable_directions(scheduled_routings),
       slow_sections: convert_to_readable_directions(slow_sections),
@@ -56,10 +58,11 @@ class RouteAnalyzer
       status: status,
       direction_statuses: convert_to_readable_directions(direction_statuses),
       delay_summaries: convert_to_readable_directions(delay_summaries),
-      service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
-      service_irregularities: convert_to_readable_directions(irregularities),
+      delays: convert_to_readable_directions(delays),
       service_change_summaries: service_change_summaries(route_id, changes, converted_destination_station_names, stop_name_formatter),
       service_changes: service_changes(route_id, changes, converted_destination_station_names, stop_name_formatter),
+      service_irregularity_summaries: convert_to_readable_directions(irregularity_summaries),
+      service_irregularities: convert_to_readable_directions(irregularities),
       destinations: converted_destination_station_names,
       max_delay: convert_to_readable_directions(max_delayed_time),
       slow_sections: convert_to_readable_directions(slow_sections),
@@ -230,6 +233,32 @@ class RouteAnalyzer
       next [direction[:route_direction], nil] unless str.present?
 
       [direction[:route_direction], "#{intro}#{str}."]
+    }.to_h
+  end
+
+  def self.determine_delays(delays, delayed_sections, destination_stations, actual_trips, stop_name_formatter)
+    direction_statuses = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].map { |direction|
+      next [direction[:route_direction], nil] unless actual_trips[direction[:route_direction]]
+      str = nil
+      intro = "#{destination_stations[direction[:route_direction]].sort.join('/')}-bound trains are "
+
+      if delayed_sections[direction[:route_direction]].present?
+        first_stop = delayed_sections[direction[:route_direction]].first[:begin]
+        last_stop = delayed_sections[direction[:route_direction]].last[:end]
+        max_delay_mins = (delayed_sections[direction[:route_direction]].map { |s| s[:delayed_time] }.max / 60.0).round
+        if first_stop == last_stop
+          str = "delayed at #{stop_name_formatter.stop_name(first_stop)} (since #{max_delay_mins} mins ago)"
+        else
+          str = "delayed between #{stop_name_formatter.stop_name(first_stop)} and #{stop_name_formatter.stop_name(last_stop)} (since #{max_delay_mins} mins ago)"
+        end
+      end
+
+      next [direction[:route_direction], nil] unless str.present?
+
+      [direction[:route_direction], {
+        description: "#{intro}#{str}.",
+        stations_affected: [first_stop, last_stop], # Not exactly accurate, but good enough for now.
+      }]
     }.to_h
   end
 
