@@ -395,6 +395,7 @@ class ServiceChangeAnalyzer
     end
 
     def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
+      return if CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(express_to_local_service_change.stations_affected)
       all_routings = current_routings(timestamp)
       long_term_routings = LongTermServiceChangeRoutingManager.get_all_routings
       all_routings = all_routings.to_h do |route_id, routing_by_direction|
