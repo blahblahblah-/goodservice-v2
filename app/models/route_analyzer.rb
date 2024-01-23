@@ -654,7 +654,11 @@ class RouteAnalyzer
       end
 
       if changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
-        next [direction, ["#{sentence_intro} not running."]]
+        next [direction, {
+          types: [ServiceChanges::NoTrainServiceChange.name.demodulize],
+          description: ["#{sentence_intro} not running."],
+          stations_affected: nil,
+        }]
       end
 
       begin_of_route = changes.find(&:begin_of_route?)
