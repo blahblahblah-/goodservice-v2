@@ -656,7 +656,7 @@ class RouteAnalyzer
       if changes.any? { |c| c.is_a?(ServiceChanges::NoTrainServiceChange) }
         next [direction, [{
           types: [ServiceChanges::NoTrainServiceChange.name.demodulize],
-          description: ["#{sentence_intro} not running."],
+          description: "#{sentence_intro} not running.",
           stations_affected: nil,
         }]]
       end
