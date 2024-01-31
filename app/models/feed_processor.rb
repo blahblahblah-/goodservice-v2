@@ -168,9 +168,9 @@ class FeedProcessor
       }.first
 
       if potential_match
-        RedisStore.add_trip_translation(feed_id, trip.id, potential_match.id)
+        RedisStore.add_trip_translation(feed_id, potential_match.id, trip.id)
         trip.id = potential_match.id
-        unmatched_trip_ids.delete(trip.id)
+        unmatched_trip_ids.delete(potential_match.id)
       end
     end
 
