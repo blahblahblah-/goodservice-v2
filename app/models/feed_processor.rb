@@ -8,6 +8,7 @@ class FeedProcessor
   SCHEDULE_DISCREPANCY_THRESHOLD = -2.minutes.to_i
   SUPPLEMENTED_TIME_LOOKUP = 20.minutes.to_i
   TRIP_UPDATE_TIMEOUT = 30.minutes.to_i
+  MIN_TRAVEL_TIME_BETWEEN_STOPS_TO_RECORD = 20
   CLOSED_STOPS = ENV['CLOSED_STOPS']&.split(',') || []
   CANAL_ST_BRIDGE_STOP = "Q01"
   CANAL_ST_TUNNEL_STOP = "R23"
@@ -218,9 +219,12 @@ class FeedProcessor
             trip.schedule_discrepancy - trip.previous_trip.previous_stop_schedule_discrepancy <= (SCHEDULE_DISCREPANCY_THRESHOLD * -1)
         )
         time_traveled_between_stops_made = trip.time_traveled_between_stops_made
-        return unless time_traveled_between_stops_made.size < 3
-        trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
-          RedisStore.add_travel_time(stops_str, travel_time, trip.id, trip.timestamp)
+        if time_traveled_between_stops_made.size < 3
+          trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
+            if travel_time >= MIN_TRAVEL_TIME_BETWEEN_STOPS_TO_RECORD
+              RedisStore.add_travel_time(stops_str, travel_time, trip.id, trip.timestamp)
+            end
+          end
         end
       end
       trip.update_stops_made!

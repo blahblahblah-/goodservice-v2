@@ -2,6 +2,10 @@ class Trip
   attr_reader :route_id, :direction, :timestamp, :stops, :tracks
   attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest, :is_assigned
 
+  SOUTHBOUND_J_STOPS_TO_OMIT_TRACKING = ["J15", "J16", "J17", "J19", "J20", "J21", "J22"]
+  NORTHBOUND_J_STOPS_TO_OMIT_TRACKING = ["J15", "J14", "J13", "J12", "G06", "G05"]
+  ETA_THRESHOLD_TO_CONSIDER_STOP_MADE_FOR_STOPS_TRACKING_IS_OMITTED = 10
+
   def initialize(route_id, direction, id, timestamp, trip_update, is_assigned)
     @route_id = route_id
     @direction = direction
@@ -65,7 +69,9 @@ class Trip
   end
 
   def upcoming_stops(time_ref: timestamp)
-    stops.select { |_, v| v > time_ref }.map(&:first) - past_stops.keys
+    upcoming = stops.select { |_, v| v > time_ref }
+    to_omit = next_stops_to_omit(upcoming)
+    upcoming.map(&:first) - past_stops.keys - to_omit
   end
 
   def stops_behind(trip)
@@ -141,5 +147,30 @@ class Trip
 
   def is_phantom?
     !is_assigned && previous_stop.present?
+  end
+
+  private
+
+  def next_stops_to_omit(upcoming_stop_hash)
+    return [] unless route_id == "J" && upcoming_stop_hash.size > 1
+
+    omitted_stops_array = SOUTHBOUND_J_STOPS_TO_OMIT_TRACKING
+
+    if direction == 1
+      omitted_stops_array = NORTHBOUND_J_STOPS_TO_OMIT_TRACKING
+    end
+
+    return [] unless omitted_stops_array.include?(upcoming_stop_hash.keys.first)
+
+    results = []
+
+    upcoming_stop_hash.each_cons(2) do |a, b|
+      break unless omitted_stops_array.include?(a[0])
+      if b[1] - a[1] < ETA_THRESHOLD_TO_CONSIDER_STOP_MADE_FOR_STOPS_TRACKING_IS_OMITTED
+        results << a[0]
+      end
+    end
+
+    results
   end
 end
