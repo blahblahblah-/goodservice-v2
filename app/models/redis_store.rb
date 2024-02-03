@@ -5,6 +5,23 @@ class RedisStore
   ROUTE_UPDATE_TIMEOUT = 5.minutes.to_i
 
   class << self
+    # iOS App
+    def minimum_version
+      REDIS_CLIENT.get("ios:minimum_version")
+    end
+
+    def update_minimum_version(version)
+      REDIS_CLIENT.set("ios:minimum_version", version)
+    end
+
+    def disabled_build_versions
+      REDIS_CLIENT.lrange("ios:disabled_build_versions", 0, -1)
+    end
+
+    def add_disabled_build_version(build)
+      REDIS_CLIENT.lpush("ios:disabled_build_versions", build)
+    end
+
     # Feeds
     def feed_timestamp(feed_id)
       REDIS_CLIENT.hget("feed-timestamp", feed_id)
