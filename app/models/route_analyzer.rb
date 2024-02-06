@@ -658,6 +658,7 @@ class RouteAnalyzer
           types: [ServiceChanges::NoTrainServiceChange.name.demodulize],
           description: "#{sentence_intro} not running.",
           stations_affected: nil,
+          is_long_term: changes.all? { |c| c.long_term? },
         }]]
       end
 
@@ -716,6 +717,7 @@ class RouteAnalyzer
           types: [begin_of_route&.class&.name&.demodulize, end_of_route&.class&.name&.demodulize].compact.uniq,
           description: sentence,
           stations_affected: [begin_of_route&.stations_affected, end_of_route&.stations_affected].flatten.compact.uniq,
+          is_long_term: [begin_of_route, end_of_route].compact.all? { |c| c.long_term? },
         }
       end
 
@@ -737,6 +739,7 @@ class RouteAnalyzer
           types: [split_route_changes.class.name.demodulize],
           description: sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}.",
           stations_affected: split_route_changes.stations_affected,
+          is_long_term: split_route_changes.long_term?,
         }
       end
 
@@ -759,6 +762,7 @@ class RouteAnalyzer
           types: [change.class.name.demodulize],
           description: sentence,
           stations_affected: change.stations_affected,
+          is_long_term: change.long_term?,
         }
       end
 
@@ -780,6 +784,7 @@ class RouteAnalyzer
           types: local_to_express.map { |s| s.class.name.demodulize }.uniq,
           description: sentence,
           stations_affected: local_to_express.flat_map { |s| s.stations_affected }.compact.uniq,
+          is_long_term: local_to_express.all? { |c| c.long_term? },
         }
       end
 
@@ -801,6 +806,7 @@ class RouteAnalyzer
           types: [change.class.name.demodulize],
           description: sentence,
           stations_affected: change.stations_affected,
+          is_long_term: change.long_term?,
         }
       end
 

@@ -59,4 +59,8 @@ class ServiceChanges::ServiceChange
   def not_long_term?
     !self.long_term_override
   end
+
+  def long_term?
+    !!self.long_term_override
+  end
 end
