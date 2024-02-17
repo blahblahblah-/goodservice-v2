@@ -300,7 +300,6 @@ Scheduled::Connection.create!(from_stop_internal_id: "712", name: "LIRR", min_tr
 Scheduled::Connection.create!(from_stop_internal_id: "701", name: "LIRR", min_transfer_time: 300, mode: "train")
 
 Scheduled::Connection.create!(from_stop_internal_id: "L24", name: "LIRR", min_transfer_time: 300, mode: "train")
-Scheduled::Connection.create!(from_stop_internal_id: "A51", name: "LIRR", min_transfer_time: 300, mode: "train")
 
 Scheduled::Connection.create!(from_stop_internal_id: "G06", name: "LIRR", min_transfer_time: 300, mode: "train")
 
