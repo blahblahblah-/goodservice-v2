@@ -152,7 +152,7 @@ class Trip
   private
 
   def next_stops_to_omit(upcoming_stop_hash)
-    return [] unless route_id == "J" && upcoming_stop_hash.size > 1
+    return [] unless ["J", "Z"].include?(route_id) && upcoming_stop_hash.size > 1
 
     omitted_stops_array = SOUTHBOUND_J_STOPS_TO_OMIT_TRACKING
 
