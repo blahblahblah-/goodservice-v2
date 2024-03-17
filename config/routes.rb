@@ -1,6 +1,5 @@
 Rails.application.routes.draw do
   namespace :api do
-    resources :ios_versions, only: [:index], :path => '/ios-versions'
     resources :routes, only: [:index, :show] do
       resources :trips, only: [:show]
     end
