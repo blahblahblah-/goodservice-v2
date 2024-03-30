@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_02_17_002930) do
+ActiveRecord::Schema.define(version: 2024_03_30_050715) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -123,12 +123,12 @@ ActiveRecord::Schema.define(version: 2024_02_17_002930) do
   end
 
   add_foreign_key "bus_transfers", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
-  add_foreign_key "calendar_exceptions", "schedules", column: "schedule_service_id", primary_key: "service_id"
+  add_foreign_key "calendar_exceptions", "schedules", column: "schedule_service_id", primary_key: "service_id", on_update: :cascade, on_delete: :cascade
   add_foreign_key "connections", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
   add_foreign_key "stop_times", "stops", column: "stop_internal_id", primary_key: "internal_id"
   add_foreign_key "stop_times", "trips", column: "trip_internal_id", primary_key: "internal_id"
   add_foreign_key "transfers", "stops", column: "from_stop_internal_id", primary_key: "internal_id"
   add_foreign_key "transfers", "stops", column: "to_stop_internal_id", primary_key: "internal_id"
   add_foreign_key "trips", "routes", column: "route_internal_id", primary_key: "internal_id"
-  add_foreign_key "trips", "schedules", column: "schedule_service_id", primary_key: "service_id"
+  add_foreign_key "trips", "schedules", column: "schedule_service_id", primary_key: "service_id", on_update: :cascade, on_delete: :cascade
 end
