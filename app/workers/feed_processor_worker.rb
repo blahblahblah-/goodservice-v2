@@ -1,6 +1,6 @@
 class FeedProcessorWorker
   include Sidekiq::Worker
-  sidekiq_options retry: false, queue: 'default'
+  sidekiq_options retry: false, queue: 'critical'
 
   def perform(feed_id, minutes, fraction_of_minute)
     begin

@@ -1,6 +1,6 @@
 class RouteProcessorWorker
   include Sidekiq::Worker
-  sidekiq_options retry: false, queue: 'default'
+  sidekiq_options retry: false, queue: 'critical'
 
   def perform(route_id, timestamp)
     marshaled_trips = RedisStore.route_trips(route_id, timestamp)

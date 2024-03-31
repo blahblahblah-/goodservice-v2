@@ -1,6 +1,6 @@
 class AccessibilityListWorker
   include Sidekiq::Worker
-  sidekiq_options retry: 1, queue: 'critical'
+  sidekiq_options retry: 1, queue: 'low'
 
   FEED_URI = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fnyct_ene_equipments.json"
 

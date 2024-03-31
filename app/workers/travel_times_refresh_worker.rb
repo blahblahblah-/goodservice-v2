@@ -1,6 +1,6 @@
 class TravelTimesRefreshWorker
   include Sidekiq::Worker
-  sidekiq_options retry: false, queue: 'critical'
+  sidekiq_options retry: false, queue: 'default'
 
   def perform
     routes = Scheduled::Route.all

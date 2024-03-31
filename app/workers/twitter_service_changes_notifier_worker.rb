@@ -1,7 +1,7 @@
 class TwitterServiceChangesNotifierWorker
   include Sidekiq::Worker
   include TwitterHelper
-  sidekiq_options retry: 1, queue: 'default'
+  sidekiq_options retry: 1, queue: 'low'
 
   SERVICE_CHANGE_NOTIFICATION_THRESHOLD = (ENV['SERVICE_CHANGE_NOTIFICATION_THRESHOLD'] || 30.minutes).to_i
   ENABLE_ROUTE_CLIENTS = ENV['TWITTER_ENABLE_ROUTE_CLIENTS'] ? ActiveModel::Type::Boolean.new.cast(ENV['TWITTER_ENABLE_ROUTE_CLIENTS']) : true

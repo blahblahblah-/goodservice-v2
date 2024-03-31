@@ -1,7 +1,7 @@
 class TwitterDelaysNotifierWorker
   include Sidekiq::Worker
   include TwitterHelper
-  sidekiq_options retry: 1, queue: 'critical'
+  sidekiq_options retry: 1, queue: 'low'
 
   SKIPPED_ROUTES = ENV['DELAY_NOTIFICATION_EXCLUDED_ROUTES']&.split(',') || []
   DELAY_NOTIFICATION_THRESHOLD = (ENV['DELAY_NOTIFICATION_THRESHOLD'] || 10.minutes).to_i
