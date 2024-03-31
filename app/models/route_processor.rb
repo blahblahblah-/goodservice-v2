@@ -90,6 +90,7 @@ class RouteProcessor
         scheduled_headways_by_routes,
         routes_with_shared_tracks,
       )
+      puts "Finished processing route #{route_id}, latency #{Time.current - Time.zone.at(timestamp)}"
     end
 
     def average_travel_time(a_stop, b_stop)
