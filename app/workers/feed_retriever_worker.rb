@@ -30,8 +30,11 @@ class FeedRetrieverWorker
       puts "Skipping feed #{feed_id} with timestamp #{last_feed_timestamp} has not been updated"
       return
     end
-    RedisStore.update_feed_timestamp(feed_id, decoded_data.header.timestamp)
+    timestamp = decoded_data.header.timestamp
+    RedisStore.update_feed_timestamp(feed_id, timestamp)
     RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
+
+    puts "Retrieved feed #{feed_id}, latency #{Time.current - Time.zone.at(timestamp)}"
 
     route_ids = decoded_data.entity.select { |entity|
       entity.field?(:trip_update)

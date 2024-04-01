@@ -24,11 +24,12 @@ class FeedProcessor
         raise "Error: #{feed_name} not found"
       end
 
-      puts "Analyzing #{feed_name} for Route #{route_id}"
-
       return if feed.entity.empty?
 
       timestamp = feed.header.timestamp
+
+      puts "Analyzing #{feed_name} for route #{route_id}, latency #{Time.current - Time.zone.at(timestamp)}"
+
       if timestamp < (Time.current - 1.hour).to_i
         puts "Feed id #{feed_id} is outdated"
         return

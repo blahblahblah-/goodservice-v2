@@ -8,7 +8,7 @@ class RouteProcessor
 
   class << self
     def process_route(route_id, trips, timestamp)
-      puts "Processing route #{route_id} at #{Time.zone.at(timestamp)}"
+      puts "Processing route #{route_id} at #{Time.zone.at(timestamp)}, latency #{Time.current - Time.zone.at(timestamp)}"
 
       trips_by_direction = trips.group_by(&:direction)
 
