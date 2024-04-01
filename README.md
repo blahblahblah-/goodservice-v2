@@ -52,7 +52,7 @@ This is a Rails app that uses React as a view manager. As such, there are a lot 
 Regularly occuring jobs are scheduled with [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron), and are defined in the [Sidekiq initializer](https://github.com/blahblahblah-/goodservice-v2/blob/main/config/initializers/sidekiq.rb).
 
 The order of operation to process the feeds within the every 15 seconds cycle is:
-FeedRetrieverSpawningWorker > FeedRetrieverWorker > FeedProcessorWorker > FeedProcessor > RouteProcessor > RouteAnalyzer
+FeedRetrieverSpawningXWorker > FeedRetrieverWorker > FeedProcessorWorker > FeedProcessor > RouteProcessor > RouteAnalyzer
 
 Static schedule data is stored in Postgres and their associated ActiveRecord classes are in the `Scheduled` namespace. No other data is currently stored in Postgres.
 

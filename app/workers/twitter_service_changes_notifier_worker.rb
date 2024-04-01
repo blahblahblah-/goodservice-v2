@@ -32,7 +32,7 @@ class TwitterServiceChangesNotifierWorker
     route_ids.each do |route_id|
       next if SKIPPED_ROUTES.include?(route_id)
       route_status = route_status_futures[route_id].value
-      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route_id))
+      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorkerBase.feed_id_for(route_id))
       scheduled = scheduled_routes.include?(route_id)
 
       current_notification_str = current_notifications[route_id]

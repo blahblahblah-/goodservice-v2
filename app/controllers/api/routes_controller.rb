@@ -17,7 +17,7 @@ class Api::RoutesController < ApplicationController
           scheduled = scheduled_routes.include?(route.internal_id)
           default_status = "No Service"
           service_change_summaries = {}
-          feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
+          feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorkerBase.feed_id_for(route.internal_id))
 
           if !scheduled
             default_status = "Not Scheduled"
@@ -65,7 +65,7 @@ class Api::RoutesController < ApplicationController
 
       default_status = "No Service"
       service_change_summaries = {}
-      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorker.feed_id_for(route.internal_id))
+      feed_timestamp = RedisStore.feed_timestamp(FeedRetrieverSpawningWorkerBase.feed_id_for(route.internal_id))
       if !scheduled
         default_status = "Not Scheduled"
       elsif feed_timestamp && feed_timestamp.to_i < (Time.current - 5.minutes).to_i

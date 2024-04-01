@@ -106,6 +106,7 @@ class FeedProcessor
         RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
         RouteProcessorWorker.perform_async(route_id, timestamp)
       # end
+      puts "Analyzed #{feed_name} for route #{route_id}, latency #{Time.current - Time.zone.at(timestamp)}"
     end
 
     private
