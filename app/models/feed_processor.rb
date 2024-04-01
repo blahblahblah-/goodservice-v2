@@ -15,7 +15,7 @@ class FeedProcessor
   CITY_HALL_STOP = "R24"
 
   class << self
-    def analyze_feed(feed_id, minutes, fraction_of_minute)
+    def analyze_feed(feed_id, route_id, minutes, fraction_of_minute)
       feed_name = "feed:#{minutes}:#{fraction_of_minute}:#{feed_id}"
       marshaled_feed = RedisStore.feed(feed_id, minutes, fraction_of_minute)
       feed = Marshal.load(marshaled_feed) if marshaled_feed
@@ -24,7 +24,7 @@ class FeedProcessor
         raise "Error: #{feed_name} not found"
       end
 
-      puts "Analyzing #{feed_name}"
+      puts "Analyzing #{feed_name} for Route #{route_id}"
 
       return if feed.entity.empty?
 
@@ -37,7 +37,7 @@ class FeedProcessor
       trip_timestamps = extract_vehicle_timestamps(feed.entity)
 
       trip_entities = feed.entity.select { |entity|
-        valid_trip?(timestamp, entity, feed_id)
+        valid_trip?(timestamp, entity, feed_id, route_id)
       }
 
       duplicate_trip_ids = trip_entities.select { |entity|
@@ -78,7 +78,7 @@ class FeedProcessor
         attach_previous_trip_update(feed_id, trip)
       end
 
-      routes = translated_trips.group_by(&:route_id)
+      # routes = translated_trips.group_by(&:route_id)
 
       REDIS_CLIENT.pipelined do
         translated_trips.each do |trip|
@@ -88,14 +88,15 @@ class FeedProcessor
 
       complete_trips(feed_id, timestamp)
 
-      routes.each do |route_id, trips|
-        if trips.none?(&:latest)
+      # routes.each do |route_id, trips|
+        if translated_trips.none?(&:latest)
           route_data_encoded = RedisStore.route_status(route_id)
           if route_data_encoded
             route_data = JSON.parse(route_data_encoded)
             if route_data['timestamp'] >= (Time.current - 2.minutes).to_i
               puts "No updated trips for #{route_id}, skipping..."
-              next
+              # next
+              return
             end
           end
         end
@@ -103,7 +104,7 @@ class FeedProcessor
         marshaled_trips = Marshal.dump(trips)
         RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
         RouteProcessorWorker.perform_async(route_id, timestamp)
-      end
+      # end
     end
 
     private
@@ -114,8 +115,9 @@ class FeedProcessor
       }
     end
 
-    def valid_trip?(timestamp, entity, feed_id)
+    def valid_trip?(timestamp, entity, feed_id, route_id)
       return false unless entity.field?(:trip_update) && entity.trip_update.trip.nyct_trip_descriptor
+      return false unless translate_route_id(entity.trip_update.trip.route_id) == route_id
       upcoming_trip_time_allowance = feed_id == SI_FEED ? UPCOMING_TRIPS_TIME_ALLOWANCE_FOR_SI : UPCOMING_TRIPS_TIME_ALLOWANCE
       entity.trip_update.stop_time_update.reject! { |update|
         (update.departure || update.arrival)&.time.nil?

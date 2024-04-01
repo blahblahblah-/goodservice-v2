@@ -32,6 +32,15 @@ class FeedRetrieverWorker
     end
     RedisStore.update_feed_timestamp(feed_id, decoded_data.header.timestamp)
     RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
-    FeedProcessorWorker.perform_async(feed_id, minutes, fraction_of_minute)
+
+    route_ids = decoded_data.entity.select { |entity|
+      entity.field?(:trip_update)
+    }.map { |entity|
+      entity.trip_update.trip.route_id
+    }.uniq
+
+    route_ids.each do |route_id|
+      FeedProcessorWorker.perform_async(feed_id, route_id, minutes, fraction_of_minute)
+    end
   end
 end

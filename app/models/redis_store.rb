@@ -23,13 +23,13 @@ class RedisStore
     end
 
     # FeedProcessor lock
-    def acquire_feed_processor_lock(feed_id, minutes, fraction_of_minute)
-      REDIS_CLIENT.set("feed-processor-lock:#{feed_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)
+    def acquire_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute)
+      REDIS_CLIENT.set("feed-processor-lock:#{feed_id}:#{route_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)
     end
 
-    def release_feed_processor_lock(feed_id, minutes, fraction_of_minute)
-      if REDIS_CLIENT.get("feed-processor-lock:#{feed_id}") == "#{minutes}:#{fraction_of_minute}"
-        REDIS_CLIENT.del("feed-processor-lock:#{feed_id}")
+    def release_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute)
+      if REDIS_CLIENT.get("feed-processor-lock:#{feed_id}:#{route_id}") == "#{minutes}:#{fraction_of_minute}"
+        REDIS_CLIENT.del("feed-processor-lock:#{feed_id}:#{route_id}")
       end
     end
 
