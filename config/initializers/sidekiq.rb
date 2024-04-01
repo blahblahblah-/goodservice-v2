@@ -6,7 +6,7 @@ Sidekiq.configure_server do |config|
   config.redis = { url: ENV['REDIS_URL'], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
 end
 
-Sidekiq.options[:poll_interval] = 5
+Sidekiq.options[:poll_interval] = 3
 
 Sidekiq::Cron::Job.create(name: 'RoutingRefreshWorker - Every 30 secs', cron: '*/30 * * * * *', class: 'RoutingRefreshWorker')
 Sidekiq::Cron::Job.create(name: 'FeedRetrieverSpawningAWorker - Every 15 secs', cron: '2-59/15 * * * * *', class: 'FeedRetrieverSpawningAWorker')
