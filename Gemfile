@@ -43,7 +43,7 @@ gem 'twitter'
 gem 'rack-cors'
 gem 'httparty'
 gem 'psych', '< 4'
-gem 'rack', '~> 2.2.4'
+gem 'rack', '~> 2.2.8'
 
 # Needed since Ruby 3.x upgrade
 gem 'rss'
