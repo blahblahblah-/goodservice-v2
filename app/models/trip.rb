@@ -12,14 +12,14 @@ class Trip
     @id = id
     @timestamp = timestamp
     stop_time_hash = trip_update.stop_time_update.filter { |update|
-      (update.departure&.time || update.arrival&.time || 0) > 0
+      (update.arrival&.time || update.departure&.time || 0) > 0
     }.to_h {|update|
-      [update.stop_id[0..2], update.departure&.time && update.departure.time > 0 ? update.departure.time : update.arrival&.time]
+      [update.stop_id[0..2], update.arrival&.time && update.arrival.time > 0 ? update.arrival.time : update.departure&.time]
     }
     @stops = stop_time_hash
     @schedule = stop_time_hash
     @tracks = trip_update.stop_time_update.filter { |update|
-      (update.departure&.time || update.arrival&.time || 0) > 0
+      (update.arrival&.time || update.departure&.time || 0) > 0
     }.to_h {|update|
       [update.stop_id[0..2], update.nyct_stop_time_update.actual_track.presence || update.nyct_stop_time_update.scheduled_track ]
     }
