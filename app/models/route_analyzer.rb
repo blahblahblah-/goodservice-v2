@@ -929,9 +929,8 @@ class RouteAnalyzer
       }.uniq { |routing_id, trip|
         trip.id
       }.map { |routing_id, trip|
-        stops = {}
+        stops = trip.past_stops.dup
         last_past_stop = trip.past_stops.keys.last
-        stops[last_past_stop] = trip.past_stops[last_past_stop] if last_past_stop
         stops[trip.upcoming_stop] = trip.estimated_upcoming_stop_arrival_time
         trip.upcoming_stops.each_cons(2).reduce(trip.estimated_upcoming_stop_arrival_time) { |sum, (a_stop, b_stop)|
           pair_str = "#{a_stop}-#{b_stop}"
