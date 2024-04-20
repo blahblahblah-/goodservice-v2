@@ -123,7 +123,7 @@ class RouteAnalyzer
       [direction, status]
     }.to_h
     status = ['Delay', 'Service Change', 'Slow', 'Not Good', 'No Service', 'Good Service', 'Not Scheduled'].find { |s| direction_statuses.any? { |_, status| s == status } }
-    if status == 'No Service' && direction_statuses.any? { |ds| !['No Service', 'Not Scheduled'].include?(ds) }
+    if status == 'No Service' && direction_statuses.any? { |_, s| !['No Service', 'Not Scheduled'].include?(s) }
       status = 'Partial Service'
     end
 

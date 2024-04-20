@@ -57,7 +57,7 @@ class FeedProcessor
         entity.trip_update.trip.trip_id
       }.map { |entity|
         convert_trip(timestamp, entity, trip_timestamps)
-      }.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }
+      }.compact.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }
 
       translated_trips = trips.map{ |trip|
         translate_trip(feed_id, trip, trips)
@@ -77,6 +77,10 @@ class FeedProcessor
 
       translated_trips.each do |trip|
         attach_previous_trip_update(feed_id, trip)
+      end
+
+      translated_trips.select! do |trip|
+        trip.is_assigned || (trip.stops.size + trip.past_stops.size) > 1
       end
 
       # routes = translated_trips.group_by(&:route_id)
@@ -149,6 +153,8 @@ class FeedProcessor
       remove_bad_data!(entity.trip_update, timestamp)
       correct_canal_st_stop!(entity.trip_update, direction)
       trip_timestamp = [trip_timestamps[trip_id] || timestamp, timestamp].min
+
+      return unless entity.trip_update.stop_time_update.present?
 
       Trip.new(route_id, direction, trip_id, trip_timestamp, entity.trip_update, is_assigned)
     end
