@@ -282,6 +282,9 @@ class ServiceChangeAnalyzer
         end
       end
 
+      station_combinations.select! { |sc| sc.present? }
+      return unless station_combinations.present?
+
       route_pair = nil
       current_route_routings = { current_route_id => current[current_route_id] }
       current_long_term_routings = {current_route_id => long_term_routings[current_route_id] }
