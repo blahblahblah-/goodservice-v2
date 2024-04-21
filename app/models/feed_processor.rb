@@ -83,8 +83,6 @@ class FeedProcessor
         trip.is_assigned || (trip.stops.size + trip.past_stops.size) > 1
       end
 
-      # routes = translated_trips.group_by(&:route_id)
-
       REDIS_CLIENT.pipelined do
         translated_trips.each do |trip|
           update_trip(feed_id, timestamp, trip)
@@ -93,23 +91,21 @@ class FeedProcessor
 
       complete_trips(feed_id, timestamp)
 
-      # routes.each do |route_id, trips|
-        if translated_trips.none?(&:latest)
-          route_data_encoded = RedisStore.route_status(route_id)
-          if route_data_encoded
-            route_data = JSON.parse(route_data_encoded)
-            if route_data['timestamp'] >= (Time.current - 2.minutes).to_i
-              puts "No updated trips for #{route_id}, skipping..."
-              # next
-              return
-            end
+      if translated_trips.none?(&:latest)
+        route_data_encoded = RedisStore.route_status(route_id)
+        if route_data_encoded
+          route_data = JSON.parse(route_data_encoded)
+          if route_data['timestamp'] >= (Time.current - 2.minutes).to_i
+            puts "No updated trips for #{route_id}, skipping..."
+            # next
+            return
           end
         end
+      end
 
-        marshaled_trips = Marshal.dump(trips)
-        RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
-        RouteProcessorWorker.perform_async(route_id, timestamp)
-      # end
+      marshaled_trips = Marshal.dump(translated_trips)
+      RedisStore.add_route_trips(route_id, timestamp, marshaled_trips)
+      RouteProcessorWorker.perform_async(route_id, timestamp)
       puts "Analyzed #{feed_name} for route #{route_id}, latency #{Time.current - Time.zone.at(timestamp)}"
     end
 
