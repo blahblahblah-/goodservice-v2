@@ -397,8 +397,12 @@ class ServiceChangeAnalyzer
       end
     end
 
+    # This method is to allow displaying express to local service change where the stations
+    # anchored by the service change don't have to be express (i.e. 7 train at 74 St)
     def trim_express_to_local_service_change(express_to_local_service_change, timestamp)
       return if CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(express_to_local_service_change.stations_affected)
+      # The closure at Northern Blvd messes this logic for QBL, so we're gonna skip over this if 65 St is included
+      return express_to_local_service_change.stations_affected.include?("G15")
       all_routings = current_routings(timestamp)
       long_term_routings = LongTermServiceChangeRoutingManager.get_all_routings
       all_routings = all_routings.to_h do |route_id, routing_by_direction|
