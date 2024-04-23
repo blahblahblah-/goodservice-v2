@@ -260,6 +260,7 @@ class ServiceChangeAnalyzer
 
     def match_route(current_route_id, reroute_service_change, recent_scheduled_routings, timestamp, is_begin_of_route)
       current = current_routings(timestamp)
+      closed_stops = (ENV['CLOSED_STOPS']&.split(',') || []).map { |s| s[0..2] }
       long_term_routings = LongTermServiceChangeRoutingManager.get_all_routings
       stations = reroute_service_change.stations_affected.compact
       stations -= [DEKALB_AV_STOP]
@@ -298,6 +299,7 @@ class ServiceChangeAnalyzer
               routings.any? do |r|
                 routing = r
                 routing -= [DEKALB_AV_STOP]
+                routing -= closed_stops
                 routing.each_cons(sc.length).any?(&sc.method(:==))
               end
             end
