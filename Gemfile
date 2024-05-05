@@ -34,7 +34,7 @@ gem 'bootsnap', '>= 1.9.4', require: false
 gem 'gtfs-realtime-bindings'
 gem 'parallel'
 gem 'sidekiq'
-gem "sidekiq-cron", "~> 1.1"
+gem "sidekiq-cron", "~> 1.12"
 gem 'foreman'
 gem 'platform-api'
 gem 'barnes'

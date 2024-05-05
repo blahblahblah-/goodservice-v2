@@ -6,314 +6,314 @@ class RedisStore
 
   class << self
     # Feeds
-    def feed_timestamp(feed_id)
-      REDIS_CLIENT.hget("feed-timestamp", feed_id)
+    def feed_timestamp(feed_id, client = REDIS_CLIENT)
+      client.hget("feed-timestamp", feed_id)
     end
 
-    def update_feed_timestamp(feed_id, timestamp)
-      REDIS_CLIENT.hset("feed-timestamp", feed_id, timestamp)
+    def update_feed_timestamp(feed_id, timestamp, client = REDIS_CLIENT)
+      client.hset("feed-timestamp", feed_id, timestamp)
     end
 
-    def feed(feed_id, minutes, fraction_of_minute)
-      REDIS_CLIENT.get("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}")
+    def feed(feed_id, minutes, fraction_of_minute, client = REDIS_CLIENT)
+      client.get("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}")
     end
 
-    def add_feed(feed_id, minutes, fraction_of_minute, marshaled_data)
-      REDIS_CLIENT.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 60 : 1800))
+    def add_feed(feed_id, minutes, fraction_of_minute, marshaled_data, client = REDIS_CLIENT)
+      client.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 60 : 1800))
     end
 
     # FeedProcessor lock
-    def acquire_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute)
-      REDIS_CLIENT.set("feed-processor-lock:#{feed_id}:#{route_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)
+    def acquire_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute, client = REDIS_CLIENT)
+      client.set("feed-processor-lock:#{feed_id}:#{route_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)
     end
 
-    def release_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute)
-      if REDIS_CLIENT.get("feed-processor-lock:#{feed_id}:#{route_id}") == "#{minutes}:#{fraction_of_minute}"
-        REDIS_CLIENT.del("feed-processor-lock:#{feed_id}:#{route_id}")
+    def release_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute, client = REDIS_CLIENT)
+      if client.get("feed-processor-lock:#{feed_id}:#{route_id}") == "#{minutes}:#{fraction_of_minute}"
+        client.del("feed-processor-lock:#{feed_id}:#{route_id}")
       end
     end
 
     # Accessibility
-    def update_accessible_stops_list(list)
-      REDIS_CLIENT.set("accessibile-stops", list, ex: 1800)
+    def update_accessible_stops_list(list, client = REDIS_CLIENT)
+      client.set("accessibile-stops", list, ex: 1800)
     end
 
-    def accessible_stops_list
-      REDIS_CLIENT.get("accessibile-stops")
+    def accessible_stops_list(client = REDIS_CLIENT)
+      client.get("accessibile-stops")
     end
 
-    def update_elevator_map(obj)
-      REDIS_CLIENT.set("accessibile-elevator-map", obj, ex: 1800)
+    def update_elevator_map(obj, client = REDIS_CLIENT)
+      client.set("accessibile-elevator-map", obj, ex: 1800)
     end
 
-    def elevator_map
-      REDIS_CLIENT.get("accessibile-elevator-map")
+    def elevator_map(client = REDIS_CLIENT)
+      client.get("accessibile-elevator-map")
     end
 
-    def update_elevator_advisories(obj)
-      REDIS_CLIENT.set("accessibile-elevator-advisories", obj, ex: 1800)
+    def update_elevator_advisories(obj, client = REDIS_CLIENT)
+      client.set("accessibile-elevator-advisories", obj, ex: 1800)
     end
 
-    def elevator_advisories
-      REDIS_CLIENT.get("accessibile-elevator-advisories")
+    def elevator_advisories(client = REDIS_CLIENT)
+      client.get("accessibile-elevator-advisories")
     end
 
     # Route Trips
-    def route_trips(route_id, timestamp)
-      REDIS_CLIENT.get("route-trips:#{route_id}:#{timestamp}")
+    def route_trips(route_id, timestamp, client = REDIS_CLIENT)
+      client.get("route-trips:#{route_id}:#{timestamp}")
     end
 
-    def add_route_trips(route_id, timestamp, marshaled_data)
-      REDIS_CLIENT.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 60)
+    def add_route_trips(route_id, timestamp, marshaled_data, client = REDIS_CLIENT)
+      client.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 60)
     end
 
     # Processed trips
-    def update_processed_trips(route_id, marshaled_data)
-      REDIS_CLIENT.set("processed-trips:#{route_id}", marshaled_data, ex: 300)
+    def update_processed_trips(route_id, marshaled_data, client = REDIS_CLIENT)
+      client.set("processed-trips:#{route_id}", marshaled_data, ex: 300)
     end
 
-    def processed_trips(route_id)
-      REDIS_CLIENT.get("processed-trips:#{route_id}")
+    def processed_trips(route_id, client = REDIS_CLIENT)
+      client.get("processed-trips:#{route_id}")
     end
 
     # Trips
-    def active_trip_list(feed_id, timestamp, timeout_threshold = 0)
+    def active_trip_list(feed_id, timestamp, timeout_threshold = 0, client = REDIS_CLIENT)
       upperbound = timestamp - timeout_threshold
-      REDIS_CLIENT.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{upperbound}")
+      client.zrangebyscore("active-trips-list:#{feed_id}", timestamp - INACTIVE_TRIP_TIMEOUT, "(#{upperbound}")
     end
 
-    def add_to_active_trip_list(feed_id, trip_id, timestamp)
-      REDIS_CLIENT.zadd("active-trips-list:#{feed_id}", timestamp, trip_id)
+    def add_to_active_trip_list(feed_id, trip_id, timestamp, client = REDIS_CLIENT)
+      client.zadd("active-trips-list:#{feed_id}", timestamp, trip_id)
     end
 
-    def remove_from_active_trip_list(feed_id, trip_id)
-      REDIS_CLIENT.zrem("active-trips-list:#{feed_id}", trip_id)
+    def remove_from_active_trip_list(feed_id, trip_id, client = REDIS_CLIENT)
+      client.zrem("active-trips-list:#{feed_id}", trip_id)
     end
 
-    def trip_translation(feed_id, trip_id)
-      REDIS_CLIENT.hget("active-trips:translations:#{feed_id}", trip_id)
+    def trip_translation(feed_id, trip_id, client = REDIS_CLIENT)
+      client.hget("active-trips:translations:#{feed_id}", trip_id)
     end
 
-    def add_trip_translation(feed_id, former_trip_id, new_trip_id)
-      REDIS_CLIENT.hset("active-trips:translations:#{feed_id}", new_trip_id, former_trip_id)
+    def add_trip_translation(feed_id, former_trip_id, new_trip_id, client = REDIS_CLIENT)
+      client.hset("active-trips:translations:#{feed_id}", new_trip_id, former_trip_id)
     end
 
-    def remove_trip_translations(feed_id, former_trip_id)
-      REDIS_CLIENT.hgetall("active-trips:translations:#{feed_id}").select { |_, v| v == former_trip_id }.keys.each do |trip_id|
-        REDIS_CLIENT.hdel("active-trips:translations:#{feed_id}", trip_id)
+    def remove_trip_translations(feed_id, former_trip_id, client = REDIS_CLIENT)
+      client.hgetall("active-trips:translations:#{feed_id}").select { |_, v| v == former_trip_id }.keys.each do |trip_id|
+        client.hdel("active-trips:translations:#{feed_id}", trip_id)
       end
     end
 
-    def active_trip(feed_id, trip_id)
-      REDIS_CLIENT.hget("active-trips:#{feed_id}", trip_id)
+    def active_trip(feed_id, trip_id, client = REDIS_CLIENT)
+      client.hget("active-trips:#{feed_id}", trip_id)
     end
 
-    def add_active_trip(feed_id, trip_id, marshaled_trip)
-      REDIS_CLIENT.hset("active-trips:#{feed_id}", trip_id, marshaled_trip)
+    def add_active_trip(feed_id, trip_id, marshaled_trip, client = REDIS_CLIENT)
+      client.hset("active-trips:#{feed_id}", trip_id, marshaled_trip)
     end
 
-    def remove_active_trip(feed_id, trip_id)
-      REDIS_CLIENT.hdel("active-trips:#{feed_id}", trip_id)
+    def remove_active_trip(feed_id, trip_id, client = REDIS_CLIENT)
+      client.hdel("active-trips:#{feed_id}", trip_id)
     end
 
     # Route stops
-    def add_route_to_route_stop(route_id, stop_id, direction, timestamp)
-      REDIS_CLIENT.zadd("routes-stop:#{stop_id}:#{direction}", timestamp, route_id)
+    def add_route_to_route_stop(route_id, stop_id, direction, timestamp, client = REDIS_CLIENT)
+      client.zadd("routes-stop:#{stop_id}:#{direction}", timestamp, route_id)
     end
 
-    def routes_stop_at(stop_id, direction, timestamp)
-      REDIS_CLIENT.zrangebyscore("routes-stop:#{stop_id}:#{direction}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
+    def routes_stop_at(stop_id, direction, timestamp, client = REDIS_CLIENT)
+      client.zrangebyscore("routes-stop:#{stop_id}:#{direction}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
     # Route stop tracks
-    def add_route_to_route_stop_track(route_id, direction, stop_id, track, timestamp)
-      REDIS_CLIENT.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, "#{route_id}:#{direction}")
-      REDIS_CLIENT.sadd("stop-tracks", "#{stop_id}:#{track}")
+    def add_route_to_route_stop_track(route_id, direction, stop_id, track, timestamp, client = REDIS_CLIENT)
+      client.zadd("routes-stop-track:#{stop_id}:#{track}", timestamp, "#{route_id}:#{direction}")
+      client.sadd?("stop-tracks", "#{stop_id}:#{track}")
     end
 
-    def routes_stop_at_track(stop_id, track, timestamp)
-      REDIS_CLIENT.zrangebyscore("routes-stop-track:#{stop_id}:#{track}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
+    def routes_stop_at_track(stop_id, track, timestamp, client = REDIS_CLIENT)
+      client.zrangebyscore("routes-stop-track:#{stop_id}:#{track}", timestamp - ROUTE_UPDATE_TIMEOUT, timestamp + ROUTE_UPDATE_TIMEOUT)
     end
 
-    def stop_tracks
-      REDIS_CLIENT.smembers("stop-tracks")
+    def stop_tracks(client = REDIS_CLIENT)
+      client.smembers("stop-tracks")
     end
 
     # Travel times
-    def add_travel_time(stops_str, travel_time, trip_id, timestamp)
-      REDIS_CLIENT.zadd("travel-time:actual:#{stops_str}", timestamp, "#{trip_id}-#{travel_time}")
+    def add_travel_time(stops_str, travel_time, trip_id, timestamp, client = REDIS_CLIENT)
+      client.zadd("travel-time:actual:#{stops_str}", timestamp, "#{trip_id}-#{travel_time}")
     end
 
-    def travel_times_at(stop_id_1, stop_id_2, count)
+    def travel_times_at(stop_id_1, stop_id_2, count, client = REDIS_CLIENT)
       stops_str = "#{stop_id_1}-#{stop_id_2}"
-      REDIS_CLIENT.zrevrange("travel-time:actual:#{stops_str}", 0, count - 1)
+      client.zrevrange("travel-time:actual:#{stops_str}", 0, count - 1)
     end
 
-    def supplemented_scheduled_travel_time(stop_id_1, stop_id_2)
-      REDIS_CLIENT.hget("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}")&.to_f
+    def supplemented_scheduled_travel_time(stop_id_1, stop_id_2, client = REDIS_CLIENT)
+      client.hget("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}")&.to_f
     end
 
-    def supplemented_scheduled_travel_times(stop_id_pairs)
+    def supplemented_scheduled_travel_times(stop_id_pairs, client = REDIS_CLIENT)
       if stop_id_pairs.present?
-        REDIS_CLIENT.mapped_hmget("travel-time:supplemented", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+        client.mapped_hmget("travel-time:supplemented", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
       else
         {}
       end
     end
 
-    def add_supplemented_scheduled_travel_time(stop_id_1, stop_id_2, time)
-      REDIS_CLIENT.hset("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}", time)
+    def add_supplemented_scheduled_travel_time(stop_id_1, stop_id_2, time, client = REDIS_CLIENT)
+      client.hset("travel-time:supplemented", "#{stop_id_1}-#{stop_id_2}", time)
     end
 
-    def scheduled_travel_time(stop_id_1, stop_id_2)
-      REDIS_CLIENT.hget("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}")&.to_i
+    def scheduled_travel_time(stop_id_1, stop_id_2, client = REDIS_CLIENT)
+      client.hget("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}")&.to_i
     end
 
-    def scheduled_travel_times(stop_id_pairs)
+    def scheduled_travel_times(stop_id_pairs, client = REDIS_CLIENT)
       if stop_id_pairs.present?
-        REDIS_CLIENT.mapped_hmget("travel-time:scheduled", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
+        client.mapped_hmget("travel-time:scheduled", *stop_id_pairs.map{ |pair| "#{pair.first}-#{pair.last}"})
       else
         {}
       end
     end
 
-    def add_scheduled_travel_time(stop_id_1, stop_id_2, time)
-      REDIS_CLIENT.hset("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}", time)
+    def add_scheduled_travel_time(stop_id_1, stop_id_2, time, client = REDIS_CLIENT)
+      client.hset("travel-time:scheduled", "#{stop_id_1}-#{stop_id_2}", time)
     end
 
-    def update_travel_times(data)
-      REDIS_CLIENT.set("travel-times", data, ex: 1800)
+    def update_travel_times(data, client = REDIS_CLIENT)
+      client.set("travel-times", data, ex: 1800)
     end
 
-    def travel_times
-      REDIS_CLIENT.get("travel-times")
+    def travel_times(client = REDIS_CLIENT)
+      client.get("travel-times")
     end
 
     # Route statuses
-    def route_status_summaries
-      REDIS_CLIENT.hgetall("route-status")
+    def route_status_summaries(client = REDIS_CLIENT)
+      client.hgetall("route-status")
     end
 
-    def add_route_status_summary(route_id, data)
-      REDIS_CLIENT.hset("route-status", route_id, data)
+    def add_route_status_summary(route_id, data, client = REDIS_CLIENT)
+      client.hset("route-status", route_id, data)
     end
 
-    def route_status_detailed_summaries
-      REDIS_CLIENT.hgetall("route-status-detailed")
+    def route_status_detailed_summaries(client = REDIS_CLIENT)
+      client.hgetall("route-status-detailed")
     end
 
-    def add_route_status_detailed_summary(route_id, data)
-      REDIS_CLIENT.hset("route-status-detailed", route_id, data)
+    def add_route_status_detailed_summary(route_id, data, client = REDIS_CLIENT)
+      client.hset("route-status-detailed", route_id, data)
     end
 
-    def route_status(route_id)
-      REDIS_CLIENT.get("route-status:#{route_id}")
+    def route_status(route_id, client = REDIS_CLIENT)
+      client.get("route-status:#{route_id}")
     end
 
-    def update_route_status(route_id, data)
-      REDIS_CLIENT.set("route-status:#{route_id}", data, ex: 300)
+    def update_route_status(route_id, data, client = REDIS_CLIENT)
+      client.set("route-status:#{route_id}", data, ex: 300)
     end
 
     # Delayed routes
-    def update_delayed_routes(data)
-      REDIS_CLIENT.set("delayed-routes", data, ex: 1800)
+    def update_delayed_routes(data, client = REDIS_CLIENT)
+      client.set("delayed-routes", data, ex: 1800)
     end
 
-    def delayed_routes
-      REDIS_CLIENT.get("delayed-routes")
+    def delayed_routes(client = REDIS_CLIENT)
+      client.get("delayed-routes")
     end
 
     # Delay Notifications
-    def update_delay_notifications(data)
-      REDIS_CLIENT.set("delay-notifications", data, ex: 1800)
+    def update_delay_notifications(data, client = REDIS_CLIENT)
+      client.set("delay-notifications", data, ex: 1800)
     end
 
-    def delay_notifications
-      REDIS_CLIENT.get("delay-notifications")
+    def delay_notifications(client = REDIS_CLIENT)
+      client.get("delay-notifications")
     end
 
     # Service Change Notifications
-    def update_service_change_notification(route_id, data)
-      REDIS_CLIENT.hset("service-change-notifications", route_id, data)
+    def update_service_change_notification(route_id, data, client = REDIS_CLIENT)
+      client.hset("service-change-notifications", route_id, data)
     end
 
-    def current_service_change_notifications
-      REDIS_CLIENT.hgetall("service-change-notifications")
+    def current_service_change_notifications(client = REDIS_CLIENT)
+      client.hgetall("service-change-notifications")
     end
 
-    def clear_service_change_notification(route_id)
-      REDIS_CLIENT.hdel("service-change-notifications", route_id)
+    def clear_service_change_notification(route_id, client = REDIS_CLIENT)
+      client.hdel("service-change-notifications", route_id)
     end
 
-    def update_upcoming_service_change_notification(route_id, data)
-      REDIS_CLIENT.set("upcoming-service-change-notification-#{route_id}", data, ex: 3600)
+    def update_upcoming_service_change_notification(route_id, data, client = REDIS_CLIENT)
+      client.set("upcoming-service-change-notification-#{route_id}", data, ex: 3600)
     end
 
-    def clear_upcoming_service_change_notification(route_id)
-      REDIS_CLIENT.del("upcoming-service-change-notification-#{route_id}")
+    def clear_upcoming_service_change_notification(route_id, client = REDIS_CLIENT)
+      client.del("upcoming-service-change-notification-#{route_id}")
     end
 
-    def upcoming_service_change_notification(route_id)
-      data = REDIS_CLIENT.get("upcoming-service-change-notification-#{route_id}")
+    def upcoming_service_change_notification(route_id, client = REDIS_CLIENT)
+      data = client.get("upcoming-service-change-notification-#{route_id}")
     end
 
-    def update_upcoming_service_change_notification_timestamp(route_id)
-      REDIS_CLIENT.set("upcoming-service-change-notification-#{route_id}-timestamp", Time.current.to_i, ex: 3600)
+    def update_upcoming_service_change_notification_timestamp(route_id, client = REDIS_CLIENT)
+      client.set("upcoming-service-change-notification-#{route_id}-timestamp", Time.current.to_i, ex: 3600)
     end
 
-    def clear_upcoming_service_change_notification_timestamp(route_id)
-      REDIS_CLIENT.del("upcoming-service-change-notification-#{route_id}-timestamp")
+    def clear_upcoming_service_change_notification_timestamp(route_id, client = REDIS_CLIENT)
+      client.del("upcoming-service-change-notification-#{route_id}-timestamp")
     end
 
-    def upcoming_service_change_notification_timestamp(route_id)
-      REDIS_CLIENT.get("upcoming-service-change-notification-#{route_id}-timestamp")
+    def upcoming_service_change_notification_timestamp(route_id, client = REDIS_CLIENT)
+      client.get("upcoming-service-change-notification-#{route_id}-timestamp")
     end
 
     # Routings
-    def current_routings
-      REDIS_CLIENT.get("current-routings")
+    def current_routings(client = REDIS_CLIENT)
+      client.get("current-routings")
     end
 
-    def set_current_routings(json)
-      REDIS_CLIENT.set("current-routings", json)
+    def set_current_routings(json, client = REDIS_CLIENT)
+      client.set("current-routings", json)
     end
 
-    def evergreen_routings
-      REDIS_CLIENT.get("evergreen-routings")
+    def evergreen_routings(client = REDIS_CLIENT)
+      client.get("evergreen-routings")
     end
 
-    def set_evergreen_routings(json)
-      REDIS_CLIENT.set("evergreen-routings", json)
+    def set_evergreen_routings(json, client = REDIS_CLIENT)
+      client.set("evergreen-routings", json)
     end
 
     # Alexa
-    def alexa_most_recent_stop(user_id)
-      REDIS_CLIENT.get("alexa-recent-stop:#{user_id}")
+    def alexa_most_recent_stop(user_id, client = REDIS_CLIENT)
+      client.get("alexa-recent-stop:#{user_id}")
     end
 
-    def set_alexa_most_recent_stop(user_id, stop_id)
-      REDIS_CLIENT.set("alexa-recent-stop:#{user_id}", stop_id, ex: 2592000)
+    def set_alexa_most_recent_stop(user_id, stop_id, client = REDIS_CLIENT)
+      client.set("alexa-recent-stop:#{user_id}", stop_id, ex: 2592000)
     end
 
-    def add_alexa_stop_query_miss(query)
-      REDIS_CLIENT.sadd("alexa-query-misses", query)
+    def add_alexa_stop_query_miss(query, client = REDIS_CLIENT)
+      client.sadd?("alexa-query-misses", query)
     end
 
     # Dynos
-    def last_unempty_workqueue_timestamp
-      REDIS_CLIENT.get("last-unempty-workqueue-timestamp")&.to_i
+    def last_unempty_workqueue_timestamp(client = REDIS_CLIENT)
+      client.get("last-unempty-workqueue-timestamp")&.to_i
     end
 
-    def update_last_unempty_workqueue_timestamp
-      REDIS_CLIENT.set("last-unempty-workqueue-timestamp", Time.current.to_i)
+    def update_last_unempty_workqueue_timestamp(client = REDIS_CLIENT)
+      client.set("last-unempty-workqueue-timestamp", Time.current.to_i)
     end
 
-    def last_scaleup_timestamp
-      REDIS_CLIENT.get("last-scaleup-timestamp")&.to_i
+    def last_scaleup_timestamp(client = REDIS_CLIENT)
+      client.get("last-scaleup-timestamp")&.to_i
     end
 
-    def update_last_scaleup_timestamp
-      REDIS_CLIENT.set("last-scaleup-timestamp", Time.current.to_i)
+    def update_last_scaleup_timestamp(client = REDIS_CLIENT)
+      client.set("last-scaleup-timestamp", Time.current.to_i)
     end
 
     # Maintenance

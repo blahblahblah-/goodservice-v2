@@ -14,17 +14,17 @@ class Api::StopsController < ApplicationController
       tracks = RedisStore.stop_tracks.group_by { |stop_id_track| stop_id_track.split(':').first }.to_h { |stop_id, tracks|
         [stop_id, tracks.map { |t| t.split(':').second }.filter { |t| t.present? }]
       }
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         futures = stops.to_h { |stop|
           [stop.internal_id, [1, 3].to_h { |direction|
-            [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
+            [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i, pipeline)]
           }]
         }
         tracks_futures = tracks.to_h { |stop_id, tracks|
-          [stop_id, tracks.to_h { |t| [t, RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i)] }]
+          [stop_id, tracks.to_h { |t| [t, RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i, pipeline)] }]
         }
-        accessible_stops_future = RedisStore.accessible_stops_list
-        elevator_advisories_future = RedisStore.elevator_advisories
+        accessible_stops_future = RedisStore.accessible_stops_list(pipeline)
+        elevator_advisories_future = RedisStore.elevator_advisories(pipeline)
       end
       accessible_stops = accessible_stops_future.value ? JSON.parse(accessible_stops_future.value) : []
       elevator_advisories = elevator_advisories_future.value ? JSON.parse(elevator_advisories_future.value) : {}
@@ -95,18 +95,18 @@ class Api::StopsController < ApplicationController
       timestamp = Time.current.to_i
       stop = Scheduled::Stop.find_by!(internal_id: stop_id)
       route_stops_futures = {}
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         route_stops_futures = [1, 3].to_h { |direction|
-          [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
+          [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i, pipeline)]
         }
       end
       route_directions = transform_to_route_directions_hash(route_stops_futures)
       route_ids = route_directions.keys
 
       route_futures = {}
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         route_futures = route_ids.to_h do |route_id|
-          [route_id, RedisStore.processed_trips(route_id)]
+          [route_id, RedisStore.processed_trips(route_id, pipeline)]
          end
       end
       trips_by_routes_array = route_ids.map do |route_id|

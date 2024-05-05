@@ -6,7 +6,7 @@ Sidekiq.configure_server do |config|
   config.redis = { url: ENV['REDIS_URL'], ssl_params: { verify_mode: OpenSSL::SSL::VERIFY_NONE } }
 end
 
-Sidekiq.options[:poll_interval] = 2
+Sidekiq::Options[:cron_poll_interval] = 2
 
 Rails.application.reloader.to_prepare do
   Sidekiq::Cron::Job.create(name: 'RoutingRefreshWorker - Every 30 secs', cron: '*/30 * * * * *', class: 'RoutingRefreshWorker')

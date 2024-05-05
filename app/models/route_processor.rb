@@ -48,10 +48,10 @@ class RouteProcessor
 
       routes_with_shared_tracks_futures = {}
 
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         routes_with_shared_tracks_futures = tracks.to_h { |direction, stops|
           [direction, stops.to_h { |stop_id, tracks|
-            [stop_id, tracks.map { |t| RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i) }]
+            [stop_id, tracks.map { |t| RedisStore.routes_stop_at_track(stop_id, t, Time.current.to_i, pipeline) }]
           }]
         }
       end
@@ -73,9 +73,9 @@ class RouteProcessor
       recent_scheduled_routings = determine_scheduled_routings(scheduled_trips, timestamp)
       scheduled_headways_by_routes = determine_max_scheduled_headway(scheduled_trips, route_id, timestamp)
 
-      REDIS_CLIENT.pipelined do
-        update_scheduled_runtimes(scheduled_trips)
-        persist_processed_trips(route_id, processed_trips)
+      REDIS_CLIENT.pipelined do |pipeline|
+        update_scheduled_runtimes(scheduled_trips, pipeline)
+        persist_processed_trips(route_id, processed_trips, pipeline)
       end
 
       RouteAnalyzer.analyze_route(
@@ -109,10 +109,10 @@ class RouteProcessor
     def batch_average_travel_time_pairs(stop_pairs_array)
       futures = {}
 
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         futures = stop_pairs_array.to_h { |stop_pair|
           stops_str = "#{stop_pair.first}-#{stop_pair.last}"
-          [stops_str, RedisStore.travel_times_at(stop_pair.first, stop_pair.last, TRAVEL_TIME_AVERAGE_TRIP_COUNT)]
+          [stops_str, RedisStore.travel_times_at(stop_pair.first, stop_pair.last, TRAVEL_TIME_AVERAGE_TRIP_COUNT, pipeline)]
         }
       end
 
@@ -289,12 +289,12 @@ class RouteProcessor
       [time_until_first_trip] + d.sort.each_cons(2).map { |a,b| b - a }
     end
 
-    def update_scheduled_runtimes(scheduled_trips)
+    def update_scheduled_runtimes(scheduled_trips, pipeline)
       scheduled_trips.each do |_, trips|
         trips.each do |t|
           t.stop_times.each_cons(2).each do |a_st, b_st|
             time = b_st.departure_time - a_st.departure_time
-            RedisStore.add_scheduled_travel_time(a_st.stop_internal_id, b_st.stop_internal_id, time)
+            RedisStore.add_scheduled_travel_time(a_st.stop_internal_id, b_st.stop_internal_id, time, pipeline)
           end
         end
       end
@@ -313,8 +313,8 @@ class RouteProcessor
       }.to_h
     end
 
-    def persist_processed_trips(route_id, trips)
-      RedisStore.update_processed_trips(route_id, Marshal.dump(trips))
+    def persist_processed_trips(route_id, trips, pipeline)
+      RedisStore.update_processed_trips(route_id, Marshal.dump(trips), pipeline)
     end
   end
 end

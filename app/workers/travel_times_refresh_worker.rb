@@ -6,9 +6,9 @@ class TravelTimesRefreshWorker
     routes = Scheduled::Route.all
     route_futures = {}
 
-    REDIS_CLIENT.pipelined do
+    REDIS_CLIENT.pipelined do |pipeline|
       route_futures = routes.to_h do |r|
-        [r.internal_id, RedisStore.route_status(r.internal_id)]
+        [r.internal_id, RedisStore.route_status(r.internal_id, pipeline)]
       end
     end
 

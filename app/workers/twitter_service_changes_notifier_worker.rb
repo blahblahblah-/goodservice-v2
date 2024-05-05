@@ -14,15 +14,15 @@ class TwitterServiceChangesNotifierWorker
     upcoming_service_change_notification_futures = {}
     upcoming_service_change_notification_timestamp_futures = {}
 
-    REDIS_CLIENT.pipelined do
+    REDIS_CLIENT.pipelined do |pipeline|
       route_status_futures = route_ids.to_h do |route_id|
-        [route_id, RedisStore.route_status(route_id)]
+        [route_id, RedisStore.route_status(route_id, pipeline)]
       end
       upcoming_service_change_notification_futures = route_ids.to_h do |route_id|
-        [route_id, RedisStore.upcoming_service_change_notification(route_id)]
+        [route_id, RedisStore.upcoming_service_change_notification(route_id, pipeline)]
       end
       upcoming_service_change_notification_timestamp_futures = route_ids.to_h do |route_id|
-        [route_id, RedisStore.upcoming_service_change_notification_timestamp(route_id)]
+        [route_id, RedisStore.upcoming_service_change_notification_timestamp(route_id, pipeline)]
       end
     end
 

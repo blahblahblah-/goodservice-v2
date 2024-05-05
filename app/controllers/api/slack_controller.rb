@@ -65,9 +65,9 @@ class Api::SlackController < ApplicationController
 
   def self.routes_stop_at(stop_id, timestamp)
     futures = {}
-    REDIS_CLIENT.pipelined do
+    REDIS_CLIENT.pipelined do |pipeline|
       futures = [1, 3].to_h { |direction|
-        [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp)]
+        [direction, RedisStore.routes_stop_at(stop_id, direction, timestamp, pipeline)]
       }
     end
     transform_to_routes_array(futures)
@@ -89,10 +89,10 @@ class Api::SlackController < ApplicationController
     routes = Scheduled::Route.all
     stops = Scheduled::Stop.all
     futures = {}
-    REDIS_CLIENT.pipelined do
+    REDIS_CLIENT.pipelined do |pipeline|
       futures = stops.to_h { |stop|
         [stop.internal_id, [1, 3].to_h { |direction|
-          [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i)]
+          [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i, pipeline)]
         }]
       }
     end

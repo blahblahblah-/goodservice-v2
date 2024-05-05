@@ -83,9 +83,9 @@ class FeedProcessor
         trip.is_assigned || (trip.stops.size + trip.past_stops.size) > 1
       end
 
-      REDIS_CLIENT.pipelined do
+      REDIS_CLIENT.pipelined do |pipeline|
         translated_trips.each do |trip|
-          update_trip(feed_id, timestamp, trip)
+          update_trip(feed_id, timestamp, trip, pipeline)
         end
       end
 
@@ -200,25 +200,25 @@ class FeedProcessor
       end
     end
 
-    def update_trip(feed_id, timestamp, trip)
+    def update_trip(feed_id, timestamp, trip, pipeline)
       return unless trip.latest
-      process_stops(trip)
+      process_stops(trip, pipeline)
       marshaled_trip = Marshal.dump(trip)
       trip.time_between_stops(SUPPLEMENTED_TIME_LOOKUP).each do |station_ids, time|
         stop_ids = station_ids.split('-')
-        RedisStore.add_supplemented_scheduled_travel_time(stop_ids.first, stop_ids.second, time) if time >= 30
+        RedisStore.add_supplemented_scheduled_travel_time(stop_ids.first, stop_ids.second, time, pipeline) if time >= 30
       end
       trip.upcoming_stops.each do |stop_id|
-        RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp)
+        RedisStore.add_route_to_route_stop(trip.route_id, stop_id, trip.direction, timestamp, pipeline)
       end
       trip.tracks.each do |stop_id, track|
-        RedisStore.add_route_to_route_stop_track(trip.route_id, trip.direction, stop_id, track, timestamp) if track.present?
+        RedisStore.add_route_to_route_stop_track(trip.route_id, trip.direction, stop_id, track, timestamp, pipeline) if track.present?
       end
-      RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip)
-      RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp)
+      RedisStore.add_active_trip(feed_id, trip.id, marshaled_trip, pipeline)
+      RedisStore.add_to_active_trip_list(feed_id, trip.id, timestamp, pipeline)
     end
 
-    def process_stops(trip)
+    def process_stops(trip, pipeline)
       if trip.previous_trip &&
         trip.is_assigned &&
         (trip.previous_trip.previous_stop_schedule_discrepancy >= SCHEDULE_DISCREPANCY_THRESHOLD ||
@@ -228,7 +228,7 @@ class FeedProcessor
         if time_traveled_between_stops_made.size < 3
           trip.time_traveled_between_stops_made.each do |stops_str, travel_time|
             if travel_time >= MIN_TRAVEL_TIME_BETWEEN_STOPS_TO_RECORD
-              RedisStore.add_travel_time(stops_str, travel_time, trip.id, trip.timestamp)
+              RedisStore.add_travel_time(stops_str, travel_time, trip.id, trip.timestamp, pipeline)
             end
           end
         end

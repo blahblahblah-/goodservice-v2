@@ -15,12 +15,12 @@ class TwitterDelaysNotifierWorker
     trips_by_routes_futures = {}
     route_status_futures = {}
 
-    REDIS_CLIENT.pipelined do
+    REDIS_CLIENT.pipelined do |pipeline|
       trips_by_routes_futures = route_ids.to_h do |route_id|
-        [route_id, RedisStore.processed_trips(route_id)]
+        [route_id, RedisStore.processed_trips(route_id, pipeline)]
        end
       route_status_futures = route_ids.to_h do |route_id|
-        [route_id, RedisStore.route_status(route_id)]
+        [route_id, RedisStore.route_status(route_id, pipeline)]
       end
     end
 

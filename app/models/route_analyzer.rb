@@ -83,10 +83,10 @@ class RouteAnalyzer
       timestamp: timestamp,
     }.to_json
 
-    REDIS_CLIENT.pipelined do
-      RedisStore.add_route_status_summary(route_id, summary)
-      RedisStore.add_route_status_detailed_summary(route_id, detailed_summary)
-      RedisStore.update_route_status(route_id, detailed_stats)
+    REDIS_CLIENT.pipelined do |pipeline|
+      RedisStore.add_route_status_summary(route_id, summary, pipeline)
+      RedisStore.add_route_status_detailed_summary(route_id, detailed_summary, pipeline)
+      RedisStore.update_route_status(route_id, detailed_stats, pipeline)
     end
   end
 
@@ -825,8 +825,8 @@ class RouteAnalyzer
   def self.append_additional_trips(route_id, processed_trips, actual_routings, common_routings, routes_with_shared_tracks)
     additional_routes = routes_with_shared_tracks.flat_map { |_, stops_map| stops_map.flat_map { |_, route_map| route_map.map { |key, _| key}}}.uniq
     additional_processed_trip_futures = {}
-    REDIS_CLIENT.pipelined do
-      additional_processed_trip_futures = additional_routes.map { |r| RedisStore.processed_trips(r) }
+    REDIS_CLIENT.pipelined do |pipeline|
+      additional_processed_trip_futures = additional_routes.map { |r| RedisStore.processed_trips(r, pipeline) }
     end
     additional_processed_trip_maps = additional_processed_trip_futures.flat_map { |future| future.value && Marshal.load(future.value)}.filter { |m| m.present? }
     additional_processed_trips = additional_processed_trip_maps.flat_map { |m| m.values.flat_map { |n| n.values.flatten }}.uniq(&:id)
