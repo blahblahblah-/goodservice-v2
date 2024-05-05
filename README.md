@@ -10,13 +10,13 @@ See it live at [https://www.goodservice.io](https://www.goodservice.io/). The sa
 
 ## Running locally
 
-To run locally, you'll need a couple things. First, the app requires Ruby 2.7.2 and Rails 6.1. We suggest managing this with `rbenv`. It also depends on Redis, Postgres, Yarn, and Semantic UI React. If you are on a Mac with Homebrew installed, you can get all these requirements with the following commands:
+To run locally, you'll need a couple things. First, the app requires Ruby 3.1.3 and Rails 7.1. We suggest managing this with `rbenv`. It also depends on Redis, Postgres, Yarn, and Semantic UI React. If you are on a Mac with Homebrew installed, you can get all these requirements with the following commands:
 
 ```
 # Ruby dependencies
 brew install rbenv
 brew install ruby-build
-rbenv install 2.7.2
+rbenv install 3.1.3
 gem install bundler
 
 # Other dependencies
