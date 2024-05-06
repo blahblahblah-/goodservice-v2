@@ -310,7 +310,7 @@ GEM
       globalid (>= 1.0.1)
       sidekiq (>= 6)
     simple_oauth (0.3.1)
-    spring (2.1.1)
+    spring (4.2.1)
     sprockets (4.0.3)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
