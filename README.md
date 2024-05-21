@@ -85,3 +85,5 @@ See [goodservice-ask](https://github.com/blahblahblah-/goodservice-ask).
 
 * [DC MetroHero](https://dcmetrohero.com)
 * [NYC Subway Stringlines](https://pvibien.com/stringline.htm)
+
+Subway Route Symbols ®: Metropolitan Transportation Authority. Used with permission.

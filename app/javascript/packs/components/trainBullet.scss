@@ -1,8 +1,8 @@
 .route {
-  width: 2em;
-  height: 2em;
-  font-size: 2em;
-  line-height: 2em;
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 2.25em;
+  line-height: 1.5em;
   text-align: center;
   font-weight: bold;
   font-style: normal!important;
@@ -23,12 +23,17 @@
     line-height: 1.5em;
     display: inline-block;
   }
+
+  &.condensed {
+    font-stretch: condensed;
+  }
 }
 
 .bullet {
   -webkit-border-radius: 999px;
   -moz-border-radius: 999px;
   border-radius: 999px;
+  font-family: Helvetica Neue, Helvetica, Arial, Sans-serif, Open Sans;
 
   &.downtown-only {
     border-top-left-radius: 0;

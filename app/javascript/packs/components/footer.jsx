@@ -60,7 +60,8 @@ class Footer extends React.Component {
               </Header>
               <p>
                 Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
-                <a href='https://github.com/blahblahblah-/goodservice-v2'>Source code</a>.
+                <a href='https://github.com/blahblahblah-/goodservice-v2'>Source code</a>.<br />
+                Subway Route Symbols ®: Metropolitan Transportation Authority. Used with permission.
               </p>
             </Grid.Column>
           </Grid.Row>
