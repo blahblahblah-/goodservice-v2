@@ -52,6 +52,11 @@ class Footer extends React.Component {
                     Subwaydle - Daily Subway Puzzle Game
                   </a>
                 </List.Item>
+                <List.Item>
+                  <a href="https://apps.apple.com/us/app/the-weekendest-nyc-subway-map/id6476543418?itsct=apps_box_badge&amp;itscg=30200" style={{display: "inline-block", overflow: "hidden", borderRadius: "7.5px", width: "125px", height: "41.5px"}}>
+                    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1716681600" alt="Download on the App Store" style={{borderRadius: "7.5px", width: "125px", height: "41.5px"}} />
+                  </a>
+                </List.Item>
               </List>
             </Grid.Column>
             <Grid.Column width={4}>
