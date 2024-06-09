@@ -204,7 +204,7 @@ class App extends React.Component {
           <Message.Header>Save Congestion Pricing!</Message.Header>
           <p>
             Contact your local electeds, and let them know Gov. Kathy Hochul should not derail MTA's $15 billion capital plan.&nbsp;
-            Click <a href="https://savecongestionpricing.org" onClick={() => this.trackOutboundLink('https://savecongestionpricing.org')} target="_blank">here</a> to find out how.
+            Click <a href="https://savecongestionpricing.org" target="_blank">here</a> to find out how.
           </p>
         </Message>
         <Segment inverted vertical className='header-segment'>
