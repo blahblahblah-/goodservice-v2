@@ -64,7 +64,7 @@ class RedisStore
     end
 
     def add_route_trips(route_id, timestamp, marshaled_data, client = REDIS_CLIENT)
-      client.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 60)
+      client.set("route-trips:#{route_id}:#{timestamp}", marshaled_data, ex: 15)
     end
 
     # Processed trips
