@@ -44,7 +44,7 @@ class Footer extends React.Component {
                 </List.Item>
                 <List.Item>
                   <a href='https://www.theweekendest.com' target='_blank'>
-                    The Weekendest - Real-Time Map
+                    The Weekendest - Real-Time Subway Map for NYC
                   </a>
                 </List.Item>
                 <List.Item>
