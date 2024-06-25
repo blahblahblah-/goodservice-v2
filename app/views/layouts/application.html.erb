@@ -10,6 +10,19 @@
     <meta name="Description" content="New York City Subway Status Page. Track active trains, check for delays, compare headways and travel times, view real-time route maps and estimated arrival times for each subway route.">
     <link rel="canonical" href="https://www.goodservice.io" data-react-helmet="true" />
     <meta name="apple-itunes-app" content="app-id=6476543418">
+    <%= stylesheet_pack_tag 'vendor/smartbanner' %>
+    <%= javascript_packs_with_chunks_tag 'vendor/smartbanner' %>
+
+    <!-- Start SmartBanner configuration -->
+    <meta name="smartbanner:title" content="The Weekendest">
+    <meta name="smartbanner:author" content="Real-time Subway Map for NYC">
+    <meta name="smartbanner:icon-apple" content="https://www.theweekendest.com/apple-touch-icon.png">
+    <meta name="smartbanner:button" content="VIEW">
+    <meta name="smartbanner:button-url-apple" content="https://apps.apple.com/us/app/the-weekendest-nyc-subway-map/id6476543418">
+    <meta name="smartbanner:enabled-platforms" content="ios">
+    <meta name="smartbanner:exclude-user-agent-regex" content="^.*(Version).*Safari">
+    <meta name="smartbanner:close-label" content="Close">
+    <!-- End SmartBanner configuration -->
 
     <!-— facebook open graph tags -->
     <meta property="og:type" content="website" />
