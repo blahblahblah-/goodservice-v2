@@ -195,7 +195,7 @@ class FeedProcessor
         end
 
         trip.is_assigned = trip.is_assigned || previous_update.is_assigned
-        trip.schedule = previous_update.schedule if previous_update
+        trip.schedule = trip.schedule.merge(previous_update.schedule) if previous_update
         trip.past_stops = previous_update.past_stops if previous_update&.past_stops
       end
     end
