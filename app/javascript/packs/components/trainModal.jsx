@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Grid, Menu, Header } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Grid, Menu, Header, Button, Icon } from "semantic-ui-react";
 import { withRouter, Redirect, HashRouter, Switch, Route, NavLink } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -141,7 +141,17 @@ class TrainModal extends React.Component {
                     <Grid.Column textAlign='center' computer={4} tablet={6} mobile={6} className='train-name-cell'>
                       <TrainBullet name={train.name} color={train.color}
                         textColor={train.text_color} style={{display: "inline-block"}} size='large' />
-                      <p>{train.alternate_name}</p>
+                      { train.alternate_name &&
+                        <p>{train.alternate_name}</p>
+                      }
+                      <div>
+                        <a href={`https://www.theweekendest.com/trains/${train.id}`} target="_blank">
+                          <Button secondary size='mini'>
+                            <Icon name='map outline' />
+                            Open on <nobr>The Weekendest</nobr>
+                          </Button>
+                        </a>
+                      </div>
                     </Grid.Column>
                     <Grid.Column verticalAlign='middle' computer={12} tablet={10} mobile={10} className='train-direction-nav-cell'>
                       <Menu widths={3} inverted className='header-menu' stackable>
@@ -174,7 +184,6 @@ class TrainModal extends React.Component {
                   <TrainModalOverviewPane train={train} trains={trains} stations={stations} />
                 }
                   <Header inverted as='h5'>
-                    View on a map at <a href={`https://www.theweekendest.com/trains/${train.id}`} target="_blank">The Weekendest</a>.<br />
                     Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.
                   </Header>
                 </Modal.Description>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup, Icon, Label } from "semantic-ui-react";
+import { Modal, Dimmer, Loader, Header, Table, Statistic, Divider, Segment, List, Popup, Icon, Label, Button } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -331,15 +331,15 @@ class StationModal extends React.Component {
                     accessibilityIcon(selectedStation.accessibility)
                   }
                   <div className="train-list">
-                  {
-                    Object.keys(selectedStation.routes).map((trainId) => {
-                      const train = trains[trainId];
-                      return (
-                        <TrainBullet link={true} id={train.id} key={train.id} name={train.name} color={train.color} textColor={train.text_color} size='small' directions={selectedStation.routes[trainId]} />
-                      );
-                    })
-                  }
-                  <Icon name="pin" color={isFavStation ? "grey" : "black"} inverted link onClick={this.handlePinToggle} />
+                    {
+                      Object.keys(selectedStation.routes).map((trainId) => {
+                        const train = trains[trainId];
+                        return (
+                          <TrainBullet link={true} id={train.id} key={train.id} name={train.name} color={train.color} textColor={train.text_color} size='small' directions={selectedStation.routes[trainId]} />
+                        );
+                      })
+                    }
+                    <Icon name="pin" color={isFavStation ? "grey" : "black"} inverted link onClick={this.handlePinToggle} />
                   </div>
                 </Header.Content>
                 {
@@ -349,6 +349,12 @@ class StationModal extends React.Component {
                   </Header.Subheader>
                 }
               </Header>
+              <a href={`https://www.theweekendest.com/stations/${station.id}`} target="_blank">
+                <Button secondary size='tiny'>
+                  <Icon name='map outline' />
+                  Open on The Weekendest
+                </Button>
+              </a>
             </Modal.Header>
             <Modal.Content scrolling>
               {
@@ -386,7 +392,6 @@ class StationModal extends React.Component {
               }
               <Modal.Description>
                 <Header inverted as='h5'>
-                  View on a map at <a href={`https://www.theweekendest.com/stations/${station.id}`} target="_blank">The Weekendest</a>.<br />
                   Last updated {timestamp && (new Date(timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
                 </Header>
               </Modal.Description>

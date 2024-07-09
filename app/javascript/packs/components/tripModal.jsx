@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Header, Divider, Checkbox } from "semantic-ui-react";
+import { Modal, Table, Header, Divider, Checkbox, Button, Icon } from "semantic-ui-react";
 import { withRouter, Link } from 'react-router-dom';
 import { Helmet } from "react-helmet";
 
@@ -178,11 +178,18 @@ class TripModal extends React.Component {
             { !selectedTrip.is_assigned &&
               <>Train not yet assigned to trip<br/></>
             }
-            { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule
+            { Math.abs(Math.round(selectedTrip.schedule_discrepancy / 60))} min {Math.round(selectedTrip.schedule_discrepancy / 60) > 0 ? 'behind' : 'ahead of'} schedule<br />
             {
               delayed &&
               <Header className='delayed-header' as='h3' color='red' inverted>{ delayInfo }</Header>
             }
+            <a href={`https://www.theweekendest.com/trains/${train.id}/${selectedTrip.id}`} target="_blank">
+              <Button secondary size='mini'>
+                <Icon name='map outline' />
+                Open on The Weekendest
+              </Button>
+            </a>
+            <br />
           </div>
           <Checkbox checked={showPastStops} onChange={this.handleToggleChange} className='past-stops-toggle' toggle label={<label className="toggle-label">Show Past Stops</label>} />
         </Modal.Header>
@@ -212,7 +219,6 @@ class TripModal extends React.Component {
               }
             </Table>
             <Header inverted as='h5'>
-              View on a map at <a href={`https://www.theweekendest.com/trains/${train.id}/${selectedTrip.id}`} target="_blank">The Weekendest</a>.<br />
               Last updated {trip && (new Date(trip.timestamp * 1000)).toLocaleTimeString('en-US')}.<br />
             </Header>
           </Modal.Description>

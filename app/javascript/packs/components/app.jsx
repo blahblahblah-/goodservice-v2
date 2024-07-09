@@ -1,5 +1,5 @@
 import React from 'react';
-import { Header, Segment, Grid, Button, Dimmer, Loader, Dropdown, List, Tab, Menu, Message } from "semantic-ui-react";
+import { Header, Segment, Grid, Dimmer, Loader, Dropdown, List, Tab, Menu, Message } from "semantic-ui-react";
 import {
   Router,
   Switch,
