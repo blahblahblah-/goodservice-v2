@@ -28,6 +28,7 @@ class Api::StopsController < ApplicationController
       end
       accessible_stops = accessible_stops_future.value ? JSON.parse(accessible_stops_future.value) : []
       elevator_advisories = elevator_advisories_future.value ? JSON.parse(elevator_advisories_future.value) : {}
+      stops_hash = generate_scheduled_stops_hash
       {
         stops: Naturally.sort_by(stops){ |s| "#{s.stop_name}#{s.secondary_name}" }.map { |s|
           route_directions = transform_to_route_directions_hash(futures[s.internal_id])
@@ -61,6 +62,9 @@ class Api::StopsController < ApplicationController
             latitude: s.latitude.to_f,
             longitude: s.longitude.to_f,
             routes: route_directions,
+            scheduled_routes: stops_hash[s.internal_id].to_h { |route_id, stop_set|
+              [route_id, stop_set.to_a.sort]
+            },
             transfers: transfers[s.internal_id]&.map{ |t| t.to_stop_internal_id },
             bus_transfers: bus_transfers[s.internal_id]&.map{ |t|
               {
@@ -219,5 +223,21 @@ class Api::StopsController < ApplicationController
       time,
       time
     ).group_by(&:from_stop_internal_id)
+  end
+
+  def generate_scheduled_stops_hash
+    current_routings = ServiceChangeAnalyzer.current_routings(Time.current.to_i)
+    stops_hash = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = Set.new } }
+    current_routings.each do |route_id, route_hash|
+      route_hash.each do |scheduled_direction, routings|
+        sym_direction = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].find { |d| d[:scheduled_direction] == scheduled_direction.to_i }[:sym]
+        routings.each do |routing|
+          routing.each do |stop_id|
+            stops_hash[stop_id][route_id] << sym_direction
+          end
+        end
+      end
+    end
+    stops_hash
   end
 end
