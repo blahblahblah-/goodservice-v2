@@ -31,7 +31,7 @@ class Api::StopsController < ApplicationController
       stops_hash = generate_scheduled_stops_hash
       {
         stops: Naturally.sort_by(stops){ |s| "#{s.stop_name}#{s.secondary_name}" }.map { |s|
-          route_directions = transform_to_route_directions_hash(futures[s.internal_id])
+          route_directions = transform_to_route_directions_hash(futures[s.internal_id], s.internal_id)
           accessible_directions = accessible_stops.include?(s.internal_id) ? ['north', 'south'] : []
 
           if ADA_OVERRIDES.include?("#{s.internal_id}N")
@@ -104,7 +104,7 @@ class Api::StopsController < ApplicationController
           [direction, RedisStore.routes_stop_at(stop.internal_id, direction, Time.current.to_i, pipeline)]
         }
       end
-      route_directions = transform_to_route_directions_hash(route_stops_futures)
+      route_directions = transform_to_route_directions_hash(route_stops_futures, stop_id)
       route_ids = route_directions.keys
 
       route_futures = {}
@@ -151,7 +151,7 @@ class Api::StopsController < ApplicationController
 
   private
 
-  def transform_to_route_directions_hash(direction_futures_hash)
+  def transform_to_route_directions_hash(direction_futures_hash, stop_id)
     routes_by_direction = direction_futures_hash.to_h do |direction, future|
       [direction, future.value]
     end
@@ -159,10 +159,18 @@ class Api::StopsController < ApplicationController
     routes.to_h do |route_id|
       directions_array = []
       if routes_by_direction[1].include?(route_id)
-        directions_array << "north"
+        if M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+          directions_array << "south"
+        else
+          directions_array << "north"
+        end
       end
       if routes_by_direction[3].include?(route_id)
-        directions_array << "south"
+        if M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+          directions_array << "north"
+        else
+          directions_array << "south"
+        end
       end
       [route_id, directions_array]
     end
@@ -233,7 +241,12 @@ class Api::StopsController < ApplicationController
         sym_direction = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].find { |d| d[:scheduled_direction] == scheduled_direction.to_i }[:sym]
         routings.each do |routing|
           routing.each do |stop_id|
-            stops_hash[stop_id][route_id] << sym_direction
+            if M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+              other_direction = [ServiceChangeAnalyzer::NORTH, ServiceChangeAnalyzer::SOUTH].find { |d| d[:scheduled_direction] != scheduled_direction.to_i }[:sym]
+              stops_hash[stop_id][route_id] << other_direction
+            else
+              stops_hash[stop_id][route_id] << sym_direction
+            end
           end
         end
       end
