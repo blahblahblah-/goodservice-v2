@@ -23,9 +23,15 @@ class Api::RoutesController < ApplicationController
             default_status = "Not Scheduled"
           elsif feed_timestamp && feed_timestamp.to_i < (Time.current - 5.minutes).to_i
             default_status = "No Data"
+          else
+            service_change_summaries = {
+              both: [
+                "<#{route.internal_id}> trains are not running."
+              ]
+            }
           end
 
-          [route.internal_id, {
+          data = {
             id: route.internal_id,
             name: route.name,
             color: route.color && "##{route.color}",
@@ -34,7 +40,13 @@ class Api::RoutesController < ApplicationController
             status: default_status,
             visible: route.visible?,
             scheduled: scheduled,
-          }.merge(route_data).except('timestamp')]
+          }
+
+          if detailed
+            data[:service_change_summaries] = service_change_summaries
+          end
+
+          [route.internal_id, data.merge(route_data).except('timestamp')]
         }.to_h,
         timestamp: timestamps.max
       }
