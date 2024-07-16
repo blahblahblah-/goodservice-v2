@@ -124,7 +124,7 @@ class FeedProcessor
       entity.trip_update.stop_time_update.reject! { |update|
         (update.departure || update.arrival)&.time.nil?
       }
-      return false if entity.trip_update.stop_time_update.all? {|update| (update&.departure || update&.arrival).time < timestamp }
+      return false if entity.trip_update.stop_time_update.all? {|update| (update&.departure || update&.arrival).time < timestamp + 2.minutes.to_i }
       return false if entity.trip_update.stop_time_update.all? {|update|
         (update&.departure || update&.arrival).time > timestamp + upcoming_trip_time_allowance
       }
