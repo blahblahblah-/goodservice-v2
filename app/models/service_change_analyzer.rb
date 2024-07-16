@@ -79,7 +79,9 @@ class ServiceChangeAnalyzer
                       else
                         array_of_skipped_stations = scheduled_routing[(scheduled_index - 1)..scheduled_index_to_current_station]
                         if array_of_skipped_stations.include?(CITY_HALL_STOP)
-                          routing_changes << ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                          previous_station_to_insert = previous_actual_station
+                          previous_station_to_insert = scheduled_routing[scheduled_index - 2] if scheduled_index > 1 && previous_actual_station == DEKALB_AV_STOP
+                          routing_changes << ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_station_to_insert, actual_station], actual_routing.first, actual_routing)
                         else
                           routing_changes << ServiceChanges::LocalToExpressServiceChange.new(direction[:route_direction], array_of_skipped_stations, actual_routing.first, actual_routing)
                         end
@@ -104,10 +106,10 @@ class ServiceChangeAnalyzer
                   end
                 else
                   if ongoing_service_change.is_a?(ServiceChanges::ExpressToLocalServiceChange)
-                    if actual_station == CITY_HALL_STOP
+                    ongoing_service_change.stations_affected << actual_station
+                    if ongoing_service_change.stations_affected.include?(CITY_HALL_STOP)
                       ongoing_service_change = ongoing_service_change.convert_to_rerouting
                     end
-                    ongoing_service_change.stations_affected << actual_station
 
                     if actual_station == scheduled_station || interchangeable_transfers[actual_station]&.any? { |t| t.from_stop_internal_id == scheduled_station }
                       routing_changes << ongoing_service_change
@@ -294,6 +296,7 @@ class ServiceChangeAnalyzer
 
       [current_long_term_routings, current_route_routings, current_evergreen_routings, long_term_routings, evergreen_routings, current, recent_route_routings].each do |routing_set|
         route_pair = routing_set.find do |route_id, direction|
+          next if route_id == current_route_id && !reroute_service_change.begin_of_route? && !reroute_service_change.end_of_route?
           direction&.any? do |_, routings|
             station_combinations.any? do |sc|
               routings.any? do |r|
