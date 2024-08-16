@@ -25,6 +25,7 @@ class ServiceChangeAnalyzer
 
   class << self
     def service_change_summary(route_id, actual_routings, scheduled_routings, recent_scheduled_routings, timestamp)
+      closed_stops = (ENV['CLOSED_STOPS']&.split(',') || [])
       direction_changes = [NORTH, SOUTH].map do |direction|
         changes = []
         actual = actual_routings[direction[:route_direction]]
@@ -97,7 +98,18 @@ class ServiceChangeAnalyzer
                           ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station].compact, actual_routing.first, actual_routing)
                         end
                       else
-                        ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                        if closed_stops.include?(scheduled_station) || closed_stops.any? { |s| s[0..2] == scheduled_station && s.length == 4 && s[3] == direction[:suffix] }
+                          if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && !CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(routing_changes.last.stations_affected) && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
+                            ongoing_service_change = routing_changes.pop
+                            ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
+                          else
+                            ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station].compact, actual_routing.first, actual_routing)
+                          end
+                          routing_changes << ServiceChanges::LocalToExpressServiceChange.new(direction[:route_direction], scheduled_routing[scheduled_index -1..scheduled_index + 1], actual_routing.first, actual_routing)
+                          scheduled_index += 1
+                        else
+                          ongoing_service_change = ServiceChanges::ReroutingServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station], actual_routing.first, actual_routing)
+                        end
                       end
                     end
                   else
@@ -384,6 +396,7 @@ class ServiceChangeAnalyzer
                   routings.any? do |r|
                     routing = r
                     routing -= [DEKALB_AV_STOP]
+                    routing -= closed_stops
                     routing.each_cons(sub_sc.length).any?(&sub_sc.method(:==))
                   end
                 end
