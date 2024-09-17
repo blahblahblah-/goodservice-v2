@@ -1,7 +1,6 @@
 class Api::SlackController < ApplicationController
   skip_before_action :verify_authenticity_token
   before_action :verify_slack_request
-  allow_other_host: true
 
   def index
     query = params[:text]
@@ -276,7 +275,7 @@ class Api::SlackController < ApplicationController
       "elements": [
         {
           "type": "mrkdwn",
-          "text": "More info on https://www.goodservice.io/trains/#{route_id}"
+          "text": "More info on https://www.theweekendest.com/trains/#{route_id}"
         }
       ]
     }
@@ -389,7 +388,7 @@ class Api::SlackController < ApplicationController
       "elements": [
         {
           "type": "mrkdwn",
-          "text": "More info on https://www.goodservice.io/stations/#{stop.internal_id}"
+          "text": "More info on https://www.theweekendest.com/stations/#{stop.internal_id}"
         }
       ]
     }
