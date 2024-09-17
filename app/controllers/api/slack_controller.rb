@@ -1,6 +1,7 @@
 class Api::SlackController < ApplicationController
   skip_before_action :verify_authenticity_token
   before_action :verify_slack_request
+  allow_other_host: true
 
   def index
     query = params[:text]
