@@ -16,6 +16,11 @@ class FeedProcessor
 
   class << self
     def analyze_feed(feed_id, route_id, minutes, fraction_of_minute)
+      if feed_id != ROUTE_FEED_MAPPING[route_id]
+        puts "Error: #{route_id} does not belong in feed #{feed_id}, skipping"
+        return
+      end
+
       feed_name = "feed:#{minutes}:#{fraction_of_minute}:#{feed_id}"
       marshaled_feed = RedisStore.feed(feed_id, minutes, fraction_of_minute)
       feed = Marshal.load(marshaled_feed) if marshaled_feed
