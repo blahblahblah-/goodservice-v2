@@ -200,13 +200,6 @@ class App extends React.Component {
     const trainKeys = Object.keys(trains);
     return (
       <Router history={history}>
-        <Message color='black' className='toast'>
-          <Message.Header>Save Congestion Pricing!</Message.Header>
-          <p>
-            Contact your local electeds, and let them know Gov. Kathy Hochul should not derail the plan for transit improvements, and cleaner air.&nbsp;
-            Click <a href="https://savecongestionpricing.org" target="_blank">here</a> to find out how.
-          </p>
-        </Message>
         <Segment inverted vertical className='header-segment'>
           <Header inverted as='h1' color='yellow'>
             goodservice.io
