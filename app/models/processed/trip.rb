@@ -21,7 +21,7 @@ class Processed::Trip
   end
 
   def delayed_time
-    [Time.current.to_i - calculated_upcoming_stop_arrival_time, 0].max
+    [Time.current.to_i - calculated_upcoming_stop_arrival_time.to_i, 0].max
   end
 
   def effective_delayed_time

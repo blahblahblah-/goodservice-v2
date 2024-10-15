@@ -137,7 +137,7 @@ class Trip
   end
 
   def schedule_discrepancy
-    upcoming_stop_arrival_time - scheduled_upcoming_stop_arrival_time
+    (upcoming_stop_arrival_time - scheduled_upcoming_stop_arrival_time).to_i
   end
 
   def previous_stop_schedule_discrepancy
