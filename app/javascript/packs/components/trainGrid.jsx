@@ -55,7 +55,7 @@ class TrainGrid extends React.Component {
         </Grid>
         <Grid className='mobile-train-grid'>
           {
-            Object.keys(STATUSES).filter((s) => groups[s]).map((status) => {
+            Object.keys(STATUSES).filter((s) => groups[s] && groups[s].some((t) => t.visible || s !== "Not Scheduled")).map((status) => {
               return (
                 <React.Fragment key={status}>
                   <Grid.Row columns={1} className='train-status-row'>
