@@ -16,7 +16,7 @@ class FeedProcessor
 
   class << self
     def analyze_feed(feed_id, route_id, minutes, fraction_of_minute)
-      if feed_id != ROUTE_FEED_MAPPING[route_id]
+      if feed_id != FeedRetrieverSpawningWorkerBase.feed_id_for(route_id)
         puts "Error: #{route_id} does not belong in feed #{feed_id}, skipping"
         return
       end

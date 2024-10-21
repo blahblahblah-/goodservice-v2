@@ -5,6 +5,7 @@ class FeedRetrieverSpawningWorkerBase
     "GS" => "",
     "H" => "-ace",
     "SI" => "-si",
+    "SS" => "-si",
   }
 
   def self.feed_id_for(route_id)
