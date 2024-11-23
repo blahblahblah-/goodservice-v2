@@ -282,8 +282,7 @@ GEM
     regexp_parser (1.8.2)
     reline (0.5.5)
       io-console (~> 0.5)
-    rexml (3.3.6)
-      strscan
+    rexml (3.3.9)
     rss (0.2.9)
       rexml
     rubyzip (2.3.0)
