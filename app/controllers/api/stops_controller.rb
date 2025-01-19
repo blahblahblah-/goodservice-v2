@@ -235,6 +235,7 @@ class Api::StopsController < ApplicationController
 
   def generate_scheduled_stops_hash
     current_routings = ServiceChangeAnalyzer.current_routings(Time.current.to_i)
+    long_term_service_change_original_routings = LongTermServiceChangeRoutingManager.get_all_routings
     stops_hash = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = Set.new } }
     current_routings.each do |route_id, route_hash|
       route_hash.each do |scheduled_direction, routings|
@@ -246,6 +247,20 @@ class Api::StopsController < ApplicationController
               stops_hash[stop_id][route_id] << other_direction
             else
               stops_hash[stop_id][route_id] << sym_direction
+            end
+          end
+        end
+      end
+    end
+    long_term_service_change_original_routings.each do |route_id, route_hash|
+      route_hash.each do |scheduled_direction, routings|
+        routings.each do |routing|
+          routing.each do |stop_id|
+            if M_TRAIN_SHUFFLE_STOPS.include?(stop_id) && route_id == 'M'
+              other_direction = [:north, :south].find { |d| d[:scheduled_direction] != scheduled_direction }
+              stops_hash[stop_id][route_id] << other_direction
+            else
+              stops_hash[stop_id][route_id] << scheduled_direction
             end
           end
         end
