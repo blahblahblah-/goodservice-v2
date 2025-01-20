@@ -1,6 +1,6 @@
 class LongTermServiceChangeRoutingManager
   F_TRAIN_ROUTING_N = ["D43", "D42", "F39", "F38", "F36", "F35", "F34", "F33", "F32", "F31", "F30", "F29", "F27", "F26", "F25", "F24", "F23", "F22", "F21", "F20", "A41", "F18", "F16", "F15", "F14", "D21", "D20", "D19", "D18", "D17", "D16", "D15", "B10", "B08", "B06", "B04", "G14", "G08", "F07", "F06", "F05", "F04", "F03", "F02", "F01"]
-  H_TRAIN_ROUTING_N = ["H15", "H14", "H13", "H12", "H04"]
+  # H_TRAIN_ROUTING_N = ["H15", "H14", "H13", "H12", "H04"]
 
   SCHEDULED_ROUTING_OVERRIDES = {
     "A" => {
@@ -2938,14 +2938,14 @@ class LongTermServiceChangeRoutingManager
           false, false, true),
       ]
     },
-    "H" => {
-      north: [
-        LongTermServiceChangeRegularRouting.all_times("H", :north, H_TRAIN_ROUTING_N),
-      ],
-      south: [
-        LongTermServiceChangeRegularRouting.all_times("H", :south, H_TRAIN_ROUTING_N.reverse),
-      ],
-    },
+    # "H" => {
+    #   north: [
+    #     LongTermServiceChangeRegularRouting.all_times("H", :north, H_TRAIN_ROUTING_N),
+    #   ],
+    #   south: [
+    #     LongTermServiceChangeRegularRouting.all_times("H", :south, H_TRAIN_ROUTING_N.reverse),
+    #   ],
+    # },
     "R" => {
       north: [
         # Weekdays
