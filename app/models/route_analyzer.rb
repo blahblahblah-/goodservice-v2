@@ -738,7 +738,7 @@ class RouteAnalyzer
         results << {
           types: [split_route_changes.class.name.demodulize],
           description: sentence_intro + " running in #{split_route_changes.routing_tuples.size} sections: #{split_routes}.",
-          stations_affected: split_route_changes.stations_affected,
+          stations_affected: split_route_changes.stations_affected&.compact,
           is_long_term: split_route_changes.long_term?,
         }
       end
@@ -761,7 +761,7 @@ class RouteAnalyzer
         results << {
           types: [change.class.name.demodulize],
           description: sentence,
-          stations_affected: change.stations_affected,
+          stations_affected: change.stations_affected&.compact,
           is_long_term: change.long_term?,
         }
       end
@@ -805,7 +805,7 @@ class RouteAnalyzer
         results << {
           types: [change.class.name.demodulize],
           description: sentence,
-          stations_affected: change.stations_affected,
+          stations_affected: change.stations_affected&.compact,
           is_long_term: change.long_term?,
         }
       end
