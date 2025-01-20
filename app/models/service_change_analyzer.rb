@@ -98,7 +98,7 @@ class ServiceChangeAnalyzer
                           ongoing_service_change = ServiceChanges::ExpressToLocalServiceChange.new(direction[:route_direction], [previous_actual_station, actual_station].compact, actual_routing.first, actual_routing)
                         end
                       else
-                        if closed_stops.include?(scheduled_station) || closed_stops.any? { |s| s[0..2] == scheduled_station && s.length == 4 && s[3] == direction[:suffix] }
+                        if previous_scheduled_station.present? && scheduled_routing[scheduled_index + 1] && (closed_stops.include?(scheduled_station) || closed_stops.any? { |s| s[0..2] == scheduled_station && s.length == 4 && s[3] == direction[:suffix] })
                           if routing_changes.last&.class == ServiceChanges::ExpressToLocalServiceChange && !CANAL_TO_ATLANTIC_VIA_BRIDGE_WITH_DEKALB_BOTH_DIRS.include?(routing_changes.last.stations_affected) && actual_routing[actual_index - 2, 2].include?(routing_changes.last.last_station)
                             ongoing_service_change = routing_changes.pop
                             ongoing_service_change.stations_affected << actual_station if ongoing_service_change.last_station != actual_station
