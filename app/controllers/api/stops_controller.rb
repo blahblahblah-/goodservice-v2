@@ -113,11 +113,11 @@ class Api::StopsController < ApplicationController
           [route_id, RedisStore.processed_trips(route_id, pipeline)]
          end
       end
-      trips_by_routes_array = route_ids.map do |route_id|
+      trips_by_routes_array = route_ids.map { |route_id|
         marshaled_trips = route_futures[route_id].value
         next unless marshaled_trips
         Marshal.load(marshaled_trips)
-      end
+      }.compact
       travel_times_data = RedisStore.travel_times
       travel_times = travel_times_data ? Marshal.load(travel_times_data) : {}
 
