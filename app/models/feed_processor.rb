@@ -62,7 +62,9 @@ class FeedProcessor
         entity.trip_update.trip.trip_id
       }.map { |entity|
         convert_trip(timestamp, entity, trip_timestamps)
-      }.compact.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }
+      }.compact.select { |trip| trip.timestamp >= timestamp - TRIP_UPDATE_TIMEOUT }.select{ |trip|
+        !trip.timed_out?
+      }
 
       translated_trips = trips.map{ |trip|
         translate_trip(feed_id, trip, trips)

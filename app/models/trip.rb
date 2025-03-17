@@ -37,6 +37,12 @@ class Trip
       (trip.stops.keys - stops.keys).size <= 1
   end
 
+  def timed_out?(time_ref: timestamp)
+    return false if is_assigned
+
+    (time_ref - first_stop_arrival_time) > 5.minutes.to_i
+  end
+
   def stop_ids
     stops.keys
   end
@@ -51,6 +57,10 @@ class Trip
 
   def scheduled_previous_stop_arrival_time
     schedule ? (schedule[previous_stop] || previous_stop_arrival_time) : previous_stop_arrival_time
+  end
+
+  def first_stop_arrival_time
+    stops.values.first
   end
 
   def upcoming_stop(time_ref: timestamp)
