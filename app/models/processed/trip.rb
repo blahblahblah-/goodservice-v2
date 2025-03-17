@@ -1,6 +1,6 @@
 class Processed::Trip
   DELAY_THRESHOLD = 5.minutes.to_i
-  delegate :id, :route_id, :stops_behind, :timestamp, :direction, :upcoming_stop, :time_until_upcoming_stop,
+  delegate :id, :interval, :route_id, :stops_behind, :timestamp, :direction, :upcoming_stop, :time_until_upcoming_stop,
   :is_assigned, :is_phantom?,
   :upcoming_stop_arrival_time, :destination, :stops, :stop_ids, :tracks, :schedule_discrepancy, :past_stops, to: :trip
 

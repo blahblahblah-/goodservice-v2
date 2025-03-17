@@ -1,15 +1,16 @@
 class Trip
   attr_reader :route_id, :direction, :timestamp, :stops, :tracks
-  attr_accessor :id, :previous_trip, :schedule, :past_stops, :latest, :is_assigned
+  attr_accessor :id, :interval, :previous_trip, :schedule, :past_stops, :latest, :is_assigned
 
   SOUTHBOUND_J_STOPS_TO_OMIT_TRACKING = ["J15", "J16", "J17", "J19", "J20", "J21", "J22"]
   NORTHBOUND_J_STOPS_TO_OMIT_TRACKING = ["J16", "J15", "J14", "J13", "J12", "G06", "G05"]
   ETA_THRESHOLD_TO_CONSIDER_STOP_MADE_FOR_STOPS_TRACKING_IS_OMITTED = 10
 
-  def initialize(route_id, direction, id, timestamp, trip_update, is_assigned)
+  def initialize(route_id, direction, id, interval, timestamp, trip_update, is_assigned)
     @route_id = route_id
     @direction = direction
     @id = id
+    @interval = interval
     @timestamp = timestamp
     stop_time_hash = trip_update.stop_time_update.filter { |update|
       (update.arrival&.time || update.departure&.time || 0) > 0

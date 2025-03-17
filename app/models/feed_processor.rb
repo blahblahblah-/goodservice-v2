@@ -144,6 +144,7 @@ class FeedProcessor
       trip_id = entity.trip_update.trip.trip_id
       direction = entity.trip_update.trip.nyct_trip_descriptor.direction.to_i
       is_assigned = entity.trip_update.trip.nyct_trip_descriptor.is_assigned
+      interval = entity.trip_update.trip.nyct_trip_descriptor.train_id
 
       if is_a_shuttle?(route_id, entity)
         entity.trip_update, direction = reverse_trip_update(entity.trip_update)
@@ -157,7 +158,7 @@ class FeedProcessor
 
       return unless entity.trip_update.stop_time_update.present?
 
-      Trip.new(route_id, direction, trip_id, trip_timestamp, entity.trip_update, is_assigned)
+      Trip.new(route_id, direction, trip_id, interval, trip_timestamp, entity.trip_update, is_assigned)
     end
 
     def translate_trip(feed_id, trip, trips)

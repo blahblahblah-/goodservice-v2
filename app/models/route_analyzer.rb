@@ -881,6 +881,7 @@ class RouteAnalyzer
           if route_id != trip.route_id
             {
               id: trip.id,
+              interval: trip.interval,
               route_id: trip.route_id,
               direction: trip.direction == 3 ? "south" : "north",
               previous_stop: trip.previous_stop,
@@ -898,6 +899,7 @@ class RouteAnalyzer
           else
             {
               id: trip.id,
+              interval: trip.interval,
               route_id: trip.route_id,
               previous_stop: trip.previous_stop,
               previous_stop_arrival_time: trip.previous_stop_arrival_time,
@@ -939,6 +941,7 @@ class RouteAnalyzer
         }
         {
           id: trip.id,
+          interval: trip.interval,
           stops: stops,
           delayed_time: trip.delayed_time,
           schedule_discrepancy: trip.schedule_discrepancy,
