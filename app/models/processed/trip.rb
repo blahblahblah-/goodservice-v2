@@ -41,9 +41,9 @@ class Processed::Trip
 
   def estimated_upcoming_stop_arrival_time
     if delayed?
-      [effective_calculated_upcoming_stop_arrival_time, timestamp + 60].max
+      [effective_calculated_upcoming_stop_arrival_time, timestamp + 60].max + compensated_time
     end
-    effective_calculated_upcoming_stop_arrival_time
+    effective_calculated_upcoming_stop_arrival_time + compensated_time
   end
 
   private
@@ -97,6 +97,11 @@ class Processed::Trip
       @estimated_time_behind_next_train = [estimated_time_until_upcoming_stop - estimated_time_for_next_trip_until_its_upcoming_stop, 0].max
       @time_behind_next_train = [time_until_upcoming_stop - next_trip.time_until_upcoming_stop(time_ref: timestamp), 0].max
     end
+  end
+
+  def compensated_time
+    return -30 if FeedRetrieverSpawningWorkerBase.feed_id_for(route_id) == ""
+    0
   end
 
   def self.determine_previous_stop_and_arrival_time(current_trip)

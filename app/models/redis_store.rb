@@ -22,6 +22,23 @@ class RedisStore
       client.set("feed:#{minutes}:#{fraction_of_minute}:#{feed_id}", marshaled_data, ex: (Rails.env.production? ? 15 : 1800))
     end
 
+    # Latency
+    def all_feed_latencies(client = REDIS_CLIENT)
+      client.hgetall("feed-latency")
+    end
+
+    def update_feed_latency(feed_id, latency, client = REDIS_CLIENT)
+      client.hset("feed-latency", feed_id, latency)
+    end
+
+    def all_processed_route_latencies(client = REDIS_CLIENT)
+      client.hgetall("processed-route-latency")
+    end
+
+    def update_processed_route_latency(route_id, latency, client = REDIS_CLIENT)
+      client.hset("processed-route-latency", route_id, latency)
+    end
+
     # FeedProcessor lock
     def acquire_feed_processor_lock(feed_id, route_id, minutes, fraction_of_minute, client = REDIS_CLIENT)
       client.set("feed-processor-lock:#{feed_id}:#{route_id}", "#{minutes}:#{fraction_of_minute}", nx: true, ex: 15)

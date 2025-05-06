@@ -35,6 +35,7 @@ class FeedRetrieverWorker
     RedisStore.add_feed(feed_id, minutes, fraction_of_minute, Marshal.dump(decoded_data))
 
     puts "Retrieved feed #{feed_id}, latency #{Time.current - Time.zone.at(timestamp)}"
+    RedisStore.update_feed_latency(feed_id, Time.current - Time.zone.at(timestamp))
 
     route_ids = decoded_data.entity.select { |entity|
       entity.field?(:trip_update)
