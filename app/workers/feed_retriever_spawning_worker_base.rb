@@ -1,7 +1,7 @@
 class FeedRetrieverSpawningWorkerBase
   ALL_FEEDS = ["", "-ace", "-bdfm", "-g", "-jz", "-nqrw", "-l", "-si"]
   MISC_FEED_MAPPING = {
-    "FS" => "-ace",
+    "FS" => "-bdfm",
     "GS" => "",
     "H" => "-ace",
     "SI" => "-si",
