@@ -18,7 +18,7 @@ class AccessibilityStatusesWorker
       request["x-api-key"] = ENV["MTA_KEY"]
 
       response = http.request request
-      JSON.parse(response.body).select{ |s| s['equipmenttype'] == 'EL' && s['ADA'] == 'Y' }
+      JSON.parse(response.body).select{ |s| s['equipmenttype'] == 'EL' && s['ADA'] == 'Y' && s['isupcomingoutage'] == 'N' }
     end
   end
 
