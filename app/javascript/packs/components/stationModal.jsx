@@ -302,7 +302,7 @@ class StationModal extends React.Component {
     const { station, timestamp } = this.state;
     const stationName = formatStation(selectedStation.name);
     const heading = selectedStation.secondary_name ? `${stationName} (${selectedStation.secondary_name})` : stationName;
-    const title = `goodservice.io - ${heading} Station`;
+    const title = `Subway Now lite (formerly goodservice.io) - ${heading} Station`;
     return (
       <Modal basic size='large' open={open} closeIcon dimmer='blurring'
         onClose={this.handleOnClose} closeOnDocumentClick closeOnDimmerClick className='station-modal'>
@@ -319,9 +319,9 @@ class StationModal extends React.Component {
               <title>{title}</title>
               <meta property="og:title" content={title} />
               <meta name="twitter:title" content={title} />
-              <link rel="canonical" href={`https://www.goodservice.io/stations/${selectedStation.id}`} />
-              <meta property="og:url" content={`https://www.goodservice.io/stations/${selectedStation.id}`} />
-              <meta name="twitter:url" content={`https://www.goodservice.io/stations/${selectedStation.id}`} />
+              <link rel="canonical" href={`https://lite.subwaynow.app/stations/${selectedStation.id}`} />
+              <meta property="og:url" content={`https://lite.subwaynow.app/stations/${selectedStation.id}`} />
+              <meta name="twitter:url" content={`https://lite.subwaynow.app/stations/${selectedStation.id}`} />
             </Helmet>
             <Modal.Header>
               <Header as='h3' inverted>
@@ -349,10 +349,10 @@ class StationModal extends React.Component {
                   </Header.Subheader>
                 }
               </Header>
-              <a href={`https://www.theweekendest.com/stations/${station.id}`} target="_blank">
+              <a href={`https://www.subwaynow.app/stations/${station.id}`} target="_blank">
                 <Button secondary size='tiny'>
                   <Icon name='map outline' />
-                  Open on The Weekendest
+                  Open on Subway Now
                 </Button>
               </a>
             </Modal.Header>

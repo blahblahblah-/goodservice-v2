@@ -84,7 +84,7 @@ class TrainModal extends React.Component {
   render() {
     const { train, timestamp } = this.state;
     const { trains, trigger, selected, match, stations, location } = this.props;
-    const title = `goodservice.io - ${train?.alternate_name ? `S - ${train?.alternate_name}` : train?.name} Train`;
+    const title = `Subway Now lite (formerly goodservice.io) - ${train?.alternate_name ? `S - ${train?.alternate_name}` : train?.name} Train`;
 
     if (match.params.direction && !['N', 'S'].includes(match.params.direction)) {
       return (<Redirect to={`/trains/${match.params.id}`} />);
@@ -131,9 +131,9 @@ class TrainModal extends React.Component {
                 <title>{title}</title>
                 <meta property="og:title" content={title} />
                 <meta name="twitter:title" content={title} />
-                <link rel="canonical" href={`https://www.goodservice.io/trains/${train.id}`} />
-                <meta property="og:url" content={`https://www.goodservice.io/trains/${train.id}`} />
-                <meta name="twitter:url" content={`https://www.goodservice.io/trains/${train.id}`} />
+                <link rel="canonical" href={`https://lite.subwaynow.app/trains/${train.id}`} />
+                <meta property="og:url" content={`https://lite.subwaynow.app/trains/${train.id}`} />
+                <meta name="twitter:url" content={`https://lite.subwaynow.app/trains/${train.id}`} />
               </Helmet>
               <Modal.Header>
                 <Grid>
@@ -145,10 +145,10 @@ class TrainModal extends React.Component {
                         <p>{train.alternate_name}</p>
                       }
                       <div>
-                        <a href={`https://www.theweekendest.com/trains/${train.id}`} target="_blank">
+                        <a href={`https://www.subwaynow.app/trains/${train.id}`} target="_blank">
                           <Button secondary size='mini'>
                             <Icon name='map outline' />
-                            Open on <nobr>The Weekendest</nobr>
+                            Open on <nobr>Subway Now</nobr>
                           </Button>
                         </a>
                       </div>

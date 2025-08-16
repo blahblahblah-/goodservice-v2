@@ -1,9 +1,9 @@
 {
-  "name": "goodservice.io",
-  "short_name": "goodservice.io",
-  "start_url": "https://www.goodservice.io",
+  "name": "Subway Now lite",
+  "short_name": "Subway Now lite",
+  "start_url": "https://lite.subwaynow.app",
   "display": "fullscreen",
   "background_color": "#000000",
   "description": "New York City Subway Status Page",
-  "scope": "https://www.goodservice.io/"
+  "scope": "https://lite.subwaynow.app/"
 }

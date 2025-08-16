@@ -6,7 +6,7 @@ goodservice-v2 is a re-write of the original [goodservice](https://github.com/bl
 
 The biggest change in technology use is using Redis as the primary persistence source, relying on [Sidekiq](https://github.com/mperham/sidekiq) to process data asynchronously, using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) to schedule jobs and a custom written [Heroku Autoscaler](https://github.com/blahblahblah-/goodservice-v2/blob/main/app/workers/heroku_autoscaler_worker.rb) to scale horizontally when there are more trains running and the job queue is getting too large. Postgres is still used to store static schedule info.
 
-See it live at [https://www.goodservice.io](https://www.goodservice.io/). The same set of APIs are used to power [https://www.theweekendest.com](https://www.theweekendest.com/)
+See it live at [https://lite.subwaynow.app](https://lite.subwaynow.app/). The same set of APIs are used to power [https://www.subwaynow.app](https://www.subwaynow.app/)
 
 ## Running locally
 

@@ -1,62 +1,55 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>goodservice.io - <%= content_for?(:title) ? yield(:title) : 'New York City Subway Status Page' %></title>
+    <title>Subway Now lite (formerly goodservice.io) - <%= content_for?(:title) ? yield(:title) : 'New York City Subway Status Page' %></title>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_pack_tag 'components/app' %>
     <%= javascript_pack_tag 'application' %>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="Description" content="New York City Subway Status Page. Track active trains, check for delays, compare headways and travel times, view real-time route maps and estimated arrival times for each subway route.">
-    <link rel="canonical" href="https://www.goodservice.io" data-react-helmet="true" />
+    <link rel="canonical" href="https://lite.subwaynow.app" data-react-helmet="true" />
     <meta name="apple-itunes-app" content="app-id=6476543418">
     <%= stylesheet_pack_tag 'vendor/smartbanner' %>
     <%= javascript_packs_with_chunks_tag 'vendor/smartbanner' %>
 
     <!-- Start SmartBanner configuration -->
-    <meta name="smartbanner:title" content="The Weekendest">
-    <meta name="smartbanner:author" content="Real-time Subway Map for NYC">
-    <meta name="smartbanner:icon-apple" content="https://www.theweekendest.com/apple-touch-icon.png">
+    <meta name="smartbanner:title" content="Subway Now">
+    <meta name="smartbanner:author" content="NYC Train Tracker">
+    <meta name="smartbanner:icon-apple" content="https://www.subwaynow.app/apple-touch-icon.png">
+    <meta name="smartbanner:icon-google" content="https://www.subwaynow.app/apple-touch-icon.png">
     <meta name="smartbanner:button" content="VIEW">
     <meta name="smartbanner:button-url-apple" content="https://apps.apple.com/us/app/the-weekendest-nyc-subway-map/id6476543418">
-    <meta name="smartbanner:enabled-platforms" content="ios">
+    <meta name="smartbanner:button-url-google" content="https://play.google.com/store/apps/details?id=io.goodservice.theweekendest">
+    <meta name="smartbanner:enabled-platforms" content="android,ios">
     <meta name="smartbanner:exclude-user-agent-regex" content="^.*(Version).*Safari">
     <meta name="smartbanner:close-label" content="Close">
     <!-- End SmartBanner configuration -->
 
     <!-— facebook open graph tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.goodservice.io" data-react-helmet="true" />
-    <meta property="og:title" content="goodservice.io" data-react-helmet="true" />
+    <meta property="og:url" content="https://lite.subwaynow.app" data-react-helmet="true" />
+    <meta property="og:title" content="Subway Now lite" data-react-helmet="true" />
     <meta property="og:description" content="New York City Subway Status Page. Track active trains, check for delays, compare headways and travel times, view real-time route maps and estimated arrival times for each subway route." />
     <%= tag :meta, property: 'og:image', content: image_url('screenshot.png') %>
     <link rel="manifest" href="<%= asset_path 'manifest.webmanifest' %>">
 
     <!-— twitter card tags additive with the og: tags -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:domain" content="www.goodservice.io" />
-    <meta name="twitter:title" content="goodservice.io" data-react-helmet="true" />
+    <meta name="twitter:domain" content="lite.subwaynow.app" />
+    <meta name="twitter:title" content="Subway Now lite" data-react-helmet="true" />
     <meta name="twitter:description" content="New York City Subway Status Page. Track active trains, check for delays, compare headways, view real-time route maps and estimated arrival times for each subway route." />
     <meta name="twitter:site" content="@goodservice_io" />
     <meta name="twitter:creator" content="@_blahblahblah" />
     <%= tag :meta, property: 'twitter:image', content: image_url('screenshot.png') %>
-    <meta name="twitter:url" content="https://www.goodservice.io" data-react-helmet="true" />
-    <%= favicon_link_tag asset_path('favicon.ico'), rel: 'icon', type: "image/x-icon" %>
+    <meta name="twitter:url" content="https://lite.subwaynow.app" data-react-helmet="true" />
+    <%= favicon_link_tag asset_path('favicon.png'), rel: 'icon' %>
     <meta name="slack-app-id" content="AGK7ZP2AH">
     <link rel="apple-touch-icon" href="<%= image_url('apple-touch-icon.png') %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="goodservice.io">
-    <link href="<%= image_url('iphone5_splash.png') %>" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('iphone6_splash.png') %>" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('iphoneplus_splash.png') %>" media="(device-width: 621px) and (device-height: 1104px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('iphonex_splash.png') %>" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('iphonexr_splash.png') %>" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('iphonexsmax_splash.png') %>" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('ipad_splash.png') %>" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('ipadpro1_splash.png') %>" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('ipadpro3_splash.png') %>" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
-    <link href="<%= image_url('ipadpro2_splash.png') %>" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image" />
+    <meta name="apple-mobile-web-app-title" content="Subway Now lite">
+  
   </head>
 
   <body>

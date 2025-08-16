@@ -1,0 +1,41 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appIDs": ["LT5JAC55XG.io.goodservice.The-Weekendest"],
+                "components": [
+                    {
+                      "/": "/*",
+                      "comment": "Matches any URL"
+                    },
+                    {
+                      "/": "/api/*",
+                      "exclude": true,
+                      "comment": "Exclude APIs"
+                    },
+                    {
+                      "/": "/about",
+                      "exclude": true,
+                      "comment": "Exclude About"
+                    },
+                    {
+                      "/": "/twitter",
+                      "exclude": true,
+                      "comment": "Exclude Twitter"
+                    },
+                    {
+                      "/": "/slack",
+                      "exclude": true,
+                      "comment": "Exclude Slack"
+                    },
+                    {
+                      "/": "/slack/*",
+                      "exclude": true,
+                      "comment": "Exclude Slack"
+                    }
+                ]
+            }
+        ]
+    }
+}

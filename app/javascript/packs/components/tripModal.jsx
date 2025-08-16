@@ -155,7 +155,7 @@ class TripModal extends React.Component {
     const { trip, showPastStops } = this.state;
     const directionKey = direction[0].toUpperCase();
     const destinationStationName = formatStation(stations[selectedTrip.destination_stop].name);
-    const title = `goodservice.io - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
+    const title = `Subway Now lite (formerly goodservice.io) - ${train.alternate_name ? `S - ${train.alternate_name}` : train.name} Train - Trip ${selectedTrip.id} to ${destinationStationName}`;
     const delayed = selectedTrip.delayed_time > 300;
     const effectiveDelayedTime = Math.max(Math.min(selectedTrip.schedule_discrepancy, selectedTrip.delayed_time), 0);
     const delayedTime = selectedTrip.is_delayed ? effectiveDelayedTime : selectedTrip.delayed_time;
@@ -166,8 +166,8 @@ class TripModal extends React.Component {
           <title>{title}</title>
           <meta property="og:title" content={title} />
           <meta name="twitter:title" content={title} />
-          <meta property="og:url" content={`https://www.goodservice.io/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
-          <meta name="twitter:url" content={`https://www.goodservice.io/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
+          <meta property="og:url" content={`https://lite.subwaynow.app/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
+          <meta name="twitter:url" content={`https://lite.subwaynow.app/trains/${train.id}/${directionKey}/${selectedTrip.id}`} />
         </Helmet>
         <Modal.Header className='modal-header'>
           <TrainBullet name={train.name} color={train.color}
@@ -183,10 +183,10 @@ class TripModal extends React.Component {
               delayed &&
               <Header className='delayed-header' as='h3' color='red' inverted>{ delayInfo }</Header>
             }
-            <a href={`https://www.theweekendest.com/trains/${train.id}/${selectedTrip.id}`} target="_blank">
+            <a href={`https://www.subwaynow.app/trains/${train.id}/${selectedTrip.id}`} target="_blank">
               <Button secondary size='mini'>
                 <Icon name='map outline' />
-                Open on The Weekendest
+                Open on Subway Now
               </Button>
             </a>
             <br />

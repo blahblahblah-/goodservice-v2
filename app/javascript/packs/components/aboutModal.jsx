@@ -15,11 +15,11 @@ class AboutModal extends React.Component {
         open={this.props.open} onClose={this.handleOnClose}
         closeIcon dimmer="blurring" closeOnDocumentClick closeOnDimmerClick>
         <Helmet>
-          <title>goodservice.io - About</title>
-          <meta property="og:title" content="goodservice.io - About" />
-          <meta name="twitter:title" content="goodservice.io - About" />
-          <meta property="og:url" content="https://www.goodservice.io/about" />
-          <meta name="twitter:url" content="https://www.goodservice.io/about" />
+          <title>Subway Now lite (formerly goodservice.io) - About</title>
+          <meta property="og:title" content="Subway Now lite (formerly goodservice.io) - About" />
+          <meta name="twitter:title" content="Subway Now lite (formerly goodservice.io) - About" />
+          <meta property="og:url" content="https://lite.subwaynow.app/about" />
+          <meta name="twitter:url" content="https://lite.subwaynow.app/about" />
         </Helmet>
         <Modal.Header>
           What is Good Service?
@@ -62,7 +62,7 @@ class AboutModal extends React.Component {
             <p>Other transit projects I've been working on:
 
               <ul>
-                <li><a href="https://www.theweekendest.com" target="_blank">The Weekendest</a></li>
+                <li><a href="https://www.subwaynow.app" target="_blank">Subway Now</a></li>
                 <li><a href="https://www.subwayridership.nyc" target="_blank">NYC Subway Ridership</a></li>
               </ul>
             </p>

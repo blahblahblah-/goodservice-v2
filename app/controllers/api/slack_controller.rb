@@ -275,7 +275,7 @@ class Api::SlackController < ApplicationController
       "elements": [
         {
           "type": "mrkdwn",
-          "text": "More info on https://www.theweekendest.com/trains/#{route_id}"
+          "text": "More info on https://www.subwaynow.app/trains/#{route_id}"
         }
       ]
     }
@@ -388,7 +388,7 @@ class Api::SlackController < ApplicationController
       "elements": [
         {
           "type": "mrkdwn",
-          "text": "More info on https://www.theweekendest.com/stations/#{stop.internal_id}"
+          "text": "More info on https://www.subwaynow.app/stations/#{stop.internal_id}"
         }
       ]
     }

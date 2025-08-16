@@ -19,11 +19,11 @@ class TwitterModal extends React.Component {
         open={this.props.open} onClose={this.handleOnClose}
         closeIcon dimmer="blurring" className="twitter-modal" closeOnDocumentClick closeOnDimmerClick>
         <Helmet>
-          <title>goodservice.io - Twitter Feeds</title>
-          <meta property="og:title" content="goodservice.io - About" />
-          <meta name="twitter:title" content="goodservice.io - About" />
-          <meta property="og:url" content="https://www.goodservice.io/about" />
-          <meta name="twitter:url" content="https://www.goodservice.io/about" />
+          <title>Subway Now lite (formerly goodservice.io) - Twitter Feeds</title>
+          <meta property="og:title" content="Subway Now lite (formerly goodservice.io) - About" />
+          <meta name="twitter:title" content="Subway Now lite (formerly goodservice.io) - About" />
+          <meta property="og:url" content="https://lite.subwaynow.app/about" />
+          <meta name="twitter:url" content="https://lite.subwaynow.app/about" />
         </Helmet>
         <Modal.Header>
           Follow us on Twitter for Alerts <Icon name='twitter' color='blue' />

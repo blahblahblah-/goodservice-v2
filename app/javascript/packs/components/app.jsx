@@ -201,20 +201,20 @@ class App extends React.Component {
     return (
       <Router history={history}>
         <Segment inverted vertical className='header-segment'>
-          <Header inverted as='h1' color='yellow'>
-            goodservice.io
+          <Header inverted as='h1' style={{color: "#b0b1b2"}}>
+            Subway Now <sup style={{color: "#888889"}}>lite</sup>
             <Header.Subheader>
               New York City Subway Status Page
                 <sup>[<Link to='/about'>?</Link>]</sup>
             </Header.Subheader>
           </Header>
           <Helmet>
-            <title>goodservice.io - New York City Subway Status Page</title>
-            <meta property="og:title" content="goodservice.io" />
-            <meta name="twitter:title" content="goodservice.io" />
-            <link rel="canonical" href="https://www.goodservice.io" />
-            <meta property="og:url" content="https://www.goodservice.io" />
-            <meta name="twitter:url" content="https://www.goodservice.io" />
+            <title>Subway Now lite (formerly goodservice.io) - New York City Subway Status Page</title>
+            <meta property="og:title" content="Subway Now lite" />
+            <meta name="twitter:title" content="Subway Now lite" />
+            <link rel="canonical" href="https://lite.subwaynow.app" />
+            <meta property="og:url" content="https://lite.subwaynow.app" />
+            <meta name="twitter:url" content="https://lite.subwaynow.app" />
           </Helmet>
         </Segment>
         <Segment inverted vertical className='blogpost-segment'>
